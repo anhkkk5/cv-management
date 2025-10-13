@@ -1,0 +1,348 @@
+{
+  "Candidates": [
+    {
+      "id": "C001",
+      "name": "Nguyễn Văn A",
+      "isOpen": 1,
+      "dob": "1995-05-15",
+      "address": "Hà Nội, Việt Nam",
+      "email": "nguyenvana@example.com",
+      "phone": "0123456789",
+      "password": "hashed_password_1",
+      "gender": 1,
+      "link_fb": "https://facebook.com/nguyenvana",
+      "link_linkedin": "https://linkedin.com/in/nguyenvana",
+      "link_git": "https://github.com/nguyenvana",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "C002",
+      "name": "Trần Thị B",
+      "isOpen": 0,
+      "dob": "1998-08-20",
+      "address": "TP. Hồ Chí Minh, Việt Nam",
+      "email": "tranthib@example.com",
+      "phone": "0987654321",
+      "password": "hashed_password_2",
+      "gender": 0,
+      "link_fb": "https://facebook.com/tranthib",
+      "link_linkedin": "https://linkedin.com/in/tranthib",
+      "link_git": "https://github.com/tranthib",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Education_Candidate": [
+    {
+      "id": "E001",
+      "candidate_id": "C001",
+      "name_education": "Đại học Bách Khoa Hà Nội",
+      "major": "Công nghệ Thông tin",
+      "started_at": "2018-09-01",
+      "end_at": "2022-06-30",
+      "info": "GPA: 3.5/4.0",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "E002",
+      "candidate_id": "C002",
+      "name_education": "Đại học Kinh tế TP. HCM",
+      "major": "Marketing",
+      "started_at": "2019-09-01",
+      "end_at": "2023-06-30",
+      "info": "GPA: 3.2/4.0",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Experience_Candidate": [
+    {
+      "id": "EX001",
+      "candidate_id": "C001",
+      "position": "Junior Developer",
+      "company": "FPT Software",
+      "started_at": "2022-07-01",
+      "end_at": "2024-12-31",
+      "info": "Phát triển ứng dụng web với React và Node.js",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "EX002",
+      "candidate_id": "C002",
+      "position": "Marketing Specialist",
+      "company": "VNG Corporation",
+      "started_at": "2023-07-01",
+      "end_at": null,
+      "info": "Quản lý chiến dịch quảng cáo trên Google Ads",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Project_Candidate": [
+    {
+      "id": "P001",
+      "candidate_id": "C001",
+      "name": "E-commerce Website",
+      "link": "https://github.com/nguyenvana/ecommerce",
+      "started_at": "2023-01-01",
+      "end_at": "2023-06-30",
+      "info": "Xây dựng website bán hàng với fullstack",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "P002",
+      "candidate_id": "C002",
+      "name": "Digital Marketing Campaign",
+      "link": "https://example.com/campaign",
+      "started_at": "2024-03-01",
+      "end_at": "2024-09-30",
+      "info": "Chiến dịch SEO tăng traffic 50%",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Certificate_Candidate": [
+    {
+      "id": "CERT001",
+      "candidate_id": "C001",
+      "name": "AWS Certified Developer",
+      "organization": "Amazon Web Services",
+      "started_at": "2023-10-01",
+      "end_at": null,
+      "info": "Certified on October 2023",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "CERT002",
+      "candidate_id": "C002",
+      "name": "Google Analytics Certification",
+      "organization": "Google",
+      "started_at": "2024-05-01",
+      "end_at": null,
+      "info": "Certified on May 2024",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Skills_Candidate": [
+    {
+      "id": "S001",
+      "candidate_id": "C001",
+      "name": "ReactJS",
+      "level_job_id": "L001",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "S002",
+      "candidate_id": "C001",
+      "name": "Node.js",
+      "level_job_id": "L002",
+      "created_at": "2025-01-10",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "S003",
+      "candidate_id": "C002",
+      "name": "SEO",
+      "level_job_id": "L001",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    },
+    {
+      "id": "S004",
+      "candidate_id": "C002",
+      "name": "Google Ads",
+      "level_job_id": "L002",
+      "created_at": "2025-02-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Account_Company": [
+    {
+      "id": "AC001",
+      "email": "admin@fpt.com",
+      "password": "hashed_company_1"
+    },
+    {
+      "id": "AC002",
+      "email": "hr@vng.com",
+      "password": "hashed_company_2"
+    }
+  ],
+  "Companies": [
+    {
+      "id": "COMP001",
+      "account_company_id": "AC001",
+      "name": "FPT Software",
+      "logo": "https://example.com/fpt-logo.png",
+      "website": "https://fptsoftware.com",
+      "link_fb": "https://facebook.com/fptsoftware",
+      "link_linkedin": "https://linkedin.com/company/fptsoftware",
+      "follower": 100000,
+      "size": 50000,
+      "typeCompany_id": "TC001",
+      "description": "Công ty công nghệ hàng đầu Việt Nam",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "COMP002",
+      "account_company_id": "AC002",
+      "name": "VNG Corporation",
+      "logo": "https://example.com/vng-logo.png",
+      "website": "https://vng.com.vn",
+      "link_fb": "https://facebook.com/vngcorp",
+      "link_linkedin": "https://linkedin.com/company/vngcorp",
+      "follower": 50000,
+      "size": 10000,
+      "typeCompany_id": "TC002",
+      "description": "Công ty game và công nghệ Việt Nam",
+      "created_at": "2021-03-15",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "Jobs": [
+    {
+      "id": "J001",
+      "title": "Fullstack Developer",
+      "company_id": "COMP001",
+      "description": "Phát triển ứng dụng web fullstack",
+      "salary": "15-25 triệu VND",
+      "location_id": "LOC001",
+      "expire_at": "2025-11-30",
+      "created_at": "2025-09-01",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "J002",
+      "title": "Marketing Manager",
+      "company_id": "COMP002",
+      "description": "Quản lý chiến dịch marketing",
+      "salary": "20-30 triệu VND",
+      "location_id": "LOC002",
+      "expire_at": "2025-12-15",
+      "created_at": "2025-09-10",
+      "updated_at": "2025-09-20"
+    }
+  ],
+  "TypeCompany": [
+    {
+      "id": "TC001",
+      "name": "Công nghệ",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "TC002",
+      "name": "Truyền thông",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    }
+  ],
+  "Locations": [
+    {
+      "id": "LOC001",
+      "name": "Hà Nội",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "LOC002",
+      "name": "TP. Hồ Chí Minh",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    }
+  ],
+  "TypeJobs": [
+    {
+      "id": "TJ001",
+      "name": "Full Time",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "TJ002",
+      "name": "Part Time",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    }
+  ],
+  "LevelJobs": [
+    {
+      "id": "L001",
+      "name": "Intern",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    },
+    {
+      "id": "L002",
+      "name": "Junior",
+      "created_at": "2020-01-01",
+      "updated_at": "2025-10-06"
+    }
+  ],
+  "Address_Companies": [
+    {
+      "id": "AD001",
+      "company_id": "COMP001",
+      "address": "Tòa nhà FPT, Hà Nội",
+      "map_url": "https://maps.google.com/fpt-hanoi",
+      "location_id": "LOC001"
+    },
+    {
+      "id": "AD002",
+      "company_id": "COMP002",
+      "address": "Quận 1, TP. HCM",
+      "map_url": "https://maps.google.com/vng-hcm",
+      "location_id": "LOC002"
+    }
+  ],
+  "Jobs_Candidates": [
+    {
+      "id": "JC001",
+      "job_id": "J001",
+      "candidate_id": "C001",
+      "cv_url": "https://example.com/cv-nguyenvana.pdf",
+      "content": "Ứng tuyển vị trí Fullstack Developer",
+      "status": 1
+    },
+    {
+      "id": "JC002",
+      "job_id": "J002",
+      "candidate_id": "C002",
+      "cv_url": "https://example.com/cv-tranthib.pdf",
+      "content": "Ứng tuyển vị trí Marketing Manager",
+      "status": 0
+    }
+  ],
+  "Levels_Jobs": [
+    {
+      "id": "LJ001",
+      "job_id": "J001",
+      "level_id": "L002"
+    },
+    {
+      "id": "LJ002",
+      "job_id": "J002",
+      "level_id": "L001"
+    }
+  ],
+  "Types_Jobs": [
+    {
+      "id": "TyJ001",
+      "job_id": "J001",
+      "type_job_id": "TJ001"
+    },
+    {
+      "id": "TyJ002",
+      "job_id": "J002",
+      "type_job_id": "TJ002"
+    }
+  ]
+}
