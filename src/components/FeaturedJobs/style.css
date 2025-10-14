@@ -53,7 +53,7 @@
   display: inline-block;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: .2px;
+  letter-spacing: 0.2px;
   border-radius: 6px;
   padding: 4px 8px;
   background: #e8f5e9;
@@ -93,4 +93,3 @@
 .fj-location {
   color: #8c8c8c;
 }
-

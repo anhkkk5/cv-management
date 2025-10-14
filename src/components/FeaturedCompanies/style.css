@@ -1,17 +1,84 @@
 /* Wrapper + Header */
-.fc-wrapper { padding: 24px 0; }
-.fc-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
-.fc-title { margin:0; font-size:28px; }
-.fc-view-more { color:#c62828 !important; font-weight:600; }
+.fc-wrapper {
+  padding: 24px 0;
+}
+.fc-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+.fc-title {
+  margin: 0;
+  font-size: 28px;
+}
+.fc-view-more {
+  color: #c62828 !important;
+  font-weight: 600;
+}
 
 /* Card */
-.fc-card { border:1px solid #eee; border-radius:12px; }
-.fc-top { display:flex; align-items:center; gap:12px; }
-.fc-logo { width:48px; height:48px; border-radius:10px; background:#ff6a8b; display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; }
-.fc-logo-avatar { border-radius:10px; }
-.fc-top-info { display:flex; align-items:center; gap:10px; }
-.fc-name { font-weight:600; }
-.fc-chip { background:#ffe4e8; color:#cc4b5a; border-radius:999px; padding:2px 8px; font-size:12px; font-weight:600; }
-.fc-location { color:#8c8c8c; margin:8px 0 12px; }
-.fc-button { background:#e7f0ff !important; color:#1e56d9 !important; font-weight:600; border:none !important; }
-
+.fc-card {
+  border: 1px solid #eee;
+  border-radius: 12px;
+}
+.fc-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.fc-logo {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: #ff6a8b;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 22px;
+}
+.fc-logo-avatar {
+  border-radius: 10px;
+}
+.fc-top-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.fc-name {
+  font-weight: 600;
+}
+.fc-chip {
+  background: #ffe4e8;
+  color: #cc4b5a;
+  border-radius: 999px;
+  padding: 2px 8px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.fc-location {
+  color: #8c8c8c;
+  margin-bottom: 12px;
+}
+.fc-description {
+  color: #595959;
+  font-size: 14px;
+  margin-bottom: 16px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.fc-button {
+  background: #e7f0ff !important;
+  color: #1e56d9 !important;
+  font-weight: 600;
+  border: none !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}

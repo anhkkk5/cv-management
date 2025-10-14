@@ -1,4 +1,9 @@
 import { get, post, edit } from "../../utils/axios/request";
+export const getAllCompany = async () => {
+  const result = await get("Companies");
+  return result;
+};
+
 export const getDetaiCompany = async (id) => {
   const result = await get(`Companies/${id}`);
   return result;

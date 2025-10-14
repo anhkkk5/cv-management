@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Tag, Row, Col, Spin, Empty } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
-
+import { getAlljob } from "../../services/jobServices/jobServices";
 function JobsPage() {
   const [jobs, setJobs] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
@@ -10,10 +10,9 @@ function JobsPage() {
     const fetchJobs = async () => {
       try {
         setLoading(true);
-        const res = await fetch("http://localhost:3002/Jobs");
-        const data = await res.json();
+        const data = await getAlljob();
         setJobs(Array.isArray(data) ? data : []);
-      } catch (e) {
+      } catch {
         setJobs([]);
       } finally {
         setLoading(false);

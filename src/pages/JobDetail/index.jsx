@@ -8,12 +8,9 @@ import {
   Spin,
   Empty,
   Button,
-  Divider,
-  Modal,
   Form,
   Input,
   Select,
-  DatePicker,
   Typography,
   Breadcrumb,
   Avatar,
@@ -26,9 +23,6 @@ import {
   ApartmentOutlined,
   ProfileOutlined,
   BookOutlined,
-  ShareAltOutlined,
-  EditOutlined,
-  DeleteOutlined,
   ArrowRightOutlined,
   FacebookOutlined,
   TwitterOutlined,
@@ -37,6 +31,10 @@ import {
   LinkOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
+import { getDetaiJob } from "../../services/jobServices/jobServices";
+import { getAllCompany } from "../../services/getAllCompany/companyServices";
+import { getLocation } from "../../services/getAllLocation/locationServices";
+
 import "./style.css";
 
 const { Title, Paragraph, Text } = Typography;
@@ -54,70 +52,7 @@ function JobDetail() {
   const [locationName, setLocationName] = React.useState("");
   const [appliedCandidates, setAppliedCandidates] = React.useState([]);
 
-  // Modal states
-  const [updateModalVisible, setUpdateModalVisible] = React.useState(false);
-  const [deleteModalVisible, setDeleteModalVisible] = React.useState(false);
-  const [updateLoading, setUpdateLoading] = React.useState(false);
-
-  // Mock data for demonstration
-  const mockJob = {
-    id: "J001",
-    title: "Senior UX Designer",
-    company_id: "COMP001",
-    description: `Velstar is a Shopify Plus agency, and we partner with brands to help them grow, we also do the same with our people.
-
-Here at Velstar, we don't just make websites, we create exceptional digital experiences that users and search engines love. Our team of specialists work hard to play hard, creating unique and memorable e-commerce solutions that produce outstanding results.
-
-The role will involve translating project specifications into clean, test-driven, easily maintainable code. You will work with the Project, Development, and Technical Director teams throughout the build cycle and will be supported by the project management team to ensure efficient delivery of technically sound, pioneering products.
-
-Want to work with us? You're in good company!`,
-    requirements: [
-      "Great troubleshooting and analytical skills combined with the desire to tackle challenges head-on",
-      "3+ years of experience in back-end development working either with multiple smaller projects simultaneously or large-scale applications",
-      "Experience with HTML, JavaScript, CSS, PHP, Symphony and/or Laravel",
-      "Working regularly with APIs and Web Services (REST, GraphQL, SOAP, etc)",
-      "Experience/awareness in Agile application development, commercial off-the-shelf software, middleware, servers and storage, and database management",
-      "Familiarity with version control and project management systems (e.g., Github, Jira)",
-      "Ambitious and hungry to grow your career in a fast-growing agency",
-    ],
-    desirable: [
-      "Working knowledge of eCommerce platforms, ideally Shopify but also others e.g. Magento, WooCommerce, Visualsoft to enable seamless migrations",
-      "Working knowledge of payment gateways",
-      "API platform experience / Building restful APIs",
-    ],
-    benefits: [
-      "Early finish on Fridays for our end of week catch up (4:30 finish, and drink of your choice from the bar)",
-      "28 days holiday (including bank holidays) rising by 1 day per year PLUS an additional day off on your birthday",
-      "Generous annual bonus",
-      "Healthcare package",
-      "Paid community days to volunteer for a charity of your choice",
-      "£100 contribution for your own personal learning and development",
-      "Free Breakfast on Mondays and free snacks in the office",
-      "Access to Perkbox with numerous discounts plus free points from the company to spend as you wish",
-      "Cycle 2 Work Scheme",
-      "Brand new MacBook Pro",
-      "Joining an agency on the cusp of exponential growth and being part of this exciting story",
-    ],
-    salary: "$100,000 - $120,000",
-    location_id: "LOC001",
-    jobType: "FULL-TIME",
-    jobLevel: "Entry Level",
-    experience: "$50k-80k/month",
-    education: "Graduation",
-    postedDate: "14 Jun, 2021",
-    expireDate: "14 Aug, 2021",
-    expire_at: "2025-11-30",
-    created_at: "2025-09-01",
-    updated_at: "2025-10-06",
-  };
-
-  const mockCompany = {
-    id: "COMP001",
-    name: "FPT Software",
-    logo: "https://example.com/fpt-logo.png",
-    description: "Công ty công nghệ hàng đầu Việt Nam",
-  };
-
+  // Mock data for candidates (can be replaced with real API later)
   const mockCandidates = [
     {
       id: "C001",
@@ -131,7 +66,7 @@ Want to work with us? You're in good company!`,
     },
     {
       id: "C002",
-      name: "Nguyen Van A",
+      name: "Tran Thi B",
       position: "Front-end",
       experience: "Fresher",
       skills: ["REACTJS", "NODEJS"],
@@ -141,7 +76,7 @@ Want to work with us? You're in good company!`,
     },
     {
       id: "C003",
-      name: "Nguyen Van A",
+      name: "Le Van C",
       position: "Front-end",
       experience: "Fresher",
       skills: ["REACTJS", "NODEJS"],
@@ -157,26 +92,66 @@ Want to work with us? You're in good company!`,
       try {
         setLoading(true);
 
-        // For demo purposes, using mock data
-        // In real app, you would fetch from API
-        setJob(mockJob);
-        setCompany(mockCompany);
-        setLocationName("Dhaka, Bangladesh");
+        // Fetch job data using service
+        const jobData = await getDetaiJob(id);
+
+        if (!jobData) {
+          throw new Error("Job not found");
+        }
+
+        setJob(jobData);
+
+        // Fetch company data if company_id exists
+        if (jobData.company_id) {
+          try {
+            const companyResponse = await getAllCompany(jobData.company_id);
+            if (companyResponse.ok) {
+              const companyData = await companyResponse.json();
+              setCompany(companyData);
+            }
+          } catch {
+            setCompany({ id: jobData.company_id, name: "Unknown Company" });
+          }
+        }
+
+        // Fetch location data if location_id exists
+        if (jobData.location_id) {
+          try {
+            const locationResponse = await getLocation(jobData.location_id);
+            if (locationResponse.ok) {
+              const locationData = await locationResponse.json();
+              setLocationName(
+                locationData.name || locationData.city || "Unknown Location"
+              );
+            }
+          } catch {
+            setLocationName("Unknown Location");
+          }
+        }
+
+        // Set mock candidates
         setAppliedCandidates(mockCandidates);
 
         // Populate form with current job data
         form.setFieldsValue({
-          title: mockJob.title,
-          jobType: mockJob.jobType,
-          salary: mockJob.salary,
-          level: mockJob.jobLevel,
-          description: mockJob.description,
-          requirements: mockJob.requirements.join("\n"),
-          startDate: dayjs("2021-09-12"),
-          endDate: dayjs("2021-10-12"),
+          title: jobData.title || jobData.name,
+          jobType: jobData.type || jobData.jobType,
+          salary: jobData.salary,
+          level: jobData.jobLevel || "Entry Level",
+          description: jobData.description,
+          requirements: jobData.requirements
+            ? Array.isArray(jobData.requirements)
+              ? jobData.requirements.join("\n")
+              : jobData.requirements
+            : "",
+          startDate: jobData.created_at ? dayjs(jobData.created_at) : dayjs(),
+          endDate: jobData.expire_at
+            ? dayjs(jobData.expire_at)
+            : dayjs().add(30, "days"),
         });
-      } catch (e) {
-        console.error("Error loading job data:", e);
+      } catch (error) {
+        console.error("Error loading job data:", error);
+        message.error("Không thể tải thông tin công việc");
         setJob(null);
       } finally {
         setLoading(false);
@@ -184,53 +159,6 @@ Want to work with us? You're in good company!`,
     };
     loadData();
   }, [id, form]);
-
-  const handleUpdateJob = async (values) => {
-    try {
-      setUpdateLoading(true);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Update job data
-      const updatedJob = {
-        ...job,
-        title: values.title,
-        jobType: values.jobType,
-        salary: values.salary,
-        jobLevel: values.level,
-        description: values.description,
-        requirements: values.requirements
-          .split("\n")
-          .filter((req) => req.trim()),
-      };
-
-      setJob(updatedJob);
-      setUpdateModalVisible(false);
-      message.success("Cập nhật thông tin công việc thành công!");
-    } catch {
-      message.error("Có lỗi xảy ra khi cập nhật!");
-    } finally {
-      setUpdateLoading(false);
-    }
-  };
-
-  const handleDeleteJob = async () => {
-    try {
-      setUpdateLoading(true);
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      message.success("Xóa công việc thành công!");
-      setDeleteModalVisible(false);
-      navigate("/jobs");
-    } catch {
-      message.error("Có lỗi xảy ra khi xóa!");
-    } finally {
-      setUpdateLoading(false);
-    }
-  };
 
   const copyJobLink = () => {
     const url = window.location.href;
@@ -257,8 +185,7 @@ Want to work with us? You're in good company!`,
       <Breadcrumb style={{ marginBottom: 24 }}>
         <Breadcrumb.Item>Trang chủ</Breadcrumb.Item>
         <Breadcrumb.Item>Việc làm</Breadcrumb.Item>
-        <Breadcrumb.Item>Graphics & Design</Breadcrumb.Item>
-        <Breadcrumb.Item>Job A Details</Breadcrumb.Item>
+        <Breadcrumb.Item>{job.title || "Chi tiết công việc"}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Row gutter={[24, 24]}>
@@ -269,42 +196,33 @@ Want to work with us? You're in good company!`,
             <div className="job-header">
               <div className="job-header-left">
                 <Avatar size={60} className="company-logo">
-                  {company?.name?.charAt(0)}
+                  {company?.name?.charAt(0) || "?"}
                 </Avatar>
                 <div className="job-title-section">
                   <Title level={2} className="job-title">
                     {job.title}
                   </Title>
-                  <Text className="company-name">at {company?.name}</Text>
+                  <Text className="company-name">
+                    at {company?.name || "Unknown"}
+                  </Text>
                   <div className="job-tags">
-                    <Tag color="green" className="job-tag">
-                      {job.jobType}
+                    <Tag
+                      color={
+                        job.type === "FULL-TIME"
+                          ? "green"
+                          : job.type === "PART-TIME"
+                          ? "blue"
+                          : "orange"
+                      }
+                      className="job-tag"
+                    >
+                      {job.type || job.jobType}
                     </Tag>
                     <Tag color="red" className="job-tag">
                       Featured
                     </Tag>
                   </div>
                 </div>
-              </div>
-              <div className="job-action-buttons">
-                <Button
-                  type="primary"
-                  danger
-                  icon={<EditOutlined />}
-                  className="update-btn"
-                  onClick={() => setUpdateModalVisible(true)}
-                >
-                  Cập Nhật Thông Tin
-                </Button>
-                <Button
-                  type="primary"
-                  danger
-                  icon={<DeleteOutlined />}
-                  className="delete-btn"
-                  onClick={() => setDeleteModalVisible(true)}
-                >
-                  Xóa Công Việc
-                </Button>
               </div>
             </div>
 
@@ -317,34 +235,52 @@ Want to work with us? You're in good company!`,
             </div>
 
             {/* Requirements */}
-            <div className="job-section">
-              <Title level={4}>Requirements</Title>
-              <ul className="job-list">
-                {job.requirements?.map((req, index) => (
-                  <li key={index}>{req}</li>
-                ))}
-              </ul>
-            </div>
+            {job.requirements && (
+              <div className="job-section">
+                <Title level={4}>Requirements</Title>
+                <ul className="job-list">
+                  {Array.isArray(job.requirements) ? (
+                    job.requirements.map((req, index) => (
+                      <li key={index}>{req}</li>
+                    ))
+                  ) : (
+                    <li>{job.requirements}</li>
+                  )}
+                </ul>
+              </div>
+            )}
 
             {/* Desirable */}
-            <div className="job-section">
-              <Title level={4}>Desirable</Title>
-              <ul className="job-list">
-                {job.desirable?.map((item, index) => (
-                  <li key={index}>{item}</li>
-                ))}
-              </ul>
-            </div>
+            {job.desirable && (
+              <div className="job-section">
+                <Title level={4}>Desirable</Title>
+                <ul className="job-list">
+                  {Array.isArray(job.desirable) ? (
+                    job.desirable.map((item, index) => (
+                      <li key={index}>{item}</li>
+                    ))
+                  ) : (
+                    <li>{job.desirable}</li>
+                  )}
+                </ul>
+              </div>
+            )}
 
             {/* Benefits */}
-            <div className="job-section">
-              <Title level={4}>Benefits</Title>
-              <ul className="job-list">
-                {job.benefits?.map((benefit, index) => (
-                  <li key={index}>{benefit}</li>
-                ))}
-              </ul>
-            </div>
+            {job.benefits && (
+              <div className="job-section">
+                <Title level={4}>Benefits</Title>
+                <ul className="job-list">
+                  {Array.isArray(job.benefits) ? (
+                    job.benefits.map((benefit, index) => (
+                      <li key={index}>{benefit}</li>
+                    ))
+                  ) : (
+                    <li>{job.benefits}</li>
+                  )}
+                </ul>
+              </div>
+            )}
           </Card>
         </Col>
 
@@ -359,40 +295,32 @@ Want to work with us? You're in good company!`,
               </Title>
               <Text className="salary-period">Yearly salary</Text>
             </div>
-
             {/* Location */}
             <div className="location-section">
               <Text className="location-label">Job Location</Text>
-              <Text className="location-value">{locationName}</Text>
+              <Text className="location-value">
+                {locationName || "Unknown"}
+              </Text>
             </div>
-
             {/* Job Overview */}
+
             <div className="overview-section">
-              <Title level={4}>Job Overview</Title>
-              <div className="overview-item">
-                <CalendarOutlined className="overview-icon" />
-                <span>JOB POSTED: {job.postedDate}</span>
-              </div>
-              <div className="overview-item">
-                <ClockCircleOutlined className="overview-icon" />
-                <span>JOB EXPIRE IN: {job.expireDate}</span>
-              </div>
-              <div className="overview-item">
-                <ApartmentOutlined className="overview-icon" />
-                <span>JOB LEVEL: {job.jobLevel}</span>
-              </div>
-
-              <div className="overview-item">
-                <ProfileOutlined className="overview-icon" />
-                <span>EXPERIENCE: {job.experience}</span>
-              </div>
-
-              <div className="overview-item">
-                <BookOutlined className="overview-icon" />
-                <span>EDUCATION: {job.education}</span>
+              <h4>Job Overview</h4>
+              <div className="overview-grid">
+                <div className="overview-item">
+                  <div className="overview-item-label">
+                    <CalendarOutlined className="overview-icon" />
+                    JOB POSTED
+                  </div>
+                  <div className="overview-item-value">
+                    {job.created_at
+                      ? dayjs(job.created_at).format("DD MMM, YYYY")
+                      : "N/A"}
+                  </div>
+                </div>
+                {/* Tương tự cho các items khác */}
               </div>
             </div>
-
             {/* Share */}
             <div className="share-section">
               <Title level={4}>Share this job</Title>
@@ -477,146 +405,6 @@ Want to work with us? You're in good company!`,
           ))}
         </Row>
       </div>
-
-      {/* Update Job Modal */}
-      <Modal
-        title="Cập nhật thông tin công việc"
-        open={updateModalVisible}
-        onCancel={() => setUpdateModalVisible(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setUpdateModalVisible(false)}>
-            Hủy Bỏ
-          </Button>,
-          <Button
-            key="update"
-            type="primary"
-            danger
-            loading={updateLoading}
-            onClick={() => form.submit()}
-          >
-            Cập Nhật
-          </Button>,
-        ]}
-        className="update-modal"
-      >
-        <Form form={form} layout="vertical" onFinish={handleUpdateJob}>
-          <Form.Item
-            name="title"
-            label="Tên công việc"
-            rules={[
-              { required: true, message: "Vui lòng nhập tên công việc!" },
-            ]}
-          >
-            <Input placeholder="Technical Support" />
-          </Form.Item>
-
-          <Form.Item
-            name="jobType"
-            label="Thời gian làm việc"
-            rules={[
-              { required: true, message: "Vui lòng chọn thời gian làm việc!" },
-            ]}
-          >
-            <Select placeholder="Chọn thời gian làm việc">
-              <Option value="FULL-TIME">Full-time</Option>
-              <Option value="PART-TIME">Part-time</Option>
-              <Option value="INTERNSHIP">Internship</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="salary"
-            label="Mức lương"
-            rules={[{ required: true, message: "Vui lòng nhập mức lương!" }]}
-          >
-            <Input placeholder="$200 - $1500" />
-          </Form.Item>
-
-          <Form.Item
-            name="level"
-            label="Cấp độ chuyên môn"
-            rules={[{ required: true, message: "Vui lòng chọn cấp độ!" }]}
-          >
-            <Select placeholder="Chọn cấp độ">
-              <Option value="Entry Level">Entry Level</Option>
-              <Option value="Junior">Junior</Option>
-              <Option value="Senior">Senior</Option>
-              <Option value="Lead">Lead</Option>
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            name="description"
-            label="Mô tả công việc"
-            rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
-          >
-            <TextArea rows={4} placeholder="Hint text" />
-          </Form.Item>
-
-          <Form.Item
-            name="requirements"
-            label="Yêu cầu của công việc"
-            rules={[{ required: true, message: "Vui lòng nhập yêu cầu!" }]}
-          >
-            <TextArea rows={4} placeholder="Hint text" />
-          </Form.Item>
-
-          <Form.Item label="Thời gian ứng tuyển">
-            <Row gutter={16}>
-              <Col span={12}>
-                <Form.Item
-                  name="startDate"
-                  rules={[
-                    { required: true, message: "Vui lòng chọn ngày bắt đầu!" },
-                  ]}
-                >
-                  <DatePicker
-                    placeholder="Start Date"
-                    style={{ width: "100%" }}
-                  />
-                </Form.Item>
-              </Col>
-              <Col span={12}>
-                <Form.Item
-                  name="endDate"
-                  rules={[
-                    { required: true, message: "Vui lòng chọn ngày kết thúc!" },
-                  ]}
-                >
-                  <DatePicker
-                    placeholder="End Date"
-                    style={{ width: "100%" }}
-                  />
-                </Form.Item>
-              </Col>
-            </Row>
-          </Form.Item>
-        </Form>
-      </Modal>
-
-      {/* Delete Confirmation Modal */}
-      <Modal
-        title="Xác nhận xóa"
-        open={deleteModalVisible}
-        onCancel={() => setDeleteModalVisible(false)}
-        footer={[
-          <Button key="cancel" onClick={() => setDeleteModalVisible(false)}>
-            Hủy bỏ
-          </Button>,
-          <Button
-            key="confirm"
-            type="primary"
-            danger
-            loading={updateLoading}
-            onClick={handleDeleteJob}
-          >
-            Xác nhận
-          </Button>,
-        ]}
-        className="delete-modal"
-      >
-        <p>Bạn có chắc chắn xóa công việc này?</p>
-      </Modal>
     </div>
   );
 }

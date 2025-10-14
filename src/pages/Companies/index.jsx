@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, Row, Col, Tag, Spin, Empty, Avatar, Button } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
+import { getAllCompany } from "../../services/getAllCompany/companyServices";
 
 function CompaniesPage() {
   const [companies, setCompanies] = React.useState([]);
@@ -10,44 +11,8 @@ function CompaniesPage() {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [companiesRes, addressesRes, locationsRes, jobsRes] =
-          await Promise.all([
-            fetch("http://localhost:3002/Companies"),
-            fetch("http://localhost:3002/Address_Companies"),
-            fetch("http://localhost:3002/Locations"),
-            fetch("http://localhost:3002/Jobs"),
-          ]);
-        const [companiesData, addressesData, locationsData, jobsData] =
-          await Promise.all([
-            companiesRes.json(),
-            addressesRes.json(),
-            locationsRes.json(),
-            jobsRes.json(),
-          ]);
-
-        const companyIdToLocation = {};
-        addressesData.forEach((ad) => {
-          const loc = locationsData.find((l) => l.id === ad.location_id);
-          companyIdToLocation[ad.company_id] = loc ? loc.name : undefined;
-        });
-
-        const companyIdToJobCount = {};
-        jobsData.forEach((j) => {
-          companyIdToJobCount[j.company_id] =
-            (companyIdToJobCount[j.company_id] || 0) + 1;
-        });
-
-        const normalized = (companiesData || []).map((c) => ({
-          id: c.id,
-          name: c.name,
-          logo: c.logo,
-          location: companyIdToLocation[c.id],
-          follower: c.follower,
-          website: c.website,
-          jobCount: companyIdToJobCount[c.id] || 0,
-        }));
-
-        setCompanies(normalized);
+        const data = await getAllCompany();
+        setCompanies(data);
       } catch {
         setCompanies([]);
       } finally {
@@ -88,9 +53,9 @@ function CompaniesPage() {
                   </div>
                 </div>
                 <div style={{ color: "#666", marginBottom: 12 }}>
-                  <EnvironmentOutlined /> {c.location || "Đang cập nhật"}
+                  <EnvironmentOutlined /> {c.address || "Đang cập nhật"}
                 </div>
-                <Button block>Open Position ({c.jobCount})</Button>
+                <Button block>Open Position (0)</Button>
               </Card>
             </Col>
           ))}
