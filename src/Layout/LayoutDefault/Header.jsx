@@ -60,13 +60,23 @@ function Header() {
           {/* Action Buttons */}
           <div className="header__actions">
             <button className="header__btn header__btn--login">
-              Đăng Nhập
+              <NavLink to="/login">Đăng Nhập</NavLink>
+            </button>
+            <button
+              className="header__btn header__btn--login"
+              style={{
+                backgroundColor: "#fff",
+                color: "#000",
+                border: "1px solid ",
+              }}
+            >
+              <NavLink to="/loginCompany">Đăng Nhập Công Ty</NavLink>
             </button>
             <button className="header__btn header__btn--register">
-              Đăng Kí
+              <NavLink to="/register">Đăng Kí</NavLink>
             </button>
             <button className="header__btn header__btn--post">
-              Đăng Tuyển
+              <NavLink to="/post">Đăng Tuyển</NavLink>
             </button>
           </div>
         </div>

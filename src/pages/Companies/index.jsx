@@ -1,11 +1,13 @@
 import React from "react";
 import { Card, Row, Col, Tag, Spin, Empty, Avatar, Button } from "antd";
 import { EnvironmentOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import { getAllCompany } from "../../services/getAllCompany/companyServices";
 
 function CompaniesPage() {
   const [companies, setCompanies] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
 
   React.useEffect(() => {
     const fetchData = async () => {
@@ -35,7 +37,11 @@ function CompaniesPage() {
         <Row gutter={[16, 16]}>
           {companies.map((c) => (
             <Col xs={24} sm={12} md={12} lg={8} key={c.id}>
-              <Card hoverable>
+              <Card
+                hoverable
+                onClick={() => navigate(`/companies/${c.id}`)}
+                style={{ cursor: "pointer" }}
+              >
                 <div
                   style={{
                     display: "flex",
@@ -55,7 +61,15 @@ function CompaniesPage() {
                 <div style={{ color: "#666", marginBottom: 12 }}>
                   <EnvironmentOutlined /> {c.address || "Đang cập nhật"}
                 </div>
-                <Button block>Open Position (0)</Button>
+                <Button
+                  block
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    navigate(`/companies/${c.id}`);
+                  }}
+                >
+                  Open Position (0)
+                </Button>
               </Card>
             </Col>
           ))}

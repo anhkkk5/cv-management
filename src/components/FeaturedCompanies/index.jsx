@@ -50,7 +50,12 @@ function FeaturedCompanies() {
         <Row gutter={[24, 24]}>
           {companies.map((company) => (
             <Col xs={24} sm={12} md={12} lg={8} key={company.id}>
-              <Card hoverable className="fc-card">
+              <Card
+                hoverable
+                className="fc-card"
+                onClick={() => navigate(`/companies/${company.id}`)}
+                style={{ cursor: "pointer" }}
+              >
                 <div className="fc-top">
                   <Avatar
                     src={company.logo}
@@ -71,7 +76,10 @@ function FeaturedCompanies() {
                   className="fc-button"
                   block
                   icon={<GlobalOutlined />}
-                  onClick={() => window.open(company.website, "_blank")}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    window.open(company.website, "_blank");
+                  }}
                 >
                   Truy cập website
                 </Button>
