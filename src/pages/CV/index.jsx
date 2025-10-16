@@ -1,9 +1,22 @@
 import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Button, message, Modal, Input, Form } from "antd";
-import { PlusOutlined, EditOutlined, DeleteOutlined } from "@ant-design/icons";
+import { Card, Row, Col, Typography, Button, message, Modal, Input, Form, DatePicker, Select } from "antd";
+import { PlusOutlined, CameraOutlined } from "@ant-design/icons";
+import dayjs from "dayjs";
 import { getCookie } from "../../helpers/cookie";
-import { getDetailCandidates } from "../../services/Candidates/candidatesServices";
+import { getDetailCandidates, editCandidates } from "../../services/Candidates/candidatesServices";
+import { 
+  getEducationByCandidate, createEducation, updateEducation,
+  getExperienceByCandidate, createExperience, updateExperience,
+  getProjectsByCandidate, createProject, updateProject,
+  getCertificatesByCandidate, createCertificate, updateCertificate
+} from "../../services/CV/cvServices";
 import { useNavigate } from "react-router-dom";
+import ProfileInfo from "./components/ProfileInfo";
+import Introduction from "./components/Introduction";
+import Education from "./components/Education";
+import Experience from "./components/Experience";
+import Projects from "./components/Projects";
+import Certificates from "./components/Certificates";
 import "./style.css";
 
 const { Title, Text } = Typography;
@@ -15,7 +28,17 @@ function CVPage() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState("");
+  const [editingItem, setEditingItem] = useState(null);
   const [form] = Form.useForm();
+  
+  // State để lưu dữ liệu các section
+  const [cvData, setCvData] = useState({
+    intro: "",
+    education: [],
+    experience: [],
+    projects: [],
+    certificates: []
+  });
 
   useEffect(() => {
     const fetchCandidateData = async () => {
@@ -29,8 +52,25 @@ function CVPage() {
       }
 
       try {
+        // Load thông tin candidate
         const data = await getDetailCandidates(candidateId);
         setCandidate(data);
+
+        // Load dữ liệu CV từ database
+        const [educationData, experienceData, projectsData, certificatesData] = await Promise.all([
+          getEducationByCandidate(candidateId),
+          getExperienceByCandidate(candidateId),
+          getProjectsByCandidate(candidateId),
+          getCertificatesByCandidate(candidateId)
+        ]);
+
+        setCvData({
+          intro: data.introduction || "",
+          education: educationData || [],
+          experience: experienceData || [],
+          projects: projectsData || [],
+          certificates: certificatesData || []
+        });
       } catch (error) {
         message.error("Không thể tải thông tin CV");
         console.error(error);
@@ -42,21 +82,207 @@ function CVPage() {
     fetchCandidateData();
   }, [navigate]);
 
-  const showModal = (type) => {
+  const showModal = (type, item = null) => {
     setModalType(type);
+    setEditingItem(item);
     setIsModalOpen(true);
+    
+    // Nếu đang edit, set giá trị vào form
+    if (item) {
+      setTimeout(() => {
+        if (type === "profile") {
+          form.setFieldsValue({
+            fullName: item.fullName || item.name,
+            position: item.position,
+            address: item.address,
+            email: item.email,
+            phone: item.phone,
+            dob: item.dob ? dayjs(item.dob) : null,
+            gender: item.gender,
+            isOpen: item.isOpen
+          });
+        } else if (type === "intro") {
+          form.setFieldsValue({ content: item });
+        } else if (type === "education") {
+          form.setFieldsValue({
+            school: item.name_education || item.school,
+            major: item.major,
+            startDate: item.started_at ? dayjs(item.started_at) : (item.startDate ? dayjs(item.startDate) : null),
+            endDate: item.end_at ? dayjs(item.end_at) : (item.endDate ? dayjs(item.endDate) : null),
+            description: item.info || item.description
+          });
+        } else if (type === "experience") {
+          form.setFieldsValue({
+            position: item.position,
+            company: item.company,
+            startDate: item.started_at ? dayjs(item.started_at) : (item.startDate ? dayjs(item.startDate) : null),
+            endDate: item.end_at ? dayjs(item.end_at) : (item.endDate ? dayjs(item.endDate) : null),
+            description: item.info || item.description
+          });
+        } else if (type === "project") {
+          form.setFieldsValue({
+            projectName: item.project_name || item.projectName,
+            demoLink: item.demo_link || item.demoLink,
+            startDate: item.started_at ? dayjs(item.started_at) : (item.startDate ? dayjs(item.startDate) : null),
+            endDate: item.end_at ? dayjs(item.end_at) : (item.endDate ? dayjs(item.endDate) : null),
+            description: item.description
+          });
+        } else if (type === "certificate") {
+          form.setFieldsValue({
+            certificateName: item.certificate_name || item.certificateName,
+            organization: item.organization,
+            startDate: item.started_at ? dayjs(item.started_at) : (item.startDate ? dayjs(item.startDate) : null),
+            endDate: item.end_at ? dayjs(item.end_at) : (item.endDate ? dayjs(item.endDate) : null),
+            description: item.description
+          });
+        }
+      }, 0);
+    }
   };
 
   const handleCancel = () => {
     setIsModalOpen(false);
+    setEditingItem(null);
     form.resetFields();
   };
 
-  const handleSubmit = (values) => {
+  const handleSubmit = async (values) => {
     console.log("Form values:", values);
-    message.success("Đã thêm thông tin thành công!");
-    setIsModalOpen(false);
-    form.resetFields();
+    const candidateId = getCookie("id");
+    
+    try {
+      // Cập nhật dữ liệu theo loại modal
+      if (modalType === "profile") {
+        // Cập nhật thông tin cá nhân vào database
+        const updatedData = {
+          fullName: values.fullName || candidate.fullName,
+          name: values.fullName || candidate.name,
+          address: values.address,
+          phone: values.phone,
+          dob: values.dob ? values.dob.format("YYYY-MM-DD") : candidate.dob,
+          gender: values.gender,
+          isOpen: values.isOpen
+        };
+        await editCandidates(candidateId, updatedData);
+        setCandidate(prev => ({ ...prev, ...updatedData }));
+      } else if (modalType === "intro") {
+        // Lưu giới thiệu vào Candidates
+        await editCandidates(candidateId, { introduction: values.content });
+        setCvData(prev => ({ ...prev, intro: values.content }));
+      } else if (modalType === "education") {
+        const educationData = {
+          candidate_id: candidateId,
+          name_education: values.school,
+          major: values.major,
+          started_at: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
+          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+          info: values.description || "",
+          updated_at: new Date().toISOString().split('T')[0]
+        };
+        
+        if (editingItem && editingItem.id) {
+          // Cập nhật học vấn cũ
+          await updateEducation(editingItem.id, educationData);
+          setCvData(prev => ({
+            ...prev,
+            education: prev.education.map(edu => 
+              edu.id === editingItem.id ? { ...edu, ...educationData } : edu
+            )
+          }));
+        } else {
+          // Tạo mới học vấn
+          educationData.created_at = new Date().toISOString().split('T')[0];
+          const newEducation = await createEducation(educationData);
+          setCvData(prev => ({ ...prev, education: [...prev.education, newEducation] }));
+        }
+      } else if (modalType === "experience") {
+        const experienceData = {
+          candidate_id: candidateId,
+          position: values.position,
+          company: values.company,
+          started_at: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
+          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+          info: values.description || "",
+          updated_at: new Date().toISOString().split('T')[0]
+        };
+        
+        if (editingItem && editingItem.id) {
+          // Cập nhật kinh nghiệm cũ
+          await updateExperience(editingItem.id, experienceData);
+          setCvData(prev => ({
+            ...prev,
+            experience: prev.experience.map(exp => 
+              exp.id === editingItem.id ? { ...exp, ...experienceData } : exp
+            )
+          }));
+        } else {
+          // Tạo mới kinh nghiệm
+          experienceData.created_at = new Date().toISOString().split('T')[0];
+          const newExperience = await createExperience(experienceData);
+          setCvData(prev => ({ ...prev, experience: [...prev.experience, newExperience] }));
+        }
+      } else if (modalType === "project") {
+        const projectData = {
+          candidate_id: candidateId,
+          project_name: values.projectName,
+          demo_link: values.demoLink || "",
+          started_at: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
+          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+          description: values.description || "",
+          updated_at: new Date().toISOString().split('T')[0]
+        };
+        
+        if (editingItem && editingItem.id) {
+          // Cập nhật dự án cũ
+          await updateProject(editingItem.id, projectData);
+          setCvData(prev => ({
+            ...prev,
+            projects: prev.projects.map(proj => 
+              proj.id === editingItem.id ? { ...proj, ...projectData } : proj
+            )
+          }));
+        } else {
+          // Tạo mới dự án
+          projectData.created_at = new Date().toISOString().split('T')[0];
+          const newProject = await createProject(projectData);
+          setCvData(prev => ({ ...prev, projects: [...prev.projects, newProject] }));
+        }
+      } else if (modalType === "certificate") {
+        const certificateData = {
+          candidate_id: candidateId,
+          certificate_name: values.certificateName,
+          organization: values.organization,
+          started_at: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
+          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+          description: values.description || "",
+          updated_at: new Date().toISOString().split('T')[0]
+        };
+        
+        if (editingItem && editingItem.id) {
+          // Cập nhật chứng chỉ cũ
+          await updateCertificate(editingItem.id, certificateData);
+          setCvData(prev => ({
+            ...prev,
+            certificates: prev.certificates.map(cert => 
+              cert.id === editingItem.id ? { ...cert, ...certificateData } : cert
+            )
+          }));
+        } else {
+          // Tạo mới chứng chỉ
+          certificateData.created_at = new Date().toISOString().split('T')[0];
+          const newCertificate = await createCertificate(certificateData);
+          setCvData(prev => ({ ...prev, certificates: [...prev.certificates, newCertificate] }));
+        }
+      }
+      
+      message.success("Đã lưu thông tin thành công!");
+      setIsModalOpen(false);
+      setEditingItem(null);
+      form.resetFields();
+    } catch (error) {
+      console.error("Error saving data:", error);
+      message.error("Không thể lưu thông tin. Vui lòng thử lại!");
+    }
   };
 
   if (loading) {
@@ -113,123 +339,287 @@ function CVPage() {
 
           {/* Main Content */}
           <Col xs={24} md={16}>
-            {/* Profile Card */}
-            <Card className="profile-card">
-              <div className="profile-header">
-                <div className="profile-avatar">
-                  <img src="/src/assets/logologin.png" alt="Avatar" />
-                  <Text className="company-label">Software</Text>
-                </div>
-                <div className="profile-info">
-                  <Title level={3}>{candidate.fullName || candidate.name || "Chưa cập nhật"}</Title>
-                  <Text className="profile-position">Full-Stack Developer</Text>
-                  <Row gutter={[16, 8]} style={{ marginTop: 10 }}>
-                    <Col span={12}>
-                      <Text>📧 {candidate.email}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>📞 {candidate.phone || "Chưa cập nhật"}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>📅 {candidate.dob || "Chưa cập nhật"}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>👤 {candidate.gender === 1 ? "Nam" : candidate.gender === 0 ? "Nữ" : "Chưa cập nhật"}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>📍 {candidate.address || "Chưa cập nhật"}</Text>
-                    </Col>
-                    <Col span={12}>
-                      <Text>🏢 {candidate.isOpen === 1 ? "Đang tìm việc" : "Không tìm việc"}</Text>
-                    </Col>
-                  </Row>
-                </div>
-                <EditOutlined className="edit-icon" />
-              </div>
-            </Card>
-
-            {/* Giới Thiệu Bản Thân */}
-            <Card className="section-card">
-              <div className="section-header">
-                <Title level={4}>Giới Thiệu Bản Thân</Title>
-                <PlusOutlined className="add-icon" onClick={() => showModal("intro")} />
-              </div>
-              <Text className="section-description">
-                Giới thiệu điểm mạnh của bản thân và kinh nghiệm của bạn
-              </Text>
-            </Card>
-
-            {/* Học Vấn */}
-            <Card className="section-card">
-              <div className="section-header">
-                <Title level={4}>Học Vấn</Title>
-                <PlusOutlined className="add-icon" onClick={() => showModal("education")} />
-              </div>
-              <Text className="section-description">
-                Giới thiệu điểm mạnh của bản thân và kinh nghiệm của bạn
-              </Text>
-            </Card>
-
-            {/* Kinh Nghiệm Làm Việc */}
-            <Card className="section-card">
-              <div className="section-header">
-                <Title level={4}>Kinh Nghiệm Làm Việc</Title>
-                <PlusOutlined className="add-icon" onClick={() => showModal("experience")} />
-              </div>
-              <Text className="section-description">
-                Giới thiệu điểm mạnh của bản thân và kinh nghiệm của bạn
-              </Text>
-            </Card>
-
-            {/* Kinh Nghiệm Làm Việc 2 */}
-            <Card className="section-card">
-              <div className="section-header">
-                <Title level={4}>Kinh Nghiệm Làm Việc</Title>
-                <EditOutlined className="edit-icon" />
-              </div>
-              <Text className="section-description">
-                Giới thiệu điểm mạnh của bản thân và kinh nghiệm của bạn
-              </Text>
-            </Card>
-
-            {/* Dự Án Cá Nhân */}
-            <Card className="section-card">
-              <div className="section-header">
-                <Title level={4}>Dự Án Cá Nhân</Title>
-                <div>
-                  <EditOutlined className="edit-icon" style={{ marginRight: 10 }} />
-                  <DeleteOutlined className="delete-icon" />
-                </div>
-              </div>
-              <Text className="section-description">Hiện tại</Text>
-            </Card>
-
-            {/* Chứng Chỉ */}
-            <Card className="section-card">
-              <div className="section-header">
-                <Title level={4}>Chứng Chỉ</Title>
-                <PlusOutlined className="add-icon" onClick={() => showModal("certificate")} />
-              </div>
-              <Text className="section-description">
-                Bổ sung chứng chỉ tiêu chuẩn để nâng cao năng lực của bạn
-              </Text>
-            </Card>
+            <ProfileInfo 
+              candidate={candidate} 
+              onEdit={() => showModal("profile", candidate)} 
+            />
+            
+            <Introduction 
+              intro={cvData.intro} 
+              onAdd={(item) => showModal("intro", item)} 
+            />
+            
+            <Education 
+              educationList={cvData.education} 
+              onAdd={(item) => showModal("education", item)} 
+            />
+            
+            <Experience 
+              experienceList={cvData.experience} 
+              onAdd={(item) => showModal("experience", item)} 
+            />
+            
+            <Projects 
+              projectsList={cvData.projects} 
+              onAdd={(item) => showModal("project", item)} 
+            />
+            
+            <Certificates 
+              certificatesList={cvData.certificates} 
+              onAdd={(item) => showModal("certificate", item)} 
+            />
           </Col>
         </Row>
       </div>
 
       {/* Modal */}
       <Modal
-        title="Giới thiệu về bản thân"
+        title={
+          modalType === "intro" ? "Giới thiệu về bản thân" :
+          modalType === "education" ? "Học vấn" :
+          modalType === "experience" ? "Thêm kinh nghiệm làm việc" :
+          modalType === "certificate" ? "Thêm chứng chỉ" :
+          modalType === "profile" ? "Cập nhật thông tin cá nhân" :
+          modalType === "project" ? "Dự án cá nhân" :
+          "Thêm thông tin"
+        }
         open={isModalOpen}
         onCancel={handleCancel}
         footer={null}
+        width={modalType === "education" || modalType === "experience" || modalType === "profile" || modalType === "project" || modalType === "certificate" ? 600 : 520}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Text type="secondary">Mô tả về bản thân, các kĩ năng của mình...</Text>
-          <Form.Item name="content" style={{ marginTop: 10 }}>
-            <TextArea rows={6} placeholder="Hint text" />
-          </Form.Item>
+          {modalType === "profile" && (
+            <>
+              <div style={{ textAlign: "center", marginBottom: 20 }}>
+                <div style={{ position: "relative", display: "inline-block" }}>
+                  <img 
+                    src="/src/assets/logologin.png" 
+                    alt="Avatar" 
+                    style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover" }}
+                  />
+                  <Button 
+                    icon={<CameraOutlined />} 
+                    shape="circle" 
+                    size="small"
+                    style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#fff" }}
+                  />
+                </div>
+                <div style={{ marginTop: 10 }}>
+                  <Button size="small" style={{ marginRight: 8 }}>Sửa</Button>
+                  <Button size="small" danger>Xóa</Button>
+                </div>
+              </div>
+
+              <Form.Item label="Họ và tên" name="fullName" initialValue={candidate?.fullName || candidate?.name}>
+                <Input placeholder="ABC" />
+              </Form.Item>
+
+              <Form.Item label="Chức danh" name="position" initialValue="Full-Stack Developer">
+                <Input placeholder="@yourfblink" />
+              </Form.Item>
+
+              <Form.Item label="Địa chỉ" name="address" initialValue={candidate?.address}>
+                <Input placeholder="+12 NhạṭHoa" />
+              </Form.Item>
+
+              <Form.Item label="Email" name="email" initialValue={candidate?.email}>
+                <Input placeholder="ABCCorp@gmail.com" />
+              </Form.Item>
+
+              <Form.Item label="SĐT" name="phone" initialValue={candidate?.phone}>
+                <Input placeholder="0123456789" />
+              </Form.Item>
+
+              <Form.Item label="DOB" name="dob" initialValue={candidate?.dob ? dayjs(candidate.dob) : null}>
+                <DatePicker 
+                  placeholder="1/1/2023" 
+                  format="DD/MM/YYYY"
+                  style={{ width: "100%" }}
+                />
+              </Form.Item>
+
+              <Form.Item label="Giới tính" name="gender" initialValue={candidate?.gender}>
+                <Select placeholder="Nam">
+                  <Select.Option value={1}>Nam</Select.Option>
+                  <Select.Option value={0}>Nữ</Select.Option>
+                </Select>
+              </Form.Item>
+
+              <Form.Item label="Trạng cá nhân" name="isOpen" initialValue={candidate?.isOpen}>
+                <Select placeholder="Nam">
+                  <Select.Option value={1}>Đang tìm việc</Select.Option>
+                  <Select.Option value={0}>Không tìm việc</Select.Option>
+                </Select>
+              </Form.Item>
+            </>
+          )}
+
+          {modalType === "intro" && (
+            <>
+              <Text type="secondary">Mô tả về bản thân, các kĩ năng của mình...</Text>
+              <Form.Item name="content" style={{ marginTop: 10 }}>
+                <TextArea rows={6} placeholder="Nhập nội dung..." />
+              </Form.Item>
+            </>
+          )}
+
+          {modalType === "education" && (
+            <>
+              <Form.Item label="Trường" name="school" rules={[{ required: true, message: "Vui lòng nhập tên trường" }]}>
+                <Input placeholder="ABC Corp" />
+              </Form.Item>
+              
+              <Form.Item label="Ngành Học" name="major" rules={[{ required: true, message: "Vui lòng nhập ngành học" }]}>
+                <Input placeholder="ABCCorp.com" />
+              </Form.Item>
+
+              <Form.Item label="Thời gian học tập">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="startDate" noStyle rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}>
+                      <DatePicker 
+                        placeholder="Start Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="endDate" noStyle rules={[{ required: true, message: "Chọn ngày kết thúc" }]}>
+                      <DatePicker 
+                        placeholder="End Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Form.Item>
+
+              <Form.Item label="Thông tin thêm" name="description">
+                <TextArea rows={4} placeholder="Hint text" />
+              </Form.Item>
+            </>
+          )}
+
+          {modalType === "experience" && (
+            <>
+              <Form.Item label="Vị trí" name="position" rules={[{ required: true, message: "Vui lòng nhập vị trí" }]}>
+                <Input placeholder="ABC Corp" />
+              </Form.Item>
+              
+              <Form.Item label="Tên đơn vị công tác" name="company" rules={[{ required: true, message: "Vui lòng nhập tên công ty" }]}>
+                <Input placeholder="ABCCorp.com" />
+              </Form.Item>
+
+              <Form.Item label="Thời gian làm việc">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="startDate" noStyle rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}>
+                      <DatePicker 
+                        placeholder="Start Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="endDate" noStyle rules={[{ required: true, message: "Chọn ngày kết thúc" }]}>
+                      <DatePicker 
+                        placeholder="End Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Form.Item>
+
+              <Form.Item label="Mô tả chi tiết công việc" name="description">
+                <TextArea rows={4} placeholder="Hint text" />
+              </Form.Item>
+            </>
+          )}
+
+          {modalType === "project" && (
+            <>
+              <Form.Item label="Tên dự án" name="projectName" rules={[{ required: true, message: "Vui lòng nhập tên dự án" }]}>
+                <Input placeholder="ABC Corp" />
+              </Form.Item>
+              
+              <Form.Item label="Link demo" name="demoLink">
+                <Input placeholder="ABCCorp.com" />
+              </Form.Item>
+
+              <Form.Item label="Thời gian thực hiện">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="startDate" noStyle rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}>
+                      <DatePicker 
+                        placeholder="Start Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="endDate" noStyle rules={[{ required: true, message: "Chọn ngày kết thúc" }]}>
+                      <DatePicker 
+                        placeholder="End Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Form.Item>
+
+              <Form.Item label="Mô tả chi tiết công việc" name="description">
+                <TextArea rows={4} placeholder="Hint text" />
+              </Form.Item>
+            </>
+          )}
+
+          {modalType === "certificate" && (
+            <>
+              <Form.Item label="Tên chứng chỉ" name="certificateName" rules={[{ required: true, message: "Vui lòng nhập tên chứng chỉ" }]}>
+                <Input placeholder="ABC Corp" />
+              </Form.Item>
+              
+              <Form.Item label="Tổ chức" name="organization" rules={[{ required: true, message: "Vui lòng nhập tên tổ chức" }]}>
+                <Input placeholder="ABCCorp.com" />
+              </Form.Item>
+
+              <Form.Item label="Thời gian">
+                <Row gutter={16}>
+                  <Col span={12}>
+                    <Form.Item name="startDate" noStyle rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}>
+                      <DatePicker 
+                        placeholder="Start Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                  <Col span={12}>
+                    <Form.Item name="endDate" noStyle rules={[{ required: true, message: "Chọn ngày kết thúc" }]}>
+                      <DatePicker 
+                        placeholder="End Date" 
+                        format="MMM DD, YYYY"
+                        style={{ width: "100%" }}
+                      />
+                    </Form.Item>
+                  </Col>
+                </Row>
+              </Form.Item>
+
+              <Form.Item label="Mô tả thêm" name="description">
+                <TextArea rows={4} placeholder="Hint text" />
+              </Form.Item>
+            </>
+          )}
+
           <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
             <Button onClick={handleCancel} style={{ marginRight: 10 }}>
               Hủy Bỏ
