@@ -1,0 +1,24 @@
+// src/main.ts
+
+import { NestFactory } from '@nestjs/core';
+import { AppModule } from './app.module';
+import { ValidationPipe } from '@nestjs/common';
+import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+
+async function bootstrap() {
+  const app = await NestFactory.create(AppModule);
+
+  app.useGlobalPipes(new ValidationPipe());
+  const config = new DocumentBuilder()
+    .setTitle('CV Management API')
+    .setDescription('The API documentation for the CV Management System')
+    .setVersion('1.0')
+    .addBearerAuth() 
+    .build();
+
+  const document = SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('api', app, document);
+
+  await app.listen(3000);
+}
+bootstrap();
