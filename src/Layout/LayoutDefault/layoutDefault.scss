@@ -223,11 +223,12 @@ body {
     text-align: center;
 
     &--login {
-      background-color: #e74c3c;
+      background-color: red;
       color: white;
+      border: 1px solid black;
 
       &:hover {
-        background-color: #c0392b;
+        background-color:red;
       }
     }
 

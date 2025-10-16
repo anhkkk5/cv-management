@@ -25,18 +25,23 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      console.log("Login attempt:", values.email);
+      const result = await loginCompany(values.email, values.password);
 
-      const data = await loginCompany(values.email, values.password);
+      // Filter by password on client side since json-server doesn't support multiple query params properly
+      const matchedCompany = result.find(company => 
+        company.email === values.email && company.password === values.password
+      );
 
-      if (data && data.length > 0) {
+      if (matchedCompany) {
         const time = 1; // 1 day
+        const companyData = matchedCompany;
 
         // Set cookies with user data
-        setCookie("id", data[0].id, time);
-        setCookie("companyName", data[0].companyName, time);
-        setCookie("email", data[0].email, time);
-        setCookie("token", data[0].token, time);
+        setCookie("id", companyData.id, time);
+        setCookie("companyName", companyData.companyName || companyData.name || companyData.fullName, time);
+        setCookie("email", companyData.email, time);
+        setCookie("token", companyData.token, time);
+        setCookie("userType", "company", time);
         dispatch(checkLogin(true));
         messageApi.success("Đăng nhập thành công!");
 
