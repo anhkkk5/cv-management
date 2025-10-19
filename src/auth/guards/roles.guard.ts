@@ -1,3 +1,5 @@
+// src/auth/guards/roles.guard.ts
+
 import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Role } from 'src/common/enums/role.enum';
@@ -13,9 +15,10 @@ export class RolesGuard implements CanActivate {
       context.getClass(),
     ]);
     if (!requiredRoles) {
-      return true; // Nếu không yêu cầu vai trò, cho phép truy cập
+      return true;
     }
     const { user } = context.switchToHttp().getRequest();
-    return requiredRoles.some((role) => user.role?.includes(role));
+
+    return user && user.role && requiredRoles.includes(user.role);
   }
 }

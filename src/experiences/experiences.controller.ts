@@ -1,10 +1,16 @@
+// src/experiences/experiences.controller.ts
+
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request, ParseIntPipe } from '@nestjs/common';
 import { ExperiencesService } from './experiences.service';
 import { CreateExperienceDto } from './dto/create-experience.dto';
 import { UpdateExperienceDto } from './dto/update-experience.dto';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { Roles } from 'src/auth/decorators/roles.decorator';
+import { Role } from 'src/common/enums/role.enum';
 
-@UseGuards(JwtAuthGuard)
+@ApiTags('experiences')
+@ApiBearerAuth()
+@Roles(Role.Candidate)
 @Controller('experiences')
 export class ExperiencesController {
   constructor(private readonly experiencesService: ExperiencesService) {}
@@ -16,6 +22,7 @@ export class ExperiencesController {
   }
 
   @Get()
+  @Roles(Role.Candidate)
   findAll(@Request() req) {
     const userId = req.user.userId;
     return this.experiencesService.findAllForUser(userId);

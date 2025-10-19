@@ -1,35 +1,29 @@
-// src/app.controller.ts
-import { Controller, Get, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Request } from '@nestjs/common';
 import { AppService } from './app.service';
-import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
-import { RolesGuard } from './auth/guards/roles.guard';
 import { Roles } from './auth/decorators/roles.decorator';
 import { Role } from './common/enums/role.enum';
+import { Public } from './auth/decorators/public.decorator';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
+@ApiTags('App')
+@ApiBearerAuth()
 @Controller()
 export class AppController {
   constructor(private readonly appService: AppService) {}
 
+  @Public()
   @Get()
   getHello(): string {
     return this.appService.getHello();
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Get('profile')
-  getProfile(@Request() req) {
-    return req.user;
-  }
-
-  @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.Admin)
   @Get('admin/dashboard')
   getAdminDashboard() {
     return { message: 'Welcome to the Admin Dashboard!' };
   }
 
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.Admin, Role.Recruiter)
+  @Roles(Role.Admin, Role.Recruiter) 
   @Get('candidatelist')
   getCandidateList() {
     return { message: 'Here is the list of candidates.' };

@@ -11,6 +11,11 @@ import { CvsController } from './cvs/cvs.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
+import { JobsModule } from './jobs/jobs.module';
+import { EducationModule } from './education/education.module';
+import { CandidatesModule } from './candidates/candidates.module';
+import { CertificatesModule } from './certificates/certificates.module';
+import { SkillsModule } from './skills/skills.module';
 
 const dbPortStr = process.env.DB_PORT;
 const dbPort = dbPortStr ? parseInt(dbPortStr, 10) : 3306;
@@ -36,6 +41,11 @@ if (Number.isNaN(dbPort)) {
     UsersModule,
     ExperiencesModule,
     ProjectsModule,
+    JobsModule,
+    EducationModule,
+    CandidatesModule,
+    CertificatesModule,
+    SkillsModule,
   ],
   controllers: [AppController, CvsController],
   providers: [AppService,
