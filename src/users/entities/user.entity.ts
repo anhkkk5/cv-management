@@ -1,5 +1,5 @@
 // src/users/entities/user.entity.ts
-import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, OneToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, OneToOne, ManyToOne } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../../common/enums/role.enum';
 import { OneToMany } from 'typeorm';
@@ -10,6 +10,7 @@ import { Education } from '../../education/entities/education.entity';
 import { Job } from '../../jobs/entities/job.entity';
 import { Certificate } from '../../certificates/entities/certificate.entity';
 import { Skill } from '../../skills/entities/skill.entity';
+import { Company } from '../../companies/entities/company.entity';
 
 @Entity('users')
 export class User {
@@ -45,6 +46,9 @@ export class User {
 
   @OneToMany(() => Skill, (skill) => skill.user)
   skills: Skill[];
+
+  @ManyToOne(() => Company, (company) => company.recruiters, { nullable: true })
+  company: Company;
   
   @BeforeInsert()
   async hashPassword() {
