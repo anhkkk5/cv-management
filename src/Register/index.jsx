@@ -3,8 +3,10 @@ import { useNavigate } from "react-router-dom";
 import { Row, Col, Form, Input, Button, message, Typography } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
 import { generateToken } from "../helpers/generateToken";
-import { checkExits } from "../services/getAllCompany/companyServices";
-import { createCompany } from "../services/getAllCompany/companyServices";
+import {
+  checkAccountExists,
+  createAccountCompany,
+} from "../services/getAllCompany/companyServices";
 import "../pages/login/style.css";
 
 const { Title, Text } = Typography;
@@ -25,6 +27,10 @@ function Register() {
   const onFinish = async (values) => {
     try {
       console.log("Registration attempt:", values);
+      // normalize user inputs
+      values.email = (values.email || "").trim().toLowerCase();
+      values.password = (values.password || "").trim();
+      values.confirmPassword = (values.confirmPassword || "").trim();
 
       // Validate password confirmation
       if (values.password !== values.confirmPassword) {
@@ -36,16 +42,20 @@ function Register() {
       values.token = generateToken();
       values.companyName = values.fullName; // Map fullName to companyName for API
 
-      // Check if email already exists
-      const checkExistEmail = await checkExits("email", values.email);
+      // Check if email already exists in Account_Company
+      const checkExistEmail = await checkAccountExists("email", values.email);
 
       if (checkExistEmail.length > 0) {
         messageApi.error("Email đã tồn tại!");
         return;
       }
 
-      // If no duplicates, proceed with registration
-      const result = await createCompany(values);
+      // Clean payload and save account
+      const payload = { ...values };
+      delete payload.confirmPassword;
+
+      // If no duplicates, proceed with registration into Account_Company
+      const result = await createAccountCompany(payload);
 
       if (result) {
         messageApi.success(
@@ -136,6 +146,7 @@ function Register() {
                 <Form.Item
                   label="Confirm password"
                   name="confirmPassword"
+                  dependencies={["password"]}
                   rules={[
                     ...rules,
                     {

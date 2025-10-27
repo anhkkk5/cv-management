@@ -130,7 +130,7 @@ function Login() {
                   <Text className="signup-text">
                     Bạn không có tài khoản?{" "}
                     <Text className="signup-link">
-                      <Link to="/register" style={{ color: "red" }}>
+                      <Link to="/registerCompany" style={{ color: "red" }}>
                         Tạo 1 tài khoản
                       </Link>
                     </Text>

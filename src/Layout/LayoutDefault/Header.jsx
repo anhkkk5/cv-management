@@ -1,45 +1,33 @@
 import "./layoutDefault.scss";
 import { NavLink } from "react-router-dom";
 import SearchListJob from "../../components/SearchJob/searchJob";
+import leaf from "../../assets/leaf.svg";
 
 function Header() {
   return (
     <header className="header">
-      {/* Top Bar */}
       <div className="header__top-bar">
         <div className="header__top-bar-content">
           <nav className="header__top-nav">
-            <NavLink to="/" className="header__top-link">
-              Trang chủ
-            </NavLink>
-            <NavLink
-              to="/jobs"
-              className="header__top-link header__top-link--active"
-            >
-              Việc làm
-            </NavLink>
-            <NavLink to="/cv" className="header__top-link">
-              CV của bạn
-            </NavLink>
-            <NavLink to="/support" className="header__top-link">
-              Customer Supports
-            </NavLink>
+            <NavLink to="/" className="header__top-link">Trang chủ</NavLink>
+            <NavLink to="/jobs" className="header__top-link header__top-link--active">Việc làm</NavLink>
+            <NavLink to="/cv" className="header__top-link">CV của bạn</NavLink>
+            <NavLink to="/support" className="header__top-link">Customer Supports</NavLink>
           </nav>
           <div className="header__top-contact">
             <span className="header__phone">
-              <i className="header__phone-icon">📞</i>
+              <i className="header__phone-icon">☎</i>
               +1-202-555-0178
             </span>
             <div className="header__language">
-              <span className="header__flag">🇺🇸</span>
+              <span className="header__flag">🇻🇳</span>
               <span>English</span>
-              <span className="header__dropdown">▼</span>
+              <span className="header__dropdown">▾</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Main Header */}
       <div className="header__main">
         <div className="header__main-content">
           {/* Logo */}
@@ -47,7 +35,7 @@ function Header() {
             <NavLink to="/" className="header__logo-link">
               <span className="header__logo-rikei">RIKEI</span>
               <span className="header__logo-edu">Edu</span>
-              <span className="header__logo-icon">🌿</span>
+              <img src={leaf} alt="Logo" className="header__logo-icon" />
             </NavLink>
             <p className="header__tagline">where dreams come true</p>
           </div>
@@ -63,14 +51,12 @@ function Header() {
               <NavLink to="/login">Đăng Nhập</NavLink>
             </button>
             <button
-              className="header__btn header__btn--login"
-              style={{
-                backgroundColor: "#fff",
-                color: "#000",
-                border: "1px solid ",
-              }}
+              className="header__btn header__btn--register"
             >
               <NavLink to="/loginCompany">Đăng Nhập Công Ty</NavLink>
+            </button>
+            <button className="header__btn header__btn--register">
+              <NavLink to="/registerCompany">Đăng Kí Công Ty</NavLink>
             </button>
             <button className="header__btn header__btn--register">
               <NavLink to="/register">Đăng Kí</NavLink>
@@ -86,3 +72,4 @@ function Header() {
 }
 
 export default Header;
+

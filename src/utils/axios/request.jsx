@@ -2,21 +2,29 @@ import axios from "axios";
 
 // Centralized Axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3002/",
+  // Use .env when available; fallback to common Nest port
+  baseURL: import.meta?.env?.VITE_API_BASE_URL || "http://localhost:3000/",
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 10000,
+  timeout: 15000,
+  withCredentials: false,
 });
 
-// Sử dụng axiosInstance thay vì fetch để nhất quán
+// Helper to normalize server error messages
+const extractMessage = (error) => {
+  const msg = error?.response?.data?.message || error?.message || "Request error";
+  return Array.isArray(msg) ? msg.join("; ") : msg;
+};
+
 export const get = async (path) => {
   try {
     const response = await axiosInstance.get(path);
     return response.data;
   } catch (error) {
-    console.error("GET request error:", error);
-    throw error;
+    const msg = extractMessage(error);
+    console.error("GET request error:", msg);
+    throw new Error(msg);
   }
 };
 
@@ -25,19 +33,20 @@ export const post = async (path, data) => {
     const response = await axiosInstance.post(path, data);
     return response.data;
   } catch (error) {
-    console.error("POST request error:", error);
-    throw error;
+    const msg = extractMessage(error);
+    console.error("POST request error:", msg);
+    throw new Error(msg);
   }
 };
 
 export const del = async (path) => {
   try {
-    // Gửi yêu cầu DELETE đến API với ID của sản phẩm cần xóa
     const response = await axiosInstance.delete(path);
     return response.data;
   } catch (error) {
-    console.error("DELETE request error:", error);
-    throw error;
+    const msg = extractMessage(error);
+    console.error("DELETE request error:", msg);
+    throw new Error(msg);
   }
 };
 
@@ -46,7 +55,9 @@ export const edit = async (path, options) => {
     const response = await axiosInstance.patch(path, options);
     return response.data;
   } catch (error) {
-    console.error("PATCH request error:", error);
-    throw error;
+    const msg = extractMessage(error);
+    console.error("PATCH request error:", msg);
+    throw new Error(msg);
   }
 };
+

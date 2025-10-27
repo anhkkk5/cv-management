@@ -17,6 +17,17 @@ export const createCompany = async (options) => {
   const result = await post(`Companies`, options);
   return result;
 };
+
+// Accounts for company login are stored in Account_Company
+export const checkAccountExists = async (key, value) => {
+  const result = await get(`Account_Company?${key}=${value}`);
+  return result;
+};
+
+export const createAccountCompany = async (options) => {
+  const result = await post(`Account_Company`, options);
+  return result;
+};
 export const loginCompany = async (email, password = "") => {
   let pass = "";
   if (password !== "") {

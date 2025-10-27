@@ -27,7 +27,10 @@ function Login() {
     try {
       console.log("Login attempt:", values.email);
 
-      const data = await loginCompany(values.email, values.password);
+      const email = (values.email || "").trim().toLowerCase();
+      const password = (values.password || "").trim();
+
+      const data = await loginCompany(email, password);
 
       if (data && data.length > 0) {
         const time = 1; // 1 day
