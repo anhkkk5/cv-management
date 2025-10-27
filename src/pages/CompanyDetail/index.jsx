@@ -1,5 +1,6 @@
 import React from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import { getCookie } from "../../helpers/cookie";
 import {
   Card,
   Row,
@@ -13,11 +14,15 @@ import {
   Breadcrumb,
   Input,
   Space,
+  Modal,
+  Form,
+  message,
 } from "antd";
 import {
   EnvironmentOutlined,
   GlobalOutlined,
   HeartOutlined,
+  HeartFilled,
   LinkOutlined,
   SearchOutlined,
   FilterOutlined,
@@ -25,16 +30,19 @@ import {
   FacebookOutlined,
   TwitterOutlined,
   MailOutlined,
+  EditOutlined,
+  PlusOutlined,
 } from "@ant-design/icons";
 import {
   getDetaiCompany,
   getAllCompany,
+  editCompany,
 } from "../../services/getAllCompany/companyServices";
 import { getListJob } from "../../services/jobServices/jobServices";
 import "./style.css";
 
 const { Title, Paragraph } = Typography;
-const { Search } = Input;
+const { Search, TextArea } = Input;
 
 function CompanyDetail() {
   const { id } = useParams();
@@ -45,6 +53,21 @@ function CompanyDetail() {
   const [loading, setLoading] = React.useState(false);
   const [jobsLoading, setJobsLoading] = React.useState(false);
   const [companiesLoading, setCompaniesLoading] = React.useState(false);
+  const [userType, setUserType] = React.useState("");
+  const [currentUserId, setCurrentUserId] = React.useState("");
+  const [isFollowing, setIsFollowing] = React.useState(false);
+  const [isFavorite, setIsFavorite] = React.useState(false);
+  const [editModalVisible, setEditModalVisible] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const [form] = Form.useForm();
+
+  React.useEffect(() => {
+    // Check user type from cookie
+    const type = getCookie("userType");
+    const userId = getCookie("id");
+    setUserType(type || "");
+    setCurrentUserId(userId || "");
+  }, []);
 
   React.useEffect(() => {
     const fetchCompany = async () => {
@@ -101,7 +124,54 @@ function CompanyDetail() {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    // You can add a notification here
+    message.success("Đã sao chép link!");
+  };
+
+  const handleEditClick = () => {
+    if (company) {
+      form.setFieldsValue({
+        companyName: company.companyName || company.name,
+        website: company.website,
+        address: company.address,
+        description: company.description,
+        logo: company.logo,
+      });
+      setEditModalVisible(true);
+    }
+  };
+
+  const handleEditSubmit = async (values) => {
+    try {
+      setSubmitting(true);
+      
+      const updateData = {
+        companyName: values.companyName,
+        name: values.companyName,
+        website: values.website,
+        address: values.address,
+        description: values.description,
+        logo: values.logo,
+        updated_at: new Date().toISOString().split('T')[0],
+      };
+
+      await editCompany(id, updateData);
+      message.success("Cập nhật thông tin công ty thành công!");
+      setEditModalVisible(false);
+      
+      // Refresh company data
+      const updatedData = await getDetaiCompany(id);
+      setCompany(updatedData);
+    } catch (error) {
+      console.error("Error updating company:", error);
+      message.error("Cập nhật thông tin công ty thất bại");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleEditCancel = () => {
+    setEditModalVisible(false);
+    form.resetFields();
   };
 
   if (loading) {
@@ -126,7 +196,7 @@ function CompanyDetail() {
         <Breadcrumb.Item>
           <a href="/companies">Thông tin doanh nghiệp</a>
         </Breadcrumb.Item>
-        <Breadcrumb.Item>{company.name}</Breadcrumb.Item>
+        <Breadcrumb.Item>{company.fullName}</Breadcrumb.Item>
       </Breadcrumb>
 
       <Row gutter={[24, 24]}>
@@ -142,11 +212,11 @@ function CompanyDetail() {
                   shape="square"
                   className="company-logo"
                 >
-                  {company.name?.charAt(0)}
+                  {company.fullName?.charAt(0)}
                 </Avatar>
                 <div className="company-info">
                   <Title level={2} className="company-name">
-                    {company.name}
+                    {company.fullName}
                   </Title>
                   <div className="company-tags">
                     <Tag color="green">Outsource</Tag>
@@ -163,12 +233,6 @@ function CompanyDetail() {
                     </a>
                   </div>
                 </div>
-              </div>
-              <div className="company-actions">
-                <Button icon={<HeartOutlined />} className="heart-btn" />
-                <Button type="primary" danger className="follow-btn">
-                  Theo Dõi Công Ty
-                </Button>
               </div>
             </div>
           </Card>
@@ -210,7 +274,23 @@ function CompanyDetail() {
           </Card>
 
           {/* Open Jobs */}
-          <Card title="Việc làm công ty đang mở" className="jobs-card">
+          <Card 
+            title="Việc làm đang mở" 
+            className="jobs-card"
+            extra={
+              userType === "company" && currentUserId === id ? (
+                <Button 
+                  type="primary" 
+                  danger
+                  icon={<PlusOutlined />}
+                  onClick={() => navigate('/create-job')}
+                  className="add-job-btn"
+                >
+                  Thêm việc làm mới
+                </Button>
+              ) : null
+            }
+          >
             <div className="job-search-section">
               <Space.Compact style={{ width: "100%", marginBottom: 16 }}>
                 <Search
@@ -327,11 +407,11 @@ function CompanyDetail() {
                             shape="square"
                             className="related-company-logo"
                           >
-                            {relatedCompany.name?.charAt(0)}
+                            {relatedCompany.fullName?.charAt(0)}
                           </Avatar>
                           <div className="related-company-info">
                             <div className="related-company-name">
-                              {relatedCompany.name}
+                              {relatedCompany.fullName}
                             </div>
                             <Tag
                               color="red-inverse"
@@ -365,6 +445,48 @@ function CompanyDetail() {
 
         {/* Sidebar */}
         <Col xs={24} lg={8}>
+          {/* Action Buttons - Show based on user type */}
+          {userType === "company" && currentUserId === id ? (
+            // Show Edit button if the company is viewing their own page
+            <Card className="action-card" style={{ marginBottom: 16 }}>
+              <Button 
+                type="primary" 
+                danger 
+                block 
+                size="large"
+                icon={<EditOutlined />}
+                onClick={handleEditClick}
+              >
+                Chỉnh Sửa
+              </Button>
+            </Card>
+          ) : userType === "candidate" || userType === "" ? (
+            // Show Follow and Favorite buttons for candidates or non-logged-in users
+            <Card className="action-card" style={{ marginBottom: 16 }}>
+              <div style={{ display: "flex", gap: "12px" }}>
+                <Button 
+                  icon={isFavorite ? <HeartFilled /> : <HeartOutlined />} 
+                  size="large"
+                  style={{ 
+                    flex: "0 0 auto",
+                    color: isFavorite ? "#c41e3a" : "inherit",
+                    borderColor: isFavorite ? "#c41e3a" : "inherit"
+                  }}
+                  onClick={() => setIsFavorite(!isFavorite)}
+                />
+                <Button 
+                  type="primary" 
+                  danger 
+                  size="large"
+                  style={{ flex: 1 }}
+                  onClick={() => setIsFollowing(!isFollowing)}
+                >
+                  {isFollowing ? "Đang Theo Dõi" : "Theo Dõi Công Ty"}
+                </Button>
+              </div>
+            </Card>
+          ) : null}
+
           {/* Company Address */}
           <Card title="Địa chỉ công ty" className="address-card">
             <div className="address-info">
@@ -421,6 +543,96 @@ function CompanyDetail() {
           </Card>
         </Col>
       </Row>
+
+      {/* Edit Company Modal */}
+      <Modal
+        title="Cập nhật thông tin doanh nghiệp"
+        open={editModalVisible}
+        onCancel={handleEditCancel}
+        footer={null}
+        width={600}
+        centered
+        destroyOnClose
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleEditSubmit}
+          className="company-edit-form"
+        >
+          <Form.Item
+            label="Tên công ty"
+            name="companyName"
+            rules={[
+              { required: true, message: "Vui lòng nhập tên công ty" },
+            ]}
+          >
+            <Input placeholder="ABC Corp" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Website"
+            name="website"
+            rules={[
+              { type: "url", message: "Vui lòng nhập URL hợp lệ" },
+            ]}
+          >
+            <Input placeholder="https://abccorp.com" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Logo (URL)"
+            name="logo"
+          >
+            <Input placeholder="https://example.com/logo.png" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Địa chỉ công ty"
+            name="address"
+            rules={[
+              { required: true, message: "Vui lòng nhập địa chỉ công ty" },
+            ]}
+          >
+            <Input placeholder="123ABC street, VN" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Mô tả về công ty"
+            name="description"
+            rules={[
+              { required: true, message: "Vui lòng nhập mô tả về công ty" },
+            ]}
+          >
+            <TextArea
+              placeholder="Nhập mô tả về công ty..."
+              rows={6}
+              size="large"
+            />
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <div style={{ display: "flex", gap: "12px", justifyContent: "flex-end" }}>
+              <Button
+                size="large"
+                onClick={handleEditCancel}
+                disabled={submitting}
+              >
+                Hủy Bỏ
+              </Button>
+              <Button
+                type="primary"
+                danger
+                size="large"
+                htmlType="submit"
+                loading={submitting}
+              >
+                Cập Nhật
+              </Button>
+            </div>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

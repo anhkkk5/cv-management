@@ -2,12 +2,12 @@ import React from "react";
 import { Row, Col } from "antd";
 import { ProfileOutlined, BankOutlined, TeamOutlined, InboxOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-
+import {getAlljob} from "../../services/jobServices/jobServices";
 import SearchListJob from "./searchJob";
 import heroImg from "../../assets/anh1.png";
 import "./style.css";
 
-function SearchJob() {
+function Search() {
   const navigate = useNavigate();
 
   const suggestions = [
@@ -42,7 +42,7 @@ function SearchJob() {
 
           <div className="search-form-container">
             <div className="search-form">
-              <SearchListJob />
+              <SearchListJob reverse={true} />
             </div>
           </div>
 
@@ -85,4 +85,4 @@ function SearchJob() {
     </div>
   );
 }
-export default SearchJob;
+export default Search;

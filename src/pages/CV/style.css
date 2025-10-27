@@ -1,0 +1,156 @@
+.cv-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding: 20px 0;
+}
+
+.cv-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.breadcrumb {
+  margin-bottom: 20px;
+  color: #666;
+}
+
+/* Sidebar */
+.sidebar-card {
+  margin-bottom: 20px;
+}
+
+.sidebar-card .ant-card-body {
+  padding: 24px;
+}
+
+.action-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.action-item:hover {
+  color: #c41e3a;
+}
+
+.action-item:last-child {
+  border-bottom: none;
+}
+
+/* Profile Card */
+.profile-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-header {
+  display: flex;
+  gap: 20px;
+  position: relative;
+}
+
+.profile-avatar {
+  text-align: center;
+}
+
+.profile-avatar img {
+  width: 100px;
+  height: 100px;
+  border-radius: 8px;
+  object-fit: cover;
+  margin-bottom: 8px;
+}
+
+.company-label {
+  display: block;
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.profile-info {
+  flex: 1;
+}
+
+.profile-info h3 {
+  margin: 0 0 4px 0;
+  color: #c41e3a;
+}
+
+.profile-position {
+  color: #666;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.edit-icon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 18px;
+  color: #c41e3a;
+  cursor: pointer;
+}
+
+.edit-icon:hover {
+  color: #a01830;
+}
+
+/* Section Cards */
+.section-card {
+  margin-bottom: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.section-header h4 {
+  margin: 0;
+}
+
+.add-icon {
+  font-size: 18px;
+  color: #c41e3a;
+  cursor: pointer;
+}
+
+.add-icon:hover {
+  color: #a01830;
+}
+
+.delete-icon {
+  font-size: 18px;
+  color: #ff4d4f;
+  cursor: pointer;
+}
+
+.delete-icon:hover {
+  color: #d9363e;
+}
+
+.section-description {
+  color: #666;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .profile-header {
+    flex-direction: column;
+  }
+
+  .profile-avatar {
+    text-align: left;
+  }
+}

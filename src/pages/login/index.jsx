@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginCompany } from "../../services/getAllCompany/companyServices";
+import { loginCandidates } from "../../services/Candidates/candidatesServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -25,18 +25,22 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      console.log("Login attempt:", values.email);
+      const data = await loginCandidates(values.email, values.password);
 
-      const data = await loginCompany(values.email, values.password);
+      // Filter by password on client side
+      const matchedCandidate = data.find(candidate => 
+        candidate.email === values.email && candidate.password === values.password
+      );
 
-      if (data && data.length > 0) {
+      if (matchedCandidate) {
         const time = 1; // 1 day
 
         // Set cookies with user data
-        setCookie("id", data[0].id, time);
-        setCookie("companyName", data[0].companyName, time);
-        setCookie("email", data[0].email, time);
-        setCookie("token", data[0].token, time);
+        setCookie("id", matchedCandidate.id, time);
+        setCookie("fullName", matchedCandidate.fullName, time);
+        setCookie("email", matchedCandidate.email, time);
+        setCookie("token", matchedCandidate.token, time);
+        setCookie("userType", "candidate", time);
         dispatch(checkLogin(true));
         messageApi.success("Đăng nhập thành công!");
 

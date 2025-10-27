@@ -2,10 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Form, Input, Button, message, Typography } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { generateToken } from "../helpers/generateToken";
-import { checkExits } from "../services/getAllCompany/companyServices";
-import { createCompany } from "../services/getAllCompany/companyServices";
-import "../pages/login/style.css";
+import { generateToken } from "../../helpers/generateToken";
+import { checkExits } from "../../services/getAllCompany/companyServices";
+import { createCompany } from "../../services/getAllCompany/companyServices";
+import "../../pages/login/style.css";
 
 const { Title, Text } = Typography;
 
@@ -38,10 +38,11 @@ function Register() {
       // Check if email already exists
       const checkExistEmail = await checkExits("email", values.email);
 
-      if (checkExistEmail.length > 0) {
-        messageApi.error("Email đã tồn tại!");
-        return;
-      }
+if (checkExistEmail.data && checkExistEmail.data.length > 0) {
+  messageApi.error("Email đã tồn tại!");
+  return;
+}
+
 
       // If no duplicates, proceed with registration
       const result = await createCompany(values);
@@ -53,7 +54,7 @@ function Register() {
         form.resetFields();
         // Wait a bit for user to see the success message before navigating
         setTimeout(() => {
-          navigate("/login");
+          navigate("/loginCompany");
         }, 2000);
       } else {
         messageApi.error("Đăng ký thất bại. Vui lòng thử lại!");
