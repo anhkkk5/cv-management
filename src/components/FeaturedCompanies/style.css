@@ -1,6 +1,10 @@
 /* Wrapper + Header */
 .fc-wrapper {
   padding: 24px 0;
+  max-width: 1400px;
+  margin: 0 auto;
+  padding-left: 20px;
+  padding-right: 20px;
 }
 .fc-header {
   display: flex;

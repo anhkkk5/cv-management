@@ -1,11 +1,11 @@
-import SearchJob from "../../components/SearchJob";
+import SearchForm from "../../components/SearchForm/index";
 import FeaturedJobs from "../../components/FeaturedJobs";
 import FeaturedCompanies from "../../components/FeaturedCompanies";
 import Testimonials from "../../components/Testimonials";
 function Home() {
   return (
     <div>
-      <SearchJob />
+      <SearchForm />
       <FeaturedJobs />
       <FeaturedCompanies />
       <Testimonials />

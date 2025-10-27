@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { deleteAllCookies } from "../../helpers/cookie";
+import { deleteAllCookies } from "../helpers/cookie";
 import { useEffect } from "react";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../actions/login";
@@ -19,7 +19,7 @@ function Logout() {
 
       // Navigate to login page after a short delay
       setTimeout(() => {
-        navigate("/login");
+        navigate("/");
       }, 1000);
     };
 

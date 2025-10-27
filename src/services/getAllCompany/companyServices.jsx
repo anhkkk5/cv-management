@@ -17,13 +17,9 @@ export const createCompany = async (options) => {
   const result = await post(`Companies`, options);
   return result;
 };
-export const loginCompany = async (email, password = "") => {
-  let pass = "";
-  if (password !== "") {
-    pass = `&password=${password}`;
-  }
-  // Accounts are stored in Account_Company per db.json
-  const result = await get(`Account_Company?email=${email}${pass}`);
+export const loginCompany = async (email, password="") => {
+  // Query by email only, password will be checked on client side
+  const result = await get(`Companies?email=${email}`);
   return result;
 };
 

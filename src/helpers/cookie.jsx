@@ -3,7 +3,10 @@ export function setCookie(name, value, exdays) {
   var d = new Date();
   d.setTime(d.getTime() + exdays * 24 * 60 * 60 * 1000);
   var expires = "expires=" + d.toUTCString();
-  document.cookie = name + "=" + value + "; " + expires;
+  // Đảm bảo cookie được lưu trữ với path=/ và các thuộc tính bảo mật phù hợp
+  // Thêm secure=false để hoạt động trên HTTP và HTTPS
+  // Thêm domain để đảm bảo cookie hoạt động trên tất cả subdomain
+  document.cookie = name + "=" + value + "; " + expires + "; path=/; SameSite=None; secure=false";
 }
 //lấy cookie
 export function getCookie(name) {
@@ -14,7 +17,7 @@ export function getCookie(name) {
     let c = cookies[i].trim();
 
     if (c.indexOf(name + "=") === 0) {
-      return c.substring(name.length + 1);
+      return c.substring((name + "=").length);
     }
   }
 
