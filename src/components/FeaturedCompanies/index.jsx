@@ -64,7 +64,7 @@ function FeaturedCompanies() {
                     className="fc-logo-avatar"
                   />
                   <div className="fc-top-info">
-                    <div className="fc-name">{company.name}</div>
+                    <div className="fc-name">{company.fullName}</div>
                     <span className="fc-chip">Featured</span>
                   </div>
                 </div>

@@ -15,14 +15,13 @@ import {
   Breadcrumb,
   Avatar,
   message,
+  Modal,
+  DatePicker,
 } from "antd";
 import {
   EnvironmentOutlined,
   CalendarOutlined,
-  ClockCircleOutlined,
-  ApartmentOutlined,
-  ProfileOutlined,
-  BookOutlined,
+
   ArrowRightOutlined,
   FacebookOutlined,
   TwitterOutlined,
@@ -31,9 +30,10 @@ import {
   LinkOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
-import { getDetaiJob } from "../../services/jobServices/jobServices";
-import { getAllCompany } from "../../services/getAllCompany/companyServices";
-import { getLocation } from "../../services/getAllLocation/locationServices";
+import { getDetaiJob, updateJob } from "../../services/jobServices/jobServices";
+import { getDetaiCompany } from "../../services/getAllCompany/companyServices";
+import { getLocationById } from "../../services/getAllLocation/locationServices";
+import { getCookie } from "../../helpers/cookie";
 
 import "./style.css";
 
@@ -51,6 +51,9 @@ function JobDetail() {
   const [company, setCompany] = React.useState(null);
   const [locationName, setLocationName] = React.useState("");
   const [appliedCandidates, setAppliedCandidates] = React.useState([]);
+  const [isModalVisible, setIsModalVisible] = React.useState(false);
+  const [isCompany, setIsCompany] = React.useState(false);
+  const [updating, setUpdating] = React.useState(false);
 
   // Mock data for candidates (can be replaced with real API later)
   const mockCandidates = [
@@ -86,6 +89,12 @@ function JobDetail() {
     },
   ];
 
+  // Check if user is company
+  React.useEffect(() => {
+    const userType = getCookie("userType");
+    setIsCompany(userType === "company");
+  }, []);
+
   React.useEffect(() => {
     if (!id) return;
     const loadData = async () => {
@@ -104,12 +113,12 @@ function JobDetail() {
         // Fetch company data if company_id exists
         if (jobData.company_id) {
           try {
-            const companyResponse = await getAllCompany(jobData.company_id);
-            if (companyResponse.ok) {
-              const companyData = await companyResponse.json();
+            const companyData = await getDetaiCompany(jobData.company_id);
+            if (companyData) {
               setCompany(companyData);
             }
-          } catch {
+          } catch (error) {
+            console.error("Error fetching company:", error);
             setCompany({ id: jobData.company_id, name: "Unknown Company" });
           }
         }
@@ -117,14 +126,14 @@ function JobDetail() {
         // Fetch location data if location_id exists
         if (jobData.location_id) {
           try {
-            const locationResponse = await getLocation(jobData.location_id);
-            if (locationResponse.ok) {
-              const locationData = await locationResponse.json();
+            const locationData = await getLocationById(jobData.location_id);
+            if (locationData) {
               setLocationName(
                 locationData.name || locationData.city || "Unknown Location"
               );
             }
-          } catch {
+          } catch (error) {
+            console.error("Error fetching location:", error);
             setLocationName("Unknown Location");
           }
         }
@@ -137,13 +146,27 @@ function JobDetail() {
           title: jobData.title || jobData.name,
           jobType: jobData.type || jobData.jobType,
           salary: jobData.salary,
-          level: jobData.jobLevel || "Entry Level",
+          level: jobData.jobLevel || jobData.level || "Entry Level",
           description: jobData.description,
           requirements: jobData.requirements
             ? Array.isArray(jobData.requirements)
               ? jobData.requirements.join("\n")
               : jobData.requirements
             : "",
+          experience: jobData.experience || "",
+          education: jobData.education || "",
+          desirable: jobData.desirable
+            ? Array.isArray(jobData.desirable)
+              ? jobData.desirable.join("\n")
+              : jobData.desirable
+            : "",
+          benefits: jobData.benefits
+            ? Array.isArray(jobData.benefits)
+              ? jobData.benefits.join("\n")
+              : jobData.benefits
+            : "",
+          location: jobData.location || jobData.location_id || "",
+          status: jobData.status || "active",
           startDate: jobData.created_at ? dayjs(jobData.created_at) : dayjs(),
           endDate: jobData.expire_at
             ? dayjs(jobData.expire_at)
@@ -165,6 +188,92 @@ function JobDetail() {
     navigator.clipboard.writeText(url).then(() => {
       message.success("Đã copy link công việc!");
     });
+  };
+
+  const showUpdateModal = () => {
+    setIsModalVisible(true);
+  };
+
+  const handleCancel = () => {
+    setIsModalVisible(false);
+  };
+
+  const handleUpdate = async (values) => {
+    try {
+      setUpdating(true);
+      
+      // Giữ nguyên tất cả các trường hiện có và chỉ cập nhật những trường được chỉnh sửa
+      // Chuyển đổi string thành array cho requirements, desirable, benefits
+      const convertToArray = (value) => {
+        if (!value) return [];
+        if (typeof value === 'string') {
+          return value.split('\n').filter(item => item.trim() !== '');
+        }
+        return value;
+      };
+
+      const updateData = {
+        ...job, // Giữ nguyên tất cả các trường hiện có
+        title: values.title,
+        type: values.jobType,
+        salary: values.salary,
+        jobLevel: values.level,
+        level: values.level,
+        description: values.description,
+        requirements: convertToArray(values.requirements),
+        experience: values.experience || "",
+        education: values.education || "",
+        desirable: convertToArray(values.desirable),
+        benefits: convertToArray(values.benefits),
+        location: values.location || "",
+        status: values.status || "active",
+        expire_at: values.endDate ? values.endDate.toISOString() : job.expire_at,
+        updated_at: new Date().toISOString(), // Cập nhật thời gian chỉnh sửa
+      };
+
+      await updateJob(id, updateData);
+      message.success("Cập nhật thông tin công việc thành công!");
+      setIsModalVisible(false);
+      
+      // Reload job data
+      const jobData = await getDetaiJob(id);
+      setJob(jobData);
+      form.setFieldsValue({
+        title: jobData.title || jobData.name,
+        jobType: jobData.type || jobData.jobType,
+        salary: jobData.salary,
+        level: jobData.jobLevel || jobData.level || "Entry Level",
+        description: jobData.description,
+        requirements: jobData.requirements
+          ? Array.isArray(jobData.requirements)
+            ? jobData.requirements.join("\n")
+            : jobData.requirements
+          : "",
+        experience: jobData.experience || "",
+        education: jobData.education || "",
+        desirable: jobData.desirable
+          ? Array.isArray(jobData.desirable)
+            ? jobData.desirable.join("\n")
+            : jobData.desirable
+          : "",
+        benefits: jobData.benefits
+          ? Array.isArray(jobData.benefits)
+            ? jobData.benefits.join("\n")
+            : jobData.benefits
+          : "",
+        location: jobData.location || jobData.location_id || "",
+        status: jobData.status || "active",
+        startDate: jobData.created_at ? dayjs(jobData.created_at) : dayjs(),
+        endDate: jobData.expire_at
+          ? dayjs(jobData.expire_at)
+          : dayjs().add(30, "days"),
+      });
+    } catch (error) {
+      console.error("Error updating job:", error);
+      message.error("Không thể cập nhật thông tin công việc");
+    } finally {
+      setUpdating(false);
+    }
   };
 
   if (loading) {
@@ -196,14 +305,14 @@ function JobDetail() {
             <div className="job-header">
               <div className="job-header-left">
                 <Avatar size={60} className="company-logo">
-                  {company?.name?.charAt(0) || "?"}
+                  {(company?.companyName || company?.name)?.charAt(0) || "?"}
                 </Avatar>
                 <div className="job-title-section">
                   <Title level={2} className="job-title">
                     {job.title}
                   </Title>
                   <Text className="company-name">
-                    at {company?.name || "Unknown"}
+                    at {company?.companyName || company?.name || "Unknown"}
                   </Text>
                   <div className="job-tags">
                     <Tag
@@ -287,6 +396,21 @@ function JobDetail() {
         {/* Sidebar */}
         <Col xs={24} lg={8}>
           <Card className="job-overview-card">
+            {/* Update Button - Only show for company */}
+            {isCompany && (
+              <Button
+                type="primary"
+                onClick={showUpdateModal}
+                style={{
+                  width: "100%",
+                  marginBottom: "20px",
+                  backgroundColor: "#c41e3a",
+                  borderColor: "#c41e3a",
+                }}
+              >
+                Cập Nhật Thông Tin
+              </Button>
+            )}
             {/* Salary */}
             <div className="salary-section">
               <Text className="salary-label">Salary (USD)</Text>
@@ -405,6 +529,188 @@ function JobDetail() {
           ))}
         </Row>
       </div>
+
+      {/* Update Job Modal */}
+      <Modal
+        title="Cập nhật thông tin công việc"
+        open={isModalVisible}
+        onCancel={handleCancel}
+        footer={null}
+        width={800}
+        style={{ top: 20 }}
+        bodyStyle={{ maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
+      >
+        <Form
+          form={form}
+          layout="vertical"
+          onFinish={handleUpdate}
+        >
+          <Form.Item
+            label="Tên công việc"
+            name="title"
+            rules={[{ required: true, message: "Vui lòng nhập tên công việc!" }]}
+          >
+            <Input placeholder="Technical Support" />
+          </Form.Item>
+
+          <Form.Item
+            label="Thời gian làm việc"
+            name="jobType"
+            rules={[{ required: true, message: "Vui lòng chọn thời gian làm việc!" }]}
+          >
+            <Select placeholder="Chọn thời gian">
+              <Option value="FULL-TIME">Full-time</Option>
+              <Option value="PART-TIME">Part-time</Option>
+              <Option value="INTERN">Intern</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Mức lương"
+            name="salary"
+            rules={[{ required: true, message: "Vui lòng nhập mức lương!" }]}
+          >
+            <Input placeholder="$500 - $1,500" />
+          </Form.Item>
+
+          <Form.Item
+            label="Cấp độ chuyên môn"
+            name="level"
+            rules={[{ required: true, message: "Vui lòng chọn cấp độ!" }]}
+          >
+            <Select placeholder="Chọn cấp độ">
+              <Option value="Senior">Senior</Option>
+              <Option value="Junior">Junior</Option>
+              <Option value="Fresher">Fresher</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Mô tả công việc"
+            name="description"
+            rules={[{ required: true, message: "Vui lòng nhập mô tả!" }]}
+          >
+            <TextArea rows={4} placeholder="Hint text" />
+          </Form.Item>
+
+          <Form.Item
+            label="Yêu cầu của công việc"
+            name="requirements"
+          >
+            <TextArea rows={4} placeholder="Nhập yêu cầu công việc (mỗi yêu cầu 1 dòng)" />
+          </Form.Item>
+
+          <Form.Item
+            label="Kinh nghiệm yêu cầu"
+            name="experience"
+          >
+            <Input placeholder="Ví dụ: 2-3 năm" />
+          </Form.Item>
+
+          <Form.Item
+            label="Trình độ học vấn"
+            name="education"
+          >
+            <Select placeholder="Chọn trình độ">
+              <Option value="Đại học">Đại học</Option>
+              <Option value="Cao đẳng">Cao đẳng</Option>
+              <Option value="Trung cấp">Trung cấp</Option>
+              <Option value="Không yêu cầu">Không yêu cầu</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Kỹ năng mong muốn (Desirable)"
+            name="desirable"
+          >
+            <TextArea rows={3} placeholder="Nhập các kỹ năng mong muốn (mỗi kỹ năng 1 dòng)" />
+          </Form.Item>
+
+          <Form.Item
+            label="Quyền lợi (Benefits)"
+            name="benefits"
+          >
+            <TextArea rows={4} placeholder="Nhập các quyền lợi (mỗi quyền lợi 1 dòng)" />
+          </Form.Item>
+
+          <Form.Item
+            label="Địa điểm làm việc"
+            name="location"
+          >
+            <Input placeholder="Ví dụ: Hà Nội" />
+          </Form.Item>
+
+          <Form.Item
+            label="Trạng thái"
+            name="status"
+          >
+            <Select placeholder="Chọn trạng thái">
+              <Option value="active">Đang tuyển</Option>
+              <Option value="inactive">Ngừng tuyển</Option>
+              <Option value="closed">Đã đóng</Option>
+            </Select>
+          </Form.Item>
+
+          <Form.Item
+            label="Thời gian ứng tuyển"
+            style={{ marginBottom: 0 }}
+          >
+            <Row gutter={16}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  label="Start Date"
+                >
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="MMM DD, YYYY"
+                    disabled
+                  />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="endDate"
+                  label="End Date"
+                  rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+                >
+                  <DatePicker
+                    style={{ width: "100%" }}
+                    format="MMM DD, YYYY"
+                  />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+
+          <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
+            <Row gutter={16}>
+              <Col span={12}>
+                <Button
+                  block
+                  onClick={handleCancel}
+                >
+                  Hủy Bỏ
+                </Button>
+              </Col>
+              <Col span={12}>
+                <Button
+                  type="primary"
+                  htmlType="submit"
+                  block
+                  loading={updating}
+                  style={{
+                    backgroundColor: "#c41e3a",
+                    borderColor: "#c41e3a",
+                  }}
+                >
+                  Cập Nhật
+                </Button>
+              </Col>
+            </Row>
+          </Form.Item>
+        </Form>
+      </Modal>
     </div>
   );
 }

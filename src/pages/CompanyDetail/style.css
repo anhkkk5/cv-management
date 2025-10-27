@@ -163,6 +163,20 @@
   color: #1f2937;
 }
 
+.add-job-btn {
+  border-radius: 6px;
+  font-weight: 500;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.add-job-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(196, 30, 58, 0.3);
+}
+
 .job-search-section {
   margin-bottom: 24px;
 }
@@ -315,44 +329,67 @@
 }
 
 .copy-link-btn {
-  border-radius: 8px;
+  border-radius: 6px;
   font-weight: 500;
+  background-color: #ffe4e8 !important;
+  color: #c41e3a !important;
+  border: none !important;
+  height: 40px;
+}
+
+.copy-link-btn:hover {
+  background-color: #ffd1d9 !important;
 }
 
 .social-share {
   display: flex;
   gap: 8px;
   justify-content: center;
+ 
 }
 
 .social-btn {
   width: 40px;
   height: 40px;
-  border-radius: 8px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid #d1d5db;
+  border: none !important;
 }
 
 .social-btn.linkedin {
-  color: #0077b5;
-  border-color: #0077b5;
+  background-color: #b52400 !important;
+  color: #fff !important;
 }
 
+
+
 .social-btn.facebook {
-  color: #1877f2;
-  border-color: #1877f2;
+  background-color: #c41e3a !important;
+  color: #fff !important;
+}
+
+.social-btn.facebook:hover {
+  background-color: #a01830 !important;
 }
 
 .social-btn.twitter {
-  color: #1da1f2;
-  border-color: #1da1f2;
+  background-color: #ffe4e8 !important;
+  color: #c41e3a !important;
+}
+
+.social-btn.twitter:hover {
+  background-color: #ffd1d9 !important;
 }
 
 .social-btn.email {
-  color: #dc2626;
-  border-color: #dc2626;
+  background-color: #ffe4e8 !important;
+  color: #c41e3a !important;
+}
+
+.social-btn.email:hover {
+  background-color: #ffd1d9 !important;
 }
 
 .social-btn:hover {
@@ -511,4 +548,31 @@
   .related-company-info {
     text-align: center;
   }
+}
+
+/* Company Edit Form */
+.company-edit-form .ant-form-item-label > label {
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.company-edit-form .ant-input,
+.company-edit-form .ant-input-textarea textarea {
+  border-radius: 4px;
+}
+
+.company-edit-form .ant-input:focus,
+.company-edit-form .ant-input-textarea textarea:focus {
+  border-color: #c41e3a;
+  box-shadow: 0 0 0 2px rgba(196, 30, 58, 0.1);
+}
+
+.company-edit-form .ant-btn-primary {
+  background-color: #c41e3a;
+  border-color: #c41e3a;
+}
+
+.company-edit-form .ant-btn-primary:hover {
+  background-color: #a01830;
+  border-color: #a01830;
 }

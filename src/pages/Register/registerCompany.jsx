@@ -2,10 +2,10 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Form, Input, Button, message, Typography } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { generateToken } from "../helpers/generateToken";
-import { checkExits } from "../services/getAllCompany/companyServices";
-import { createCompany } from "../services/getAllCompany/companyServices";
-import "../pages/login/style.css";
+import { generateToken } from "../../helpers/generateToken";
+import { checkExits } from "../../services/getAllCompany/companyServices";
+import { createCompany } from "../../services/getAllCompany/companyServices";
+import "../../pages/login/style.css";
 
 const { Title, Text } = Typography;
 

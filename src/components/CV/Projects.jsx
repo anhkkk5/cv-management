@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-function Projects({ projectsList, onAdd }) {
+function Projects({ projectsList, onAdd, onDelete }) {
   return (
     <Card className="section-card">
       <div className="section-header">
@@ -39,7 +39,7 @@ function Projects({ projectsList, onAdd }) {
               </div>
               <div>
                 <EditOutlined className="edit-icon" style={{ marginRight: 10 }} onClick={() => onAdd(project)} />
-                <DeleteOutlined className="delete-icon" />
+                <DeleteOutlined className="delete-icon" onClick={() => onDelete && onDelete(project.id)} />
               </div>
             </div>
           </div>

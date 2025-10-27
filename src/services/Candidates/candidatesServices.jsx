@@ -27,3 +27,8 @@ export const editCandidates = async (id, options) => {
   const result = await edit(`Candidates/${id}`, options);
   return result;
 };
+
+export const updateIntroduction = async (candidateId, intro) => {
+  const result = await edit(`Candidates/${candidateId}`, { introduction: intro });
+  return result;
+};

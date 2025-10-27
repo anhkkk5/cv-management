@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-function Experience({ experienceList, onAdd }) {
+function Experience({ experienceList, onAdd, onDelete }) {
   return (
     <Card className="section-card">
       <div className="section-header">
@@ -35,7 +35,7 @@ function Experience({ experienceList, onAdd }) {
               </div>
               <div>
                 <EditOutlined className="edit-icon" style={{ marginRight: 10 }} onClick={() => onAdd(exp)} />
-                <DeleteOutlined className="delete-icon" />
+                <DeleteOutlined className="delete-icon" onClick={() => onDelete && onDelete(exp.id)} />
               </div>
             </div>
           </div>

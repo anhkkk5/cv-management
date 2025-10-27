@@ -5,18 +5,19 @@ import dayjs from "dayjs";
 import { getCookie } from "../../helpers/cookie";
 import { getDetailCandidates, editCandidates } from "../../services/Candidates/candidatesServices";
 import { 
-  getEducationByCandidate, createEducation, updateEducation,
-  getExperienceByCandidate, createExperience, updateExperience,
-  getProjectsByCandidate, createProject, updateProject,
-  getCertificatesByCandidate, createCertificate, updateCertificate
-} from "../../services/CV/cvServices";
+  
+  getCertificatesByCandidate, createCertificate, updateCertificate, deleteCertificate
+} from "../../services/Certificates/CertificatesServices";
+import {getEducationByCandidate, createEducation, updateEducation, deleteEducation} from "../../services/educationServices/educationServices"
+import {getExperienceByCandidate, createExperience, updateExperience, deleteExperience} from "../../services/Experience/ExperienceServices"
+import {getProjectsByCandidate, createProject, updateProject, deleteProject} from "../../services/project/ProjectServices"
 import { useNavigate } from "react-router-dom";
-import ProfileInfo from "./components/ProfileInfo";
-import Introduction from "./components/Introduction";
-import Education from "./components/Education";
-import Experience from "./components/Experience";
-import Projects from "./components/Projects";
-import Certificates from "./components/Certificates";
+import ProfileInfo from "../../components/CV/ProfileInfo";
+import Introduction from "../../components/CV/Introduction";
+import Education from "../../components/CV/Education";
+import Experience from "../../components/CV/Experience";
+import Projects from "../../components/CV/Projects";
+import Certificates from "../../components/CV/Certificates";
 import "./style.css";
 
 const { Title, Text } = Typography;
@@ -144,6 +145,53 @@ function CVPage() {
     setIsModalOpen(false);
     setEditingItem(null);
     form.resetFields();
+  };
+
+  const handleDelete = async (type, id) => {
+    console.log("handleDelete called with type:", type, "id:", id);
+    
+    // Sử dụng window.confirm thay vì Modal.confirm
+    const confirmed = window.confirm("Bạn có chắc chắn muốn xóa mục này không?");
+    
+    if (!confirmed) {
+      console.log("User cancelled delete");
+      return;
+    }
+    
+    console.log("User confirmed, deleting...");
+    try {
+      if (type === "education") {
+        console.log("Deleting education with id:", id);
+        await deleteEducation(id);
+        setCvData(prev => ({
+          ...prev,
+          education: prev.education.filter(edu => edu.id !== id)
+        }));
+      } else if (type === "experience") {
+        console.log("Deleting experience with id:", id);
+        await deleteExperience(id);
+        setCvData(prev => ({
+          ...prev,
+          experience: prev.experience.filter(exp => exp.id !== id)
+        }));
+      } else if (type === "project") {
+        await deleteProject(id);
+        setCvData(prev => ({
+          ...prev,
+          projects: prev.projects.filter(proj => proj.id !== id)
+        }));
+      } else if (type === "certificate") {
+        await deleteCertificate(id);
+        setCvData(prev => ({
+          ...prev,
+          certificates: prev.certificates.filter(cert => cert.id !== id)
+        }));
+      }
+      message.success("Đã xóa thành công!");
+    } catch (error) {
+      console.error("Error deleting:", error);
+      message.error("Không thể xóa. Vui lòng thử lại!");
+    }
   };
 
   const handleSubmit = async (values) => {
@@ -351,22 +399,26 @@ function CVPage() {
             
             <Education 
               educationList={cvData.education} 
-              onAdd={(item) => showModal("education", item)} 
+              onAdd={(item) => showModal("education", item)}
+              onDelete={(id) => handleDelete("education", id)}
             />
             
             <Experience 
               experienceList={cvData.experience} 
-              onAdd={(item) => showModal("experience", item)} 
+              onAdd={(item) => showModal("experience", item)}
+              onDelete={(id) => handleDelete("experience", id)}
             />
             
             <Projects 
               projectsList={cvData.projects} 
-              onAdd={(item) => showModal("project", item)} 
+              onAdd={(item) => showModal("project", item)}
+              onDelete={(id) => handleDelete("project", id)}
             />
             
             <Certificates 
               certificatesList={cvData.certificates} 
-              onAdd={(item) => showModal("certificate", item)} 
+              onAdd={(item) => showModal("certificate", item)}
+              onDelete={(id) => handleDelete("certificate", id)}
             />
           </Col>
         </Row>

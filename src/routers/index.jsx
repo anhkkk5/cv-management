@@ -7,12 +7,14 @@ import JobDetail from "../pages/JobDetail/index.jsx";
 import CompanyDetail from "../pages/CompanyDetail/index.jsx";
 import CVPage from "../pages/CV/index.jsx";
 import Login from "../pages/login/index.jsx";
-import Register from "../Register/index.jsx";
+import Register from "../pages/Register/index.jsx";
 import Logout from "../logout/index.jsx";
 
 import LoginCompany from "../pages/login/loginCompany.jsx";
-import RegisterCompany from "../Register/registerCompany.jsx";
-
+import RegisterCompany from "../pages/Register/registerCompany.jsx";
+import Search from "../pages/Search/index.jsx";
+import Post from "../pages/Post/index.jsx";
+import CreateJob from "../pages/CreateJob/index.jsx";
 export const routes = [
   {
     path: "/",
@@ -31,6 +33,10 @@ export const routes = [
         element: <JobDetail />,
       },
       {
+        path: "job/:id",
+        element: <JobDetail />,
+      },
+      {
         path: "companies",
         element: <CompaniesPage />,
       },
@@ -41,6 +47,14 @@ export const routes = [
       {
         path: "cv",
         element: <CVPage />,
+      },
+      {
+        path: "search",
+        element: <Search />,
+      },
+      {
+        path: "create-job",
+        element: <CreateJob />,
       },
     ],
   },
@@ -64,4 +78,8 @@ export const routes = [
     path: "/registerCompany",
     element: <RegisterCompany />,
   },
+  {
+    path: "/post",
+    element: <Post />,
+  }
 ];
