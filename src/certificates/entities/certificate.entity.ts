@@ -14,19 +14,19 @@ export class Certificate {
   id: number;
 
   @Column()
-  name: string; // Tên chứng chỉ (ví dụ: AWS Certified Solutions Architect)
+  certificate_name: string; // Tên chứng chỉ (ví dụ: AWS Certified Solutions Architect)
 
   @Column()
-  issuer: string; // Tổ chức cấp (ví dụ: Amazon Web Services)
+  organization: string; // Tổ chức cấp (ví dụ: Amazon Web Services)
+
+  @Column({ type: 'date' })
+  started_at: Date;
 
   @Column({ type: 'date', nullable: true })
-  issueDate: Date; // Ngày cấp
+  end_at: Date;
 
-  @Column({ nullable: true })
-  credentialID: string; // Mã chứng chỉ (tùy chọn)
-
-  @Column({ nullable: true })
-  credentialURL: string; // Link xác thực (tùy chọn)
+  @Column({ type: 'text' })
+  description: string;
 
   @ManyToOne(() => User, (user) => user.certificates, { onDelete: 'CASCADE' })
   user: User; // Liên kết với User (Candidate)

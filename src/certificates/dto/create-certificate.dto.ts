@@ -4,21 +4,22 @@ import { IsString, IsNotEmpty, IsDateString, IsOptional, IsUrl } from 'class-val
 export class CreateCertificateDto {
   @ApiProperty({ example: 'AWS Certified Solutions Architect - Associate' })
   @IsString() @IsNotEmpty()
-  name: string;
+  certificate_name: string;
 
   @ApiProperty({ example: 'Amazon Web Services' })
   @IsString() @IsNotEmpty()
-  issuer: string;
+  organization: string;
 
   @ApiProperty({ example: '2024-10-20' })
   @IsOptional() @IsDateString()
-  issueDate?: Date;
+  started_at?: Date;
 
-  @ApiProperty({ example: 'ABC-123-XYZ', required: false })
-  @IsOptional() @IsString()
-  credentialID?: string;
+  @ApiProperty({ example: '2024-12-31' })
+  @IsOptional() @IsDateString()
+  end_at?: Date;
 
-  @ApiProperty({ example: 'https://aws.amazon.com/verification', required: false })
-  @IsOptional() @IsUrl()
-  credentialURL?: string;
+  @ApiProperty({ example: 'This certification validates expertise in designing distributed systems on AWS.' })
+  @IsString() @IsNotEmpty()
+  description: string;
+
 }

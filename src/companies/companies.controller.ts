@@ -32,13 +32,13 @@ export class CompaniesController {
     return this.companiesService.updateMyCompany(req.user.userId, updateDto);
   }
 
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Recruiter)
   @Post()
   create(@Body() createDto: CreateCompanyDto) {
     return this.companiesService.create(createDto);
   }
 
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Recruiter)
   @Patch(':id')
   updateByAdmin(
     @Param('id', ParseIntPipe) id: number,
@@ -47,7 +47,7 @@ export class CompaniesController {
     return this.companiesService.updateByAdmin(id, updateDto);
   }
 
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Recruiter)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number) {

@@ -15,26 +15,26 @@ export class Experience {
   id: number;
 
   @Column()
-  jobTitle: string;
+  position: string;
 
   @Column()
   company: string;
 
   @Column({ type: 'date' })
-  startDate: Date;
+  started_at: Date;
 
   @Column({ type: 'date', nullable: true })
-  endDate: Date;
+  end_at: Date;
 
   @Column({ type: 'text' })
-  description: string;
+  info: string;
   
   @ManyToOne(() => User, (user) => user.experiences, { onDelete: 'CASCADE' })
   user: User;
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updated_at: Date;
 }

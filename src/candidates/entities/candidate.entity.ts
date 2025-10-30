@@ -20,7 +20,7 @@ export class Candidate {
   user: User;
 
   @Column()
-  name: string;
+  fullName: string;
 
   @Column({ type: 'boolean', default: true })
   isOpen: boolean; // 1 = true (sẵn sàng), 0 = false
@@ -30,6 +30,9 @@ export class Candidate {
 
   @Column({ nullable: true })
   address: string;
+
+  @Column({ unique: true })
+  email: string;
 
   @Column({ nullable: true })
   phone: string;
@@ -45,6 +48,9 @@ export class Candidate {
 
   @Column({ nullable: true })
   link_git: string;
+
+  @Column({ nullable: true })
+  introduction: string;
 
   @CreateDateColumn()
   created_at: Date;

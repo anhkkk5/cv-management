@@ -6,7 +6,7 @@ export class CreateExperienceDto {
   @ApiProperty({ example: 'Software Engineer', description: 'The title of the job' })
   @IsString()
   @IsNotEmpty()
-  jobTitle: string;
+  position: string;
 
   @ApiProperty({ example: 'Google Inc.', description: 'The company name' })
   @IsString()
@@ -15,15 +15,15 @@ export class CreateExperienceDto {
 
   @ApiProperty({ example: '2020-01-01', description: 'The start date of the job' })
   @IsDateString()
-  startDate: Date;
+  started_at: Date;
 
   @ApiProperty({ example: '2022-01-01', description: 'The end date of the job', required: false })
   @IsOptional()
   @IsDateString()
-  endDate?: Date;
+  end_at?: Date;
 
   @ApiProperty({ example: 'Worked on various projects...', description: 'The job description' })
   @IsString()
   @IsNotEmpty()
-  description: string;
+  info: string;
 }

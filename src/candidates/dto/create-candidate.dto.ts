@@ -22,6 +22,11 @@ export class CreateCandidateDto {
   @IsString()
   address?: string;
 
+  @ApiProperty({ example: 'nguyenvana@gmail.com' })
+  @IsOptional()
+  @IsString()
+  email?: string;
+
   @ApiProperty({ example: '0123456789' })
   @IsOptional()
   // @IsPhoneNumber('VN') // Bỏ comment nếu bạn đã cài đặt libphonenumber-js
@@ -47,4 +52,9 @@ export class CreateCandidateDto {
   @IsOptional()
   @IsString()
   link_git?: string;
+
+  @ApiProperty({ example: 'Tôi là một lập trình viên với 5 năm kinh nghiệm...' })
+  @IsOptional()
+  @IsString()
+  introduction?: string;
 }

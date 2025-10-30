@@ -1,4 +1,5 @@
 import { User } from '../../users/entities/user.entity';
+import { Job } from '../../jobs/entities/job.entity';
 import {
   Column,
   CreateDateColumn,
@@ -6,15 +7,27 @@ import {
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
+  OneToOne,
+  JoinColumn,
 } from 'typeorm';
 
 @Entity('companies')
 export class Company {
+  @OneToOne(() => User, { onDelete: 'CASCADE' })
+  @JoinColumn()
+  user: User;
+
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column({ unique: true })
-  name: string;
+  fullName: string;
+
+  @JoinColumn()
+  email: User;
+
+  @Column({ unique: true })
+  companyName: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
@@ -28,9 +41,13 @@ export class Company {
   @Column({ nullable: true })
   website: string;
 
-  // Một Company có nhiều User (Recruiter)
-  @OneToMany(() => User, (user) => user.company)
-  recruiters: User[];
+  // Một Company có một User (Recruiter)
+  @OneToOne(() => User, (user) => user.company)
+  recruiters: User;
+  
+  // Một Company có nhiều Jobs
+  @OneToMany(() => Job, (job) => job.company)
+  jobs: Job[];
 
   @CreateDateColumn()
   created_at: Date;

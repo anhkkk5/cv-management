@@ -26,9 +26,8 @@ export class Education {
   end_at: Date;
 
   @Column({ type: 'text', nullable: true })
-  info: string; // Thông tin thêm (GPA)
+  info: string;
   
-  // Liên kết với User (Candidate)
   @ManyToOne(() => User, (user) => user.educations, { onDelete: 'CASCADE' })
   user: User;
 
