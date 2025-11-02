@@ -1,5 +1,5 @@
 // src/projects/entities/project.entity.ts
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   Entity,
@@ -21,9 +21,8 @@ export class Project {
   description: string;
 
   @Column({ nullable: true })
-  demo_link: string; // Link tới dự án
+  demo_link: string;
 
-  // Thiết lập mối quan hệ
   @ManyToOne(() => User, (user) => user.projects, { onDelete: 'CASCADE' })
   user: User;
 

@@ -1,4 +1,4 @@
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -14,19 +14,18 @@ export class Candidate {
   @PrimaryGeneratedColumn()
   id: number;
 
-  // Thiết lập mối quan hệ Một-Một với User
   @OneToOne(() => User, { onDelete: 'CASCADE' })
-  @JoinColumn() // Bảng này sẽ giữ khóa ngoại 'userId'
+  @JoinColumn()
   user: User;
 
   @Column()
   fullName: string;
 
   @Column({ type: 'boolean', default: true })
-  isOpen: boolean; // 1 = true (sẵn sàng), 0 = false
+  isOpen: boolean;
 
   @Column({ type: 'date', nullable: true })
-  dob: Date; // Ngày sinh
+  dob: Date;
 
   @Column({ nullable: true })
   address: string;
@@ -37,7 +36,7 @@ export class Candidate {
   @Column({ nullable: true })
   phone: string;
 
-  @Column({ type: 'smallint', nullable: true }) // 1 = nam, 0 = nữ (ví dụ)
+  @Column({ type: 'smallint', nullable: true })
   gender: number;
 
   @Column({ nullable: true })

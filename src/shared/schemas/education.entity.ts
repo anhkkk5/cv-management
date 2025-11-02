@@ -1,4 +1,4 @@
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -14,10 +14,10 @@ export class Education {
   id: number;
 
   @Column()
-  name_education: string; // Tên trường học (theo ví dụ của bạn)
+  name_education: string;
 
   @Column()
-  major: string; // Ngành học
+  major: string;
 
   @Column({ type: 'date' })
   started_at: Date;

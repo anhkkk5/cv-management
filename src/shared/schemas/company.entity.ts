@@ -1,5 +1,5 @@
-import { User } from '../../users/entities/user.entity';
-import { Job } from '../../jobs/entities/job.entity';
+import { User } from '../schemas/user.entity';
+import { Job } from '../schemas/job.entity';
 import {
   Column,
   CreateDateColumn,
@@ -36,16 +36,14 @@ export class Company {
   address: string;
 
   @Column({ nullable: true })
-  logoUrl: string; // URL tới logo công ty
+  logoUrl: string;
 
   @Column({ nullable: true })
   website: string;
 
-  // Một Company có một User (Recruiter)
   @OneToOne(() => User, (user) => user.company)
   recruiters: User;
   
-  // Một Company có nhiều Jobs
   @OneToMany(() => Job, (job) => job.company)
   jobs: Job[];
 

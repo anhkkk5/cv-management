@@ -3,14 +3,14 @@ import { Entity, PrimaryGeneratedColumn, Column, BeforeInsert, OneToOne, ManyToO
 import * as bcrypt from 'bcrypt';
 import { Role } from '../../common/enums/role.enum';
 import { OneToMany } from 'typeorm';
-import { Experience } from '../../experiences/entities/experience.entity';
-import { Project } from '../../projects/entities/project.entity';
-import { Candidate } from '../../candidates/entities/candidate.entity';
-import { Education } from '../../education/entities/education.entity';
-import { Job } from '../../jobs/entities/job.entity';
-import { Certificate } from '../../certificates/entities/certificate.entity';
-import { Skill } from '../../skills/entities/skill.entity';
-import { Company } from '../../companies/entities/company.entity';
+import { Experience } from '../schemas/experience.entity';
+import { Project } from '../schemas/project.entity';
+import { Candidate } from '../schemas/candidate.entity';
+import { Education } from '../schemas/education.entity';
+import { Job } from '../schemas/job.entity';
+import { Certificate } from '../schemas/certificate.entity';
+import { Skill } from '../schemas/skill.entity';
+import { Company } from '../schemas/company.entity';
 
 @Entity('users')
 export class User {

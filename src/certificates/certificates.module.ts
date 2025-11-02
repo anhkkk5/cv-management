@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { CertificatesService } from './certificates.service';
 import { CertificatesController } from './certificates.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { Certificate } from './entities/certificate.entity';
+import { Certificate } from '../shared/schemas/certificate.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Certificate])],

@@ -1,4 +1,4 @@
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   Entity,
@@ -12,11 +12,11 @@ export class Skill {
   id: number;
 
   @Column()
-  name: string; // Tên kỹ năng (ví dụ: JavaScript)
+  name: string;
 
   @Column({ nullable: true })
-  level: string; // Trình độ (ví dụ: Advanced, Intermediate)
+  level: string;
 
   @ManyToOne(() => User, (user) => user.skills, { onDelete: 'CASCADE' })
-  user: User; // Liên kết với User (Candidate)
+  user: User;
 }

@@ -1,4 +1,4 @@
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -14,10 +14,10 @@ export class Certificate {
   id: number;
 
   @Column()
-  certificate_name: string; // Tên chứng chỉ (ví dụ: AWS Certified Solutions Architect)
+  certificate_name: string; 
 
   @Column()
-  organization: string; // Tổ chức cấp (ví dụ: Amazon Web Services)
+  organization: string;
 
   @Column({ type: 'date' })
   started_at: Date;
@@ -29,7 +29,7 @@ export class Certificate {
   description: string;
 
   @ManyToOne(() => User, (user) => user.certificates, { onDelete: 'CASCADE' })
-  user: User; // Liên kết với User (Candidate)
+  user: User;
 
   @CreateDateColumn()
   created_at: Date;

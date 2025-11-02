@@ -1,10 +1,10 @@
 import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Company } from './entities/company.entity';
+import { Company } from '../shared/schemas/company.entity';
 import { CreateCompanyDto } from './dto/create-company.dto';
 import { UpdateCompanyDto } from './dto/update-company.dto';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../shared/schemas/user.entity';
 
 @Injectable()
 export class CompaniesService {

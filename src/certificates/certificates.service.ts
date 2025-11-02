@@ -3,7 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateCertificateDto } from './dto/create-certificate.dto';
 import { UpdateCertificateDto } from './dto/update-certificate.dto';
-import { Certificate } from './entities/certificate.entity';
+import { Certificate } from '../shared/schemas/certificate.entity';
 
 @Injectable()
 export class CertificatesService {

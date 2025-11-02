@@ -1,5 +1,5 @@
 // src/jobs/entities/job.entity.ts
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   CreateDateColumn,
@@ -30,39 +30,38 @@ export class Job {
   location: string;
 
   @Column({ nullable: true })
-  salary: string; // "15-25 triệu VND"
+  salary: string;
 
   @Column({
-    type: 'json', // Lưu dưới dạng JSON
+    type: 'json',
     nullable: true,
   })
-  desirable: string[]; // ["Kinh nghiệm với Docker", ...]
+  desirable: string[]; 
 
   @Column({
-    type: 'json', // Lưu dưới dạng JSON
+    type: 'json',
     nullable: true,
   })
-  benefits: string[]; // ["Lương cạnh tranh", ...]
+  benefits: string[]; 
 
   @Column({ nullable: true })
-  location_id: string; // "LOC001" (Sẽ tốt hơn nếu đây là một quan hệ)
+  location_id: string;
 
   @Column({ nullable: true })
-  type: string; // "FULL-TIME"
+  type: string;
 
   @Column({ nullable: true })
-  jobLevel: string; // "Junior"
+  jobLevel: string;
 
   @Column({ nullable: true })
-  experience: string; // "2-3 năm"
+  experience: string; 
 
   @Column({ nullable: true })
-  education: string; // "Đại học"
+  education: string;
 
   @Column({ type: 'date', nullable: true })
-  expire_at: Date; // Ngày hết hạn
+  expire_at: Date;
 
-  
   @ManyToOne(() => User, (user) => user.jobs, { onDelete: 'CASCADE' })
   postedBy: User;
 

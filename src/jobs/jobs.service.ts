@@ -7,7 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
-import { Job } from './entities/job.entity';
+import { Job } from '../shared/schemas/job.entity';
 
 @Injectable()
 export class JobsService {

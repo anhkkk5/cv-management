@@ -1,5 +1,5 @@
 // src/experiences/entities/experience.entity.ts
-import { User } from '../../users/entities/user.entity';
+import { User } from '../schemas/user.entity';
 import {
   Column,
   CreateDateColumn,
