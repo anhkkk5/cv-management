@@ -1,5 +1,6 @@
 import { User } from '../schemas/user.entity';
 import { Job } from '../schemas/job.entity';
+import { CompanyAddress } from '../schemas/company-address.entity';
 import {
   Column,
   CreateDateColumn,
@@ -46,6 +47,9 @@ export class Company {
   
   @OneToMany(() => Job, (job) => job.company)
   jobs: Job[];
+
+  @OneToMany(() => CompanyAddress, (address) => address.company)
+  addresses: CompanyAddress[];
 
   @CreateDateColumn()
   created_at: Date;

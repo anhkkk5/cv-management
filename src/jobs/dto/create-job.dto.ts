@@ -25,7 +25,7 @@ export class CreateJobDto {
   @ApiProperty({ example: 'Thành phố Hồ Chí Minh, Việt Nam' })
   @IsOptional()
   @IsString()
-  location?: string;
+  location?: number;
 
   @ApiProperty({ example: '15-25 triệu VND', required: false })
   @IsOptional()
