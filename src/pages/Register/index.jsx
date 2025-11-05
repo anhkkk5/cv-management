@@ -175,10 +175,32 @@ function Register() {
                     <Text
                       className="signup-link"
                       onClick={() => navigate("/login")}
+                      style={{ color: "red", cursor: "pointer" }}
                     >
                       Đăng nhập ngay
                     </Text>
                   </Text>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      marginTop: 12,
+                      whiteSpace: "nowrap",
+                      flexWrap: "nowrap",
+                      justifyContent: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <Text>Hoặc đăng kí bằng:</Text>
+                    
+                    <span
+                      onClick={() => navigate("/registerCompany")}
+                      style={{ color: "red", cursor: "pointer" }}
+                    >
+                      Công ty
+                    </span>
+                  </div>
                 </div>
               </Form>
             </div>
