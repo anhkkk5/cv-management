@@ -15,6 +15,12 @@ import RegisterCompany from "../pages/Register/registerCompany.jsx";
 import Search from "../pages/Search/index.jsx";
 import Post from "../pages/Post/index.jsx";
 import CreateJob from "../pages/CreateJob/index.jsx";
+import LoginAdmin from "../pages/login/loginAdmin.jsx";
+import AdminLayout from "../Layout/AdminLayout/index.jsx";
+import JobsManagement from "../pages/Admin/JobsManagement/index.jsx";
+import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
+import CompaniesManagement from "../pages/Admin/CompaniesManagement/index.jsx";
+
 export const routes = [
   {
     path: "/",
@@ -79,7 +85,29 @@ export const routes = [
     element: <RegisterCompany />,
   },
   {
+    path: "/loginAdmin",
+    element: <LoginAdmin />,
+  },
+  {
     path: "/post",
     element: <Post />,
-  }
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      {
+        path: "jobs",
+        element: <JobsManagement />,
+      },
+      {
+        path: "users",
+        element: <UsersManagement />,
+      },
+      {
+        path: "companies",
+        element: <CompaniesManagement />,
+      },
+    ],
+  },
 ];

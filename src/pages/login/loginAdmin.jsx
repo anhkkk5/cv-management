@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginCandidates } from "../../services/Candidates/candidatesServices";
+import { loginAdmin } from "../../services/Admin/adminServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -10,7 +10,7 @@ import { Link } from "react-router-dom";
 
 const { Title, Text } = Typography;
 
-function Login() {
+function LoginAdmin() {
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -25,39 +25,32 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      const data = await loginCandidates(values.email, values.password);
+      const result = await loginAdmin(values.email, values.password);
 
-      // Filter by password on client side and ensure active status
-      const matchedCandidate = data.find(candidate => 
-        candidate.email === values.email && 
-        candidate.password === values.password && 
-        candidate.status === "active"
+      // Filter by password on client side
+      const matchedAdmin = result.find(
+        (admin) =>
+          admin.email === values.email && admin.password === values.password
       );
 
-      if (matchedCandidate) {
+      if (matchedAdmin) {
         const time = 1; // 1 day
 
-        // Set cookies with user data
-        setCookie("id", matchedCandidate.id, time);
-        setCookie("fullName", matchedCandidate.fullName, time);
-        setCookie("email", matchedCandidate.email, time);
-        setCookie("token", matchedCandidate.token, time);
-        setCookie("userType", "candidate", time);
+        // Set cookies with admin data
+        setCookie("id", matchedAdmin.id, time);
+        setCookie("fullName", matchedAdmin.fullName, time);
+        setCookie("email", matchedAdmin.email, time);
+        setCookie("token", matchedAdmin.token, time);
+        setCookie("userType", "admin", time);
         dispatch(checkLogin(true));
         messageApi.success("Đăng nhập thành công!");
 
-        // Navigate after showing success message
+        // Navigate to admin dashboard
         setTimeout(() => {
-          navigate("/");
+          navigate("/admin/jobs");
         }, 1500);
       } else {
-        // Show more specific message for inactive status if email+password matched
-        const emailMatch = data.find(c => c.email === values.email && c.password === values.password);
-        if (emailMatch && emailMatch.status !== "active") {
-          messageApi.error("Tài khoản đã bị tạm dừng. Vui lòng liên hệ quản trị viên.");
-        } else {
-          messageApi.error("Email hoặc mật khẩu không đúng!");
-        }
+        messageApi.error("Email hoặc mật khẩu không đúng!");
       }
     } catch (error) {
       messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
@@ -84,8 +77,7 @@ function Login() {
 
               {/* Heading */}
               <Title level={2} className="login-heading">
-                Cùng Rikkei Education xây dựng hồ sơ nổi bật và nhận được các cơ
-                hội sự nghiệp lý tưởng
+                Đăng nhập Admin - Quản lý hệ thống Rikkei Education
               </Title>
 
               {/* Login Form */}
@@ -105,7 +97,10 @@ function Login() {
                     },
                   ]}
                 >
-                  <Input placeholder="abc@gmail.com" className="login-input" />
+                  <Input
+                    placeholder="admin@gmail.com"
+                    className="login-input"
+                  />
                 </Form.Item>
 
                 <Form.Item
@@ -141,34 +136,13 @@ function Login() {
                 <div className="login-links">
                   <Text className="forgot-password-link">Quên mật khẩu?</Text>
                   <Text className="signup-text">
-                    Bạn không có tài khoản?{" "}
+                    Bạn không phải admin?{" "}
                     <Text className="signup-link">
-                      <Link to="/register" style={{ color: "red" }}>
-                        Tạo 1 tài khoản
+                      <Link to="/login" style={{ color: "red" }}>
+                        Đăng nhập người dùng
                       </Link>
                     </Text>
                   </Text>
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 12,
-                      marginTop: 12,
-                      whiteSpace: "nowrap",
-                      flexWrap: "nowrap",
-                      justifyContent: "center",
-                      width: "100%",
-                    }}
-                  >
-                    <Text>Hoặc đăng nhập bằng:</Text>
-                    <Link to="/loginAdmin" style={{ color: "red" }}>
-                      Admin
-                    </Link>
-                    <span>|</span>
-                    <Link to="/loginCompany" style={{ color: "red" }}>
-                      Công ty
-                    </Link>
-                  </div>
                 </div>
               </Form>
             </div>
@@ -182,13 +156,13 @@ function Login() {
                 display: "flex",
                 justifyContent: "center",
                 alignItems: "center",
-                height: "100%", // ensures vertical centering within column
+                height: "100%",
                 minHeight: "100vh",
               }}
             >
               <img
                 src="/src/assets/anhloginuser.png"
-                alt="Career Growth Illustration"
+                alt="Admin Dashboard Illustration"
                 className="illustration-image"
                 style={{
                   width: "80%",
@@ -206,4 +180,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginAdmin;
