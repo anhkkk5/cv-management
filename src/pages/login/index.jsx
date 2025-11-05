@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginCandidates } from "../../services/Candidates/candidatesServices";
+import { loginCandidate } from "../../services/auth/authService";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -25,34 +25,26 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      const data = await loginCandidates(values.email, values.password);
+      const res = await loginCandidate(values.email, values.password, "candidate");
+      const payload = res?.data ?? res;
+      const token = payload?.token || payload?.accessToken || payload?.access_token;
+      const user = payload?.user || payload?.data || payload?.profile || {};
+      if (!token) throw new Error("Missing token in response");
 
-      // Filter by password on client side
-      const matchedCandidate = data.find(candidate => 
-        candidate.email === values.email && candidate.password === values.password
-      );
+      const time = 1; // 1 day
+      if (user?.id) setCookie("id", user.id, time);
+      if (user?.fullName || user?.name) setCookie("fullName", user.fullName ?? user.name, time);
+      setCookie("email", user.email ?? values.email, time);
+      setCookie("token", token, time);
+      setCookie("userType", "candidate", time);
+      dispatch(checkLogin(true));
+      messageApi.success("Đăng nhập thành công!");
 
-      if (matchedCandidate) {
-        const time = 1; // 1 day
-
-        // Set cookies with user data
-        setCookie("id", matchedCandidate.id, time);
-        setCookie("fullName", matchedCandidate.fullName, time);
-        setCookie("email", matchedCandidate.email, time);
-        setCookie("token", matchedCandidate.token, time);
-        setCookie("userType", "candidate", time);
-        dispatch(checkLogin(true));
-        messageApi.success("Đăng nhập thành công!");
-
-        // Navigate after showing success message
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      } else {
-        messageApi.error("Email hoặc mật khẩu không đúng!");
-      }
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      messageApi.error("Email hoặc mật khẩu không đúng!");
       console.error("Login error:", error);
     }
   };

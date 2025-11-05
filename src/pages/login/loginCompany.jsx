@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginCompany } from "../../services/getAllCompany/companyServices";
+import { loginCompany as loginCompanyAuth } from "../../services/auth/authService";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -25,35 +25,26 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      const result = await loginCompany(values.email, values.password);
+      const res = await loginCompanyAuth(values.email, values.password, "company");
+      const payload = res?.data ?? res;
+      const token = payload?.token || payload?.accessToken || payload?.access_token;
+      const user = payload?.user || payload?.data || payload?.profile || {};
+      if (!token) throw new Error("Missing token in response");
 
-      // Filter by password on client side since json-server doesn't support multiple query params properly
-      const matchedCompany = result.find(company => 
-        company.email === values.email && company.password === values.password
-      );
+      const time = 1; // 1 day
+      if (user?.id) setCookie("id", user.id, time);
+      if (user?.companyName || user?.name || user?.fullName) setCookie("companyName", user.companyName || user.name || user.fullName, time);
+      setCookie("email", user.email ?? values.email, time);
+      setCookie("token", token, time);
+      setCookie("userType", "company", time);
+      dispatch(checkLogin(true));
+      messageApi.success("Đăng nhập thành công!");
 
-      if (matchedCompany) {
-        const time = 1; // 1 day
-        const companyData = matchedCompany;
-
-        // Set cookies with user data
-        setCookie("id", companyData.id, time);
-        setCookie("companyName", companyData.companyName || companyData.name || companyData.fullName, time);
-        setCookie("email", companyData.email, time);
-        setCookie("token", companyData.token, time);
-        setCookie("userType", "company", time);
-        dispatch(checkLogin(true));
-        messageApi.success("Đăng nhập thành công!");
-
-        // Navigate after showing success message
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      } else {
-        messageApi.error("Email hoặc mật khẩu không đúng!");
-      }
+      setTimeout(() => {
+        navigate("/");
+      }, 1500);
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      messageApi.error("Email hoặc mật khẩu không đúng!");
       console.error("Login error:", error);
     }
   };
