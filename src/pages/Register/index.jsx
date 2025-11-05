@@ -2,9 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Form, Input, Button, message, Typography } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { generateToken } from "../../helpers/generateToken";
-import { checkExits } from "../../services/Candidates/candidatesServices";
-import { createCandidates } from "../../services/Candidates/candidatesServices";
+import { registerCandidate } from "../../services/auth/authService";
 import "../../pages/login/style.css";
 
 const { Title, Text } = Typography;
@@ -14,7 +12,6 @@ function Register() {
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
-  // Define validation rules
   const rules = [
     {
       required: true,
@@ -24,43 +21,32 @@ function Register() {
 
   const onFinish = async (values) => {
     try {
-      console.log("Registration attempt:", values);
-
-      // Validate password confirmation
       if (values.password !== values.confirmPassword) {
         messageApi.error("Mật khẩu xác nhận không khớp!");
         return;
       }
 
-      // Generate token and prepare data
-      values.token = generateToken();
+      // API requires: email, password, role
+      const payload = {
+        email: values.email,
+        password: values.password,
+        role: "candidate",
+      };
 
-      // Check if email already exists
-      const checkExistEmail = await checkExits("email", values.email);
-
-      if (checkExistEmail && checkExistEmail.length > 0) {
-        messageApi.error("Email đã tồn tại!");
-        return;
-      }
-
-
-      // If no duplicates, proceed with registration
-      const result = await createCandidates(values);
-
-      if (result) {
-        messageApi.success(
-          "Đăng ký thành công! Chào mừng bạn đến với nền tảng của chúng tôi 🎉"
-        );
+      const result = await registerCandidate(payload);
+      const resData = result?.data ?? result;
+      if (resData) {
+        messageApi.success("Đăng ký thành công!");
         form.resetFields();
-        // Wait a bit for user to see the success message before navigating
         setTimeout(() => {
           navigate("/login");
-        }, 2000);
+        }, 1500);
       } else {
         messageApi.error("Đăng ký thất bại. Vui lòng thử lại!");
       }
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      const msg = error?.response?.data?.message || "Đăng ký thất bại. Vui lòng kiểm tra thông tin!";
+      messageApi.error(msg);
       console.error("Registration error:", error);
     }
   };
@@ -70,135 +56,44 @@ function Register() {
       {contextHolder}
       <div className="login-container">
         <Row className="login-row" gutter={0}>
-          {/* Left Column - Registration Form */}
           <Col xs={24} lg={12} className="login-form-col">
             <div className="login-form-wrapper">
-              {/* Logo Section */}
               <div className="logo-section">
-                <img
-                  src="/src/assets/logologin.png"
-                  alt="RIKEI Edu Logo"
-                  className="logo-image"
-                />
+                <img src="/src/assets/logologin.png" alt="RIKEI Edu Logo" className="logo-image" />
               </div>
-
-              {/* Heading */}
               <Title level={2} className="login-heading">
-                Cùng Rikkei Education xây dựng hồ sơ nổi bật và nhận được các cơ
-                hội sự nghiệp lý tưởng
+                Cùng Rikkei Education xây dựng hồ sơ nổi bật và nhận được cơ hội sự nghiệp lý tưởng
               </Title>
-
-              {/* Registration Form */}
-              <Form
-                form={form}
-                layout="vertical"
-                onFinish={onFinish}
-                className="login-form"
-              >
-                <Form.Item label="Họ tên" name="fullName" rules={rules}>
-                  <Input placeholder="Nhập họ tên" className="login-input" />
-                </Form.Item>
-
-                <Form.Item
-                  label="Email"
-                  name="email"
-                  rules={[
-                    ...rules,
-                    {
-                      type: "email",
-                      message: "Email không hợp lệ!",
-                    },
-                  ]}
-                >
+              <Form form={form} layout="vertical" onFinish={onFinish} className="login-form">
+              {/* Họ tên không bắt buộc theo API /auth/register */}
+              <Form.Item label="Họ tên" name="fullName">
+                <Input placeholder="Nhập họ tên" className="login-input" />
+              </Form.Item>
+                <Form.Item label="Email" name="email" rules={[...rules, { type: "email", message: "Email không hợp lệ!" }]}>
                   <Input placeholder="abc@gmail.com" className="login-input" />
                 </Form.Item>
-
-                <Form.Item
-                  label="Password"
-                  name="password"
-                  rules={[
-                    ...rules,
-                    {
-                      min: 6,
-                      message: "Mật khẩu phải có ít nhất 6 ký tự!",
-                    },
-                  ]}
-                >
-                  <Input.Password
-                    placeholder="•••••••••••••"
-                    className="login-input"
-                    iconRender={(visible) =>
-                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                    }
-                  />
+                <Form.Item label="Password" name="password" rules={[...rules, { min: 6, message: "Mật khẩu tối thiểu 6 ký tự!" }]}>
+                  <Input.Password placeholder="********" className="login-input" iconRender={(v) => (v ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
                 </Form.Item>
-
-                <Form.Item
-                  label="Confirm password"
-                  name="confirmPassword"
-                  rules={[
-                    ...rules,
-                    {
-                      min: 6,
-                      message: "Mật khẩu phải có ít nhất 6 ký tự!",
-                    },
-                  ]}
-                >
-                  <Input.Password
-                    placeholder="•••••••••••••"
-                    className="login-input"
-                    iconRender={(visible) =>
-                      visible ? <EyeTwoTone /> : <EyeInvisibleOutlined />
-                    }
-                  />
+                <Form.Item label="Confirm password" name="confirmPassword" rules={[...rules, { min: 6, message: "Mật khẩu tối thiểu 6 ký tự!" }]}>
+                  <Input.Password placeholder="********" className="login-input" iconRender={(v) => (v ? <EyeTwoTone /> : <EyeInvisibleOutlined />)} />
                 </Form.Item>
-
                 <Form.Item>
-                  <Button
-                    type="primary"
-                    htmlType="submit"
-                    block
-                    className="login-button"
-                    style={{
-                      backgroundColor: "red",
-                      borderColor: "red",
-                    }}
-                  >
+                  <Button type="primary" htmlType="submit" block className="login-button" style={{ backgroundColor: "red", borderColor: "red" }}>
                     Đăng ký
                   </Button>
                 </Form.Item>
-
-                {/* Links */}
                 <div className="login-links">
                   <Text className="signup-text">
-                    Bạn đã có tài khoản?{" "}
-                    <Text
-                      className="signup-link"
-                      onClick={() => navigate("/login")}
-                    >
-                      Đăng nhập ngay
-                    </Text>
+                    Bạn đã có tài khoản? <Text className="signup-link" onClick={() => navigate("/login")}>Đăng nhập ngay</Text>
                   </Text>
                 </div>
               </Form>
             </div>
           </Col>
-
-          {/* Right Column - Illustration */}
           <Col xs={24} lg={12} className="login-illustration-col">
             <div className="illustration-wrapper">
-              <img
-                src="/src/assets/anhloginuser.png"
-                alt="Career Growth Illustration"
-                className="illustration-image"
-                style={{
-                  width: "80%",
-                  maxWidth: "80%",
-                  height: "auto",
-                  display: "block",
-                  margin: "0 auto",
-                }}
-              />
+              <img src="/src/assets/anhloginuser.png" alt="Career Growth Illustration" className="illustration-image" style={{ width: "80%", maxWidth: "80%", height: "auto", display: "block", margin: "0 auto" }} />
             </div>
           </Col>
         </Row>

@@ -1,13 +1,30 @@
 import axios from "axios";
+import { getCookie } from "../../helpers/cookie.jsx";
 
 // Centralized Axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3002/",
+  baseURL: "http://localhost:3000/",
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 10000,
 });
+
+// Attach Authorization header if token exists, skip for auth routes
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const token = getCookie("token");
+    const path = `${config.url || ""}`;
+    // Skip attaching token on auth endpoints
+    const isAuthRoute = path.startsWith("auth/") || path.includes("/auth/");
+    if (token && !isAuthRoute) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 // Sử dụng axiosInstance thay vì fetch để nhất quán
 export const get = async (path) => {
