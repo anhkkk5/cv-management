@@ -8,13 +8,11 @@ export class Location {
   id: number;
 
   @Column({ unique: true })
-  name: string; // Ví dụ: "Hà Nội", "TP. Hồ Chí Minh"
+  name: string;
 
-  // Một Location có thể có nhiều địa chỉ công ty
   @OneToMany(() => CompanyAddress, (address) => address.location)
   companyAddresses: CompanyAddress[];
 
-  // Một Location có thể có nhiều công việc
   @OneToMany(() => Job, (job) => job.location)
   jobs: Job[];
 }

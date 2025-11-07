@@ -26,6 +26,9 @@ export class User {
   @Column({type: 'enum', enum: Role, default: Role.Candidate, })
   role: Role;
 
+  @Column({ nullable: false })
+  name: string;
+
   @OneToMany(() => Experience, (experience) => experience.user)
   experiences: Experience[];
 

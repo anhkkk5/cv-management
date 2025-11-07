@@ -1,3 +1,5 @@
+// src/jobs/jobs.service.ts
+
 import {
   Injectable,
   NotFoundException,
@@ -8,6 +10,7 @@ import { Repository } from 'typeorm';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
 import { Job } from '../shared/schemas/job.entity';
+import { DeepPartial } from 'typeorm';
 
 @Injectable()
 export class JobsService {
@@ -17,22 +20,24 @@ export class JobsService {
   ) {}
 
   async create(createJobDto: CreateJobDto, recruiterId: number): Promise<Job> {
+    const { location, ...restDto } = createJobDto
     const newJob = this.jobRepository.create({
-      ...createJobDto,
-      postedBy: { id: recruiterId },
-    });
+    ...restDto,
+    postedBy: { id: recruiterId },
+    location: location ? ({ id: location } as DeepPartial<any>) : undefined,
+} as DeepPartial<Job>);
     return this.jobRepository.save(newJob);
   }
 
   findAll(): Promise<Job[]> {
-    return this.jobRepository.find({ relations: ['postedBy'] });
+    return this.jobRepository.find({ relations: ['postedBy', 'location'] });
   }
 
 
   async findOne(id: number): Promise<Job> {
     const job = await this.jobRepository.findOne({
       where: { id },
-      relations: ['postedBy'],
+      relations: ['postedBy', 'location'],
     });
     if (!job) {
       throw new NotFoundException(`Không tìm thấy công việc với ID ${id}`);
@@ -47,7 +52,10 @@ export class JobsService {
       throw new ForbiddenException('Bạn không có quyền chỉnh sửa công việc này.');
     }
 
-    Object.assign(job, updateJobDto);
+    const { location, ...restDto } = updateJobDto;
+
+    Object.assign(job, restDto);
+    if (location) job.location = { id: location } as any;
     return this.jobRepository.save(job);
   }
 

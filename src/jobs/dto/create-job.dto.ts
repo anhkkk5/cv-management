@@ -22,7 +22,7 @@ export class CreateJobDto {
   @IsString()
   requirements?: string;
 
-  @ApiProperty({ example: 'Thành phố Hồ Chí Minh, Việt Nam' })
+  @ApiProperty({ example: 1 })
   @IsOptional()
   @IsString()
   location?: number;
