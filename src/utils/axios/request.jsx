@@ -2,11 +2,23 @@ import axios from "axios";
 
 // Centralized Axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3002/",
+  baseURL: "http://localhost:3000/",
   headers: {
     "Content-Type": "application/json",
   },
   timeout: 10000,
+});
+
+// Add Authorization header if token is present
+axiosInstance.interceptors.request.use((config) => {
+  try {
+    const token = localStorage.getItem("token");
+    if (token) {
+      config.headers = config.headers || {};
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+  } catch (_) {}
+  return config;
 });
 
 // Sử dụng axiosInstance thay vì fetch để nhất quán

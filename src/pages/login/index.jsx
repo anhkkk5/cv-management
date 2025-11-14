@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginCandidates } from "../../services/Candidates/candidatesServices";
+import { login, decodeJwt } from "../../services/auth/authServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -25,42 +25,32 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      const data = await loginCandidates(values.email, values.password);
+      const res = await login({ email: values.email, password: values.password });
+      const token = res?.access_token;
+      if (!token) throw new Error("No token returned");
 
-      // Filter by password on client side and ensure active status
-      const matchedCandidate = data.find(candidate => 
-        candidate.email === values.email && 
-        candidate.password === values.password && 
-        candidate.status === "active"
-      );
+      // Save token for axios interceptor
+      localStorage.setItem("token", token);
+      const payload = decodeJwt(token);
+      const role = payload?.role;
+      const userId = payload?.sub;
 
-      if (matchedCandidate) {
-        const time = 1; // 1 day
-
-        // Set cookies with user data
-        setCookie("id", matchedCandidate.id, time);
-        setCookie("fullName", matchedCandidate.fullName, time);
-        setCookie("email", matchedCandidate.email, time);
-        setCookie("token", matchedCandidate.token, time);
-        setCookie("userType", "candidate", time);
-        dispatch(checkLogin(true));
-        messageApi.success("Đăng nhập thành công!");
-
-        // Navigate after showing success message
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      } else {
-        // Show more specific message for inactive status if email+password matched
-        const emailMatch = data.find(c => c.email === values.email && c.password === values.password);
-        if (emailMatch && emailMatch.status !== "active") {
-          messageApi.error("Tài khoản đã bị tạm dừng. Vui lòng liên hệ quản trị viên.");
-        } else {
-          messageApi.error("Email hoặc mật khẩu không đúng!");
-        }
+      if (role !== 'candidate') {
+        messageApi.error("Bạn không có quyền đăng nhập trang người dùng.");
+        return;
       }
+
+      const time = 1; // 1 day
+      setCookie("id", userId, time);
+      setCookie("userType", "candidate", time);
+      setCookie("token", token, time);
+      dispatch(checkLogin(true));
+      messageApi.success("Đăng nhập thành công!");
+      setTimeout(() => navigate("/"), 800);
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      const backendMsg = error?.response?.data?.message;
+      if (backendMsg) messageApi.error(Array.isArray(backendMsg) ? backendMsg.join(", ") : backendMsg);
+      else messageApi.error("Đăng nhập thất bại. Vui lòng thử lại!");
       console.error("Login error:", error);
     }
   };

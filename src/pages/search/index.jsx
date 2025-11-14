@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getAlljob } from "../../services/jobServices/jobServices"; // Import service để lấy danh sách job
-import { getLocation } from "../../services/getAllLocation/locationServices"; // Import service để lấy danh sách location
-import { getAllCompany } from "../../services/getAllCompany/companyServices"; // Import service để lấy danh sách company
 import { Tag } from "antd";
 import SearchList from "../search/searchList";
+import { get } from "../../utils/axios/request";
 
 /**
  * Component Search - Trang tìm kiếm công việc
@@ -35,82 +33,20 @@ function Search() {
 
   // useEffect chạy khi component mount hoặc khi search parameters thay đổi
   useEffect(() => {
-    /**
-     * Hàm async để fetch và filter data
-     */
     const fetchApi = async () => {
       try {
-        // Gọi API để lấy tất cả jobs, locations và companies
-        const [jobs, locations, companies] = await Promise.all([
-          getAlljob(),
-          getLocation(),
-          getAllCompany()
-        ]);
-
-        if (jobs && locations && companies) {
-          // Filter jobs theo điều kiện search
-          const newData = jobs.filter((item) => {
-            // ✅ Kiểm tra điều kiện city
-            // Nếu có citySearch, tìm location_id tương ứng với tên thành phố
-            let cityMatch = true;
-            if (citySearch) {
-              // Tìm location có tên khớp với citySearch
-              const location = locations.find(loc => 
-                loc.name?.toLowerCase().includes(citySearch.toLowerCase()) ||
-                loc.city?.toLowerCase().includes(citySearch.toLowerCase())
-              );
-              
-              // Nếu tìm thấy location, check xem job có location_id khớp không
-              if (location) {
-                cityMatch = item.location_id === location.id;
-              } else {
-                // Nếu không tìm thấy location, thử so sánh trực tiếp với location_id
-                cityMatch = item.location_id?.toLowerCase().includes(citySearch.toLowerCase());
-              }
-            }
-
-            // ✅ Kiểm tra điều kiện keyword
-            // Tìm keyword trong title, description, jobLevel, type VÀ tên công ty
-            // Normalize: loại bỏ khoảng trắng và chuyển về lowercase để tìm kiếm linh hoạt
-            const keyword = keywordSearch
-              ? (() => {
-                  const normalizedKeyword = keywordSearch.toLowerCase().replace(/\s+/g, '');
-                  const normalizedTitle = item.title?.toLowerCase().replace(/\s+/g, '') || '';
-                  const normalizedDesc = item.description?.toLowerCase().replace(/\s+/g, '') || '';
-                  const normalizedLevel = item.jobLevel?.toLowerCase().replace(/\s+/g, '') || '';
-                  const normalizedType = item.type?.toLowerCase().replace(/\s+/g, '') || '';
-                  
-                  // Tìm company tương ứng với job
-                  const company = companies.find(comp => comp.id === item.company_id);
-                  const normalizedCompanyName = (company?.companyName || company?.name || '').toLowerCase().replace(/\s+/g, '');
-                  
-                  return (
-                    normalizedTitle.includes(normalizedKeyword) ||
-                    normalizedDesc.includes(normalizedKeyword) ||
-                    normalizedLevel.includes(normalizedKeyword) ||
-                    normalizedType.includes(normalizedKeyword) ||
-                    normalizedCompanyName.includes(normalizedKeyword)
-                  );
-                })()
-              : true;
-
-            // Trả về job chỉ khi tất cả điều kiện đều thỏa mãn
-            return cityMatch && keyword;
-          });
-
-          // ✅ Reverse array để hiển thị jobs mới nhất trước
-          // Cập nhật state với data đã được filter và reverse
-          setData(newData.reverse());
-        }
+        const params = new URLSearchParams();
+        if (citySearch) params.set("city", citySearch);
+        if (keywordSearch) params.set("keyword", keywordSearch);
+        const result = await get(`jobs?${params.toString()}`);
+        setData(Array.isArray(result) ? result : []);
       } catch (error) {
         console.error("Error fetching jobs:", error);
-        // Có thể thêm error handling ở đây
+        setData([]);
       }
     };
-
-    // Gọi hàm fetch
     fetchApi();
-  }, [citySearch, keywordSearch]); // ✅ Dependencies: chạy lại khi search params thay đổi
+  }, [citySearch, keywordSearch]);
 
   return (
     <>

@@ -1,11 +1,13 @@
 import "./layoutDefault.scss";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import SearchListJob from "../../components/SearchForm/searchJob";
-import { getCookie } from "../../helpers/cookie";
+import { getCookie, setCookie } from "../../helpers/cookie";
 import { useEffect, useState } from "react";
 import { BellOutlined, UserOutlined, ShopOutlined } from "@ant-design/icons";
 import { Dropdown, Menu } from "antd";
-import { getAllCompany } from "../../services/getAllCompany/companyServices";
+import { getAllCompany, getMyCompany } from "../../services/getAllCompany/companyServices";
+import { getMyCandidateProfile } from "../../services/Candidates/candidatesServices";
+import { decodeJwt } from "../../services/auth/authServices";
 import logoImage from "../../assets/logologin.png";
 
 function Header() {
@@ -18,33 +20,89 @@ function Header() {
   const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
-    const token = getCookie("token");
-    const type = getCookie("userType");
-    const fullName = getCookie("fullName");
-    const companyName = getCookie("companyName");
-    const id = getCookie("id");
+    const cookieToken = getCookie("token");
+    const lsToken = localStorage.getItem("token");
+    const token = cookieToken || lsToken || "";
 
-    if (token) {
-      setIsLoggedIn(true);
-      setUserType(type);
-      const name =
-        type === "candidate"
-          ? fullName
-          : type === "admin"
-          ? fullName
-          : companyName;
-      setUserName(name);
-      if (type === "company" && id) {
-        setCompanyId(id);
-      }
-    } else {
-      // Reset state when no token (logged out)
+    if (!token) {
       setIsLoggedIn(false);
       setUserType("");
       setUserName("");
       setCompanyId("");
+      return;
+    }
+
+    setIsLoggedIn(true);
+
+    let type = getCookie("userType");
+    if (!type) {
+      try {
+        const payload = decodeJwt(token);
+        type = payload?.role || "";
+      } catch (_e) {
+        type = "";
+      }
+    }
+    setUserType(type);
+
+    const fullName = getCookie("fullName");
+    const companyName = getCookie("companyName");
+    const id = getCookie("companyId");
+
+    const name = type === "candidate" ? fullName : type === "admin" ? fullName : companyName;
+    setUserName(name || "");
+    if (type === "company" && id) {
+      setCompanyId(id);
     }
   }, [location.pathname]);
+
+  // Auto fetch my company if logged in as company but missing cache
+  useEffect(() => {
+    const maybeFetch = async () => {
+      const token = getCookie("token") || localStorage.getItem("token");
+      const type = getCookie("userType") || (token ? decodeJwt(token)?.role : "");
+      const cachedId = getCookie("companyId");
+      const cachedName = getCookie("companyName");
+      if (!token || type !== "company" || (cachedId && cachedName)) return;
+      try {
+        const comp = await getMyCompany();
+        if (comp?.id) {
+          setCookie("companyId", comp.id, 1);
+          if (comp.companyName || comp.fullName) {
+            setCookie("companyName", comp.companyName || comp.fullName, 1);
+          }
+          setCompanyId(String(comp.id));
+          setUserName(comp.companyName || comp.fullName || "");
+        }
+      } catch (e) {
+        // ignore; user may not have company yet
+      }
+    };
+    maybeFetch();
+    // run once on mount and when auth changes by route change
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto fetch candidate name if logged in as candidate but missing name
+  useEffect(() => {
+    const loadCandidateName = async () => {
+      const token = getCookie("token") || localStorage.getItem("token");
+      const type = getCookie("userType") || (token ? decodeJwt(token)?.role : "");
+      const fullName = getCookie("fullName");
+      if (!token || type !== "candidate" || fullName) return;
+      try {
+        const me = await getMyCandidateProfile();
+        if (me?.fullName) {
+          setCookie("fullName", me.fullName, 1);
+          setUserName(me.fullName);
+        }
+      } catch (_e) {
+        // ignore
+      }
+    };
+    loadCandidateName();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const fetchCompanies = async () => {
@@ -68,7 +126,43 @@ function Header() {
     navigate("/logout");
   };
 
+  const handleGoCompany = async () => {
+    if (companyId) {
+      navigate(`/companies/${companyId}`);
+      return;
+    }
+    try {
+      const comp = await getMyCompany();
+      if (comp?.id) {
+        // cache for next times
+        setCookie("companyId", comp.id, 1);
+        if (comp.companyName || comp.fullName) {
+          setCookie("companyName", comp.companyName || comp.fullName, 1);
+        }
+        navigate(`/companies/${comp.id}`);
+      }
+    } catch (e) {
+      const status = e?.response?.status;
+      if (status === 404) {
+        // Chưa có thông tin doanh nghiệp -> chuyển tới trang đăng ký công ty
+        navigate("/registerCompany");
+        return;
+      }
+      // eslint-disable-next-line no-console
+      console.error("Cannot fetch my company:", e);
+    }
+  };
+
   const userMenuItems = [
+    ...(userType === "company"
+      ? [
+          {
+            key: "my-company",
+            label: "Thông tin doanh nghiệp",
+            onClick: handleGoCompany,
+          },
+        ]
+      : []),
     {
       key: "profile",
       label: "Thông tin cá nhân",
@@ -150,7 +244,7 @@ function Header() {
                     <span
                       className="header__top-link"
                       style={{ cursor: "pointer" }}
-                      onClick={() => navigate(`/companies/${companyId}`)}
+                      onClick={handleGoCompany}
                     >
                       Thông tin doanh nghiệp
                     </span>

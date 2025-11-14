@@ -3,7 +3,7 @@ import { Card, Row, Col, Typography, Button, message, Modal, Input, Form, DatePi
 import { PlusOutlined, CameraOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getCookie } from "../../helpers/cookie";
-import { getDetailCandidates, editCandidates } from "../../services/Candidates/candidatesServices";
+import { getMyCandidateProfile, updateMyCandidateProfile, createMyCandidateProfile } from "../../services/Candidates/candidatesServices";
 import { 
   
   getCertificatesByCandidate, createCertificate, updateCertificate, deleteCertificate
@@ -12,6 +12,7 @@ import {getEducationByCandidate, createEducation, updateEducation, deleteEducati
 import {getExperienceByCandidate, createExperience, updateExperience, deleteExperience} from "../../services/Experience/ExperienceServices"
 import {getProjectsByCandidate, createProject, updateProject, deleteProject} from "../../services/project/ProjectServices"
 import { useNavigate } from "react-router-dom";
+import { decodeJwt } from "../../services/auth/authServices";
 import ProfileInfo from "../../components/CV/ProfileInfo";
 import Introduction from "../../components/CV/Introduction";
 import Education from "../../components/CV/Education";
@@ -43,10 +44,9 @@ function CVPage() {
 
   useEffect(() => {
     const fetchCandidateData = async () => {
-      const candidateId = getCookie("id");
-      const token = getCookie("token");
+      const token = getCookie("token") || localStorage.getItem("token");
 
-      if (!token || !candidateId) {
+      if (!token) {
         message.error("Vui lòng đăng nhập để xem CV");
         navigate("/login");
         return;
@@ -54,16 +54,46 @@ function CVPage() {
 
       try {
         // Load thông tin candidate
-        const data = await getDetailCandidates(candidateId);
+        let data;
+        try {
+          data = await getMyCandidateProfile();
+        } catch (err) {
+          const status = err?.response?.status;
+          if (status === 404) {
+            // Hồ sơ chưa tồn tại -> tạo hồ sơ tối thiểu rồi lấy lại
+            const tokenStr = getCookie("token") || localStorage.getItem("token");
+            let fullNameFromCookie = getCookie("fullName");
+            let emailFromJwt = "";
+            try {
+              if (tokenStr) {
+                const payload = decodeJwt(tokenStr);
+                if (!fullNameFromCookie) fullNameFromCookie = payload?.name || payload?.fullName;
+                emailFromJwt = payload?.email || "";
+              }
+            } catch (_) {}
+            const minimal = {
+              fullName: fullNameFromCookie || "User",
+              email: emailFromJwt || undefined,
+              isOpen: 1,
+            };
+            await createMyCandidateProfile(minimal);
+            data = await getMyCandidateProfile();
+          } else {
+            throw err;
+          }
+        }
         setCandidate(data);
 
         // Load dữ liệu CV từ database
-        const [educationData, experienceData, projectsData, certificatesData] = await Promise.all([
-          getEducationByCandidate(candidateId),
-          getExperienceByCandidate(candidateId),
-          getProjectsByCandidate(candidateId),
-          getCertificatesByCandidate(candidateId)
-        ]);
+        const idForSections = data?.id;
+        const [educationData, experienceData, projectsData, certificatesData] = idForSections
+          ? await Promise.all([
+              getEducationByCandidate(idForSections),
+              getExperienceByCandidate(idForSections),
+              getProjectsByCandidate(idForSections),
+              getCertificatesByCandidate(idForSections),
+            ])
+          : [[], [], [], []];
 
         setCvData({
           intro: data.introduction || "",
@@ -211,11 +241,11 @@ function CVPage() {
           gender: values.gender,
           isOpen: values.isOpen
         };
-        await editCandidates(candidateId, updatedData);
+        await updateMyCandidateProfile(updatedData);
         setCandidate(prev => ({ ...prev, ...updatedData }));
       } else if (modalType === "intro") {
         // Lưu giới thiệu vào Candidates
-        await editCandidates(candidateId, { introduction: values.content });
+        await updateMyCandidateProfile({ introduction: values.content });
         setCvData(prev => ({ ...prev, intro: values.content }));
       } else if (modalType === "education") {
         const educationData = {

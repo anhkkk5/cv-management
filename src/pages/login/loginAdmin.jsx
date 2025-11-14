@@ -1,7 +1,7 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginAdmin } from "../../services/Admin/adminServices";
+import { login, decodeJwt } from "../../services/auth/authServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -25,35 +25,30 @@ function LoginAdmin() {
 
   const onFinish = async (values) => {
     try {
-      const result = await loginAdmin(values.email, values.password);
+      const res = await login({ email: values.email, password: values.password });
+      const token = res?.access_token;
+      if (!token) throw new Error("No token returned");
+      localStorage.setItem("token", token);
+      const payload = decodeJwt(token);
+      const role = payload?.role;
+      const userId = payload?.sub;
 
-      // Filter by password on client side
-      const matchedAdmin = result.find(
-        (admin) =>
-          admin.email === values.email && admin.password === values.password
-      );
-
-      if (matchedAdmin) {
-        const time = 1; // 1 day
-
-        // Set cookies with admin data
-        setCookie("id", matchedAdmin.id, time);
-        setCookie("fullName", matchedAdmin.fullName, time);
-        setCookie("email", matchedAdmin.email, time);
-        setCookie("token", matchedAdmin.token, time);
-        setCookie("userType", "admin", time);
-        dispatch(checkLogin(true));
-        messageApi.success("Đăng nhập thành công!");
-
-        // Navigate to admin dashboard
-        setTimeout(() => {
-          navigate("/admin/jobs");
-        }, 1500);
-      } else {
-        messageApi.error("Email hoặc mật khẩu không đúng!");
+      if (role !== 'admin') {
+        messageApi.error("Bạn không có quyền đăng nhập trang quản trị.");
+        return;
       }
+
+      const time = 1; // 1 day
+      setCookie("id", userId, time);
+      setCookie("userType", "admin", time);
+      setCookie("token", token, time);
+      dispatch(checkLogin(true));
+      messageApi.success("Đăng nhập thành công!");
+      setTimeout(() => navigate("/admin/jobs"), 800);
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      const backendMsg = error?.response?.data?.message;
+      if (backendMsg) messageApi.error(Array.isArray(backendMsg) ? backendMsg.join(", ") : backendMsg);
+      else messageApi.error("Đăng nhập thất bại. Vui lòng thử lại!");
       console.error("Login error:", error);
     }
   };
