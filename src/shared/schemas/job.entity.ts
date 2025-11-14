@@ -24,8 +24,11 @@ export class Job {
   @Column()
   company: string;
 
-  @Column({ type: 'text', nullable: true })
-  requirements: string;
+  @Column({
+    type: 'json',
+    nullable: true,
+  })
+  requirements: string[];
 
   @Column({ nullable: true })
   salary: string;
@@ -46,6 +49,9 @@ export class Job {
   location_id: string;
 
   @Column({ nullable: true })
+  company_id: string;
+
+  @Column({ nullable: true })
   type: string;
 
   @Column({ nullable: true })
@@ -60,6 +66,9 @@ export class Job {
   @Column({ type: 'date', nullable: true })
   expire_at: Date;
 
+  @Column({ nullable: true })
+  status: string;
+
   @ManyToOne(() => User, (user) => user.jobs, { onDelete: 'CASCADE' })
   postedBy: User;
 
@@ -67,8 +76,8 @@ export class Job {
   location: Location;
 
   @CreateDateColumn()
-  createdAt: Date;
+  created_at: Date;
 
   @UpdateDateColumn()
-  updatedAt: Date;
+  updated_at: Date;
 }

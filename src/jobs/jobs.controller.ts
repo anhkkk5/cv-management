@@ -1,7 +1,7 @@
 // src/jobs/jobs.controller.ts
 
 import { Controller, Get, Post, Body, Patch, Param, Delete, Request, ParseIntPipe,
-  HttpCode, HttpStatus,} from '@nestjs/common';
+  HttpCode, HttpStatus, Query,} from '@nestjs/common';
 import { JobsService } from './jobs.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { UpdateJobDto } from './dto/update-job.dto';
@@ -47,8 +47,11 @@ export class JobsController {
 
   @Public() 
   @Get()
-  findAll() {
-    return this.jobsService.findAll();
+  findAll(
+    @Query('city') city?: string,
+    @Query('keyword') keyword?: string,
+  ) {
+    return this.jobsService.findAll(city, keyword);
   }
 
   @Public()

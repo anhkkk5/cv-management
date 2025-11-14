@@ -44,12 +44,49 @@ export class CompaniesService {
       relations: ['company'],
     });
 
-    if (!user || !user.company) {
-      throw new ForbiddenException('Bạn không thuộc công ty nào để cập nhật.');
+    if (!user) {
+      throw new ForbiddenException('Không tìm thấy người dùng.');
     }
-    
+
+    // If user has no company, create and link a new one
+    if (!user.company) {
+      const created = this.companyRepository.create(updateDto as any) as unknown as Company;
+      // Link the creating user to the company to populate companies.userId
+      (created as any).user = user;
+      const savedCompany = await this.companyRepository.save(created as unknown as Company);
+      // Also link back from user -> company
+      user.company = savedCompany as Company;
+      await this.usersRepository.save(user);
+      return savedCompany;
+    }
+
     const companyId = user.company.id;
     return this.updateByAdmin(companyId, updateDto); 
+  }
+
+  async getMyCompany(userId: number): Promise<Company> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['company'],
+    });
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+    if (user.company) {
+      return this.findOne(user.company.id);
+    }
+    // Fallback: find by companies.user relation
+    const byUser = await this.companyRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
+    if (byUser) {
+      // link back for next calls
+      user.company = byUser;
+      await this.usersRepository.save(user);
+      return byUser;
+    }
+    throw new NotFoundException('Bạn chưa thuộc công ty nào');
   }
 
   async remove(id: number): Promise<void> {

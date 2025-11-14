@@ -24,8 +24,8 @@ export class Company {
   @Column({ unique: true })
   fullName: string;
 
-  @JoinColumn()
-  email: User;
+  @Column({ unique: true })
+  email: string;
 
   @Column({ unique: true })
   companyName: string;
@@ -37,19 +37,22 @@ export class Company {
   address: string;
 
   @Column({ nullable: true })
-  logoUrl: string;
+  logo: string;
 
   @Column({ nullable: true })
   website: string;
 
-  @OneToOne(() => User, (user) => user.company)
-  recruiters: User;
+  @OneToMany(() => User, (user) => user.company)
+  recruiters: User[];
   
   @OneToMany(() => Job, (job) => job.company)
   jobs: Job[];
 
   @OneToMany(() => CompanyAddress, (address) => address.company)
   addresses: CompanyAddress[];
+
+  @Column({ nullable: true })
+  status: string;
 
   @CreateDateColumn()
   created_at: Date;

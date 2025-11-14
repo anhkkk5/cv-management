@@ -17,15 +17,16 @@ export class CreateJobDto {
   @IsNotEmpty()
   company: string;
 
-  @ApiProperty({ example: 'Node.js, TypeScript, PostgreSQL' })
+  @ApiProperty({ example: ['Node.js', 'TypeScript', 'PostgreSQL'], required: false })
   @IsOptional()
-  @IsString()
-  requirements?: string;
+  @IsArray()
+  @IsString({ each: true })
+  requirements?: string[];
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 'LOC001', required: false })
   @IsOptional()
   @IsString()
-  location?: number;
+  location_id?: string;
 
   @ApiProperty({ example: '15-25 triệu VND', required: false })
   @IsOptional()
@@ -50,10 +51,10 @@ export class CreateJobDto {
   @IsString({ each: true }) // Đảm bảo mọi phần tử trong mảng là string
   benefits?: string[];
 
-  @ApiProperty({ example: 'LOC001', required: false })
+  @ApiProperty({ example: 'COMP001', required: false })
   @IsOptional()
   @IsString()
-  location_id?: string;
+  company_id?: string;
 
   @ApiProperty({ example: 'FULL-TIME', required: false })
   @IsOptional()
@@ -79,4 +80,9 @@ export class CreateJobDto {
   @IsOptional()
   @IsDateString()
   expire_at?: Date;
+
+  @ApiProperty({ example: 'active', required: false })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

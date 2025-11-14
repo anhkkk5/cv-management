@@ -10,6 +10,10 @@ export class CreateCompanyDto {
   @IsString() @IsNotEmpty()
   companyName: string;
 
+  @ApiProperty({ example: 'company@example.com' })
+  @IsString() @IsNotEmpty()
+  email: string;
+
   @ApiProperty({ example: 'Một công ty công nghệ đa quốc gia.' })
   @IsOptional() @IsString()
   description?: string;
@@ -24,5 +28,9 @@ export class CreateCompanyDto {
 
   @ApiProperty({ example: 'https://logo.url/google.png' })
   @IsOptional() @IsUrl()
-  logoUrl?: string;
+  logo?: string;
+
+  @ApiProperty({ example: 'active', required: false })
+  @IsOptional() @IsString()
+  status?: string;
 }

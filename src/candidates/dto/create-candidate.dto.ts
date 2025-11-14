@@ -5,12 +5,11 @@ export class CreateCandidateDto {
   @ApiProperty({ example: 'Nguyễn Văn A' })
   @IsString()
   @IsNotEmpty()
-  name: string;
+  fullName: string;
 
-  @ApiProperty({ example: true })
+  @ApiProperty({ example: 1 })
   @IsOptional()
-  @IsBoolean()
-  isOpen?: boolean;
+  isOpen?: number;
 
   @ApiProperty({ example: '1995-05-15' })
   @IsOptional()
@@ -57,4 +56,9 @@ export class CreateCandidateDto {
   @IsOptional()
   @IsString()
   introduction?: string;
+
+  @ApiProperty({ example: 'active', required: false })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

@@ -38,4 +38,17 @@ export class CandidatesService {
     Object.assign(profile, updateDto);
     return this.candidateRepository.save(profile);
   }
+
+  async findAll(): Promise<Candidate[]> {
+    return this.candidateRepository.find({
+      relations: { user: true },
+      order: { id: 'ASC' },
+    });
+  }
+
+  async findById(id: number): Promise<Candidate> {
+    const profile = await this.candidateRepository.findOne({ where: { id }, relations: { user: true } });
+    if (!profile) throw new NotFoundException('Candidate not found');
+    return profile;
+  }
 }

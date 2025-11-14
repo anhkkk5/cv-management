@@ -20,17 +20,34 @@ export class JobsService {
   ) {}
 
   async create(createJobDto: CreateJobDto, recruiterId: number): Promise<Job> {
-    const { location, ...restDto } = createJobDto
+    const { location_id, ...restDto } = createJobDto
     const newJob = this.jobRepository.create({
     ...restDto,
     postedBy: { id: recruiterId },
-    location: location ? ({ id: location } as DeepPartial<any>) : undefined,
+    location: location_id ? ({ id: location_id } as DeepPartial<any>) : undefined,
 } as DeepPartial<Job>);
     return this.jobRepository.save(newJob);
   }
 
-  findAll(): Promise<Job[]> {
-    return this.jobRepository.find({ relations: ['postedBy', 'location'] });
+  findAll(city?: string, keyword?: string): Promise<Job[]> {
+    const qb = this.jobRepository
+      .createQueryBuilder('job')
+      .leftJoinAndSelect('job.postedBy', 'postedBy')
+      .leftJoinAndSelect('job.location', 'location');
+
+    if (keyword && keyword.trim()) {
+      qb.andWhere('LOWER(job.title) LIKE :kw OR LOWER(job.description) LIKE :kw', {
+        kw: `%${keyword.toLowerCase()}%`,
+      });
+    }
+
+    if (city && city.trim() && city !== 'All') {
+      qb.andWhere('LOWER(location.name) = :city OR LOWER(location.city) = :city', {
+        city: city.toLowerCase(),
+      });
+    }
+
+    return qb.getMany();
   }
 
 
@@ -52,10 +69,10 @@ export class JobsService {
       throw new ForbiddenException('Bạn không có quyền chỉnh sửa công việc này.');
     }
 
-    const { location, ...restDto } = updateJobDto;
+    const { location_id, ...restDto } = updateJobDto;
 
     Object.assign(job, restDto);
-    if (location) job.location = { id: location } as any;
+    if (location_id) job.location = { id: location_id } as any;
     return this.jobRepository.save(job);
   }
 

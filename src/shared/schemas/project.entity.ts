@@ -23,6 +23,12 @@ export class Project {
   @Column({ nullable: true })
   demo_link: string;
 
+  @Column({ type: 'date', nullable: true })
+  started_at: Date;
+
+  @Column({ type: 'date', nullable: true })
+  end_at: Date;
+
   @ManyToOne(() => User, (user) => user.projects, { onDelete: 'CASCADE' })
   user: User;
 

@@ -20,16 +20,22 @@ export class CompaniesController {
   }
 
   @Public()
-  @Get(':id')
-  findOne(@Param('id', ParseIntPipe) id: number) {
-    return this.companiesService.findOne(id);
-  }
-
-
   @Roles(Role.Recruiter)
   @Patch('my-company')
   updateMyCompany(@Request() req, @Body() updateDto: UpdateCompanyDto) {
     return this.companiesService.updateMyCompany(req.user.userId, updateDto);
+  }
+
+  @Roles(Role.Recruiter)
+  @Get('my-company')
+  getMyCompany(@Request() req) {
+    return this.companiesService.getMyCompany(req.user.userId);
+  }
+
+  @Public()
+  @Get(':id')
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.companiesService.findOne(id);
   }
 
   @Roles(Role.Admin, Role.Recruiter)
