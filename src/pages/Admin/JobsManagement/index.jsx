@@ -68,7 +68,9 @@ function JobsManagement() {
   };
 
   const getCompanyName = (companyId) => {
-    const company = companies.find((c) => c.id === companyId);
+    const company = companies.find(
+      (c) => String(c.id) === String(companyId)
+    );
     return company ? company.fullName || company.companyName : "N/A";
   };
 
@@ -179,7 +181,9 @@ function JobsManagement() {
       key: "email",
       width: 180,
       render: (_, record) => {
-        const company = companies.find((c) => c.id === record.company_id);
+        const company = companies.find(
+          (c) => String(c.id) === String(record.company_id)
+        );
         return company?.email || "N/A";
       },
     },

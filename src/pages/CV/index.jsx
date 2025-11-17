@@ -303,12 +303,16 @@ function CVPage() {
         const projectData = {
           candidate_id: candidateId,
           project_name: values.projectName,
-          demo_link: values.demoLink || "",
           started_at: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
           end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
           description: values.description || "",
           updated_at: new Date().toISOString().split('T')[0]
         };
+
+        // Only send demo_link if user actually entered a value to satisfy backend @IsUrl validator
+        if (values.demoLink && values.demoLink.trim()) {
+          projectData.demo_link = values.demoLink.trim();
+        }
         
         if (editingItem && editingItem.id) {
           // Cập nhật dự án cũ

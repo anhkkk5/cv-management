@@ -39,7 +39,7 @@ function Register() {
       });
 
       if (result) {
-        // Auto login to obtain JWT for creating company
+        // Auto login tạm thời để tạo company, sau đó quay lại màn đăng nhập công ty
         try {
           const auth = await login({ email: values.email, password: values.password });
           const token = auth?.access_token;
@@ -53,15 +53,13 @@ function Register() {
             status: "active",
           };
           await updateMyCompany(payload);
-          const company = await getMyCompany();
-          messageApi.success("Đăng ký và thiết lập doanh nghiệp thành công 🎉");
+          messageApi.success("Đăng ký và thiết lập doanh nghiệp thành công. Vui lòng đăng nhập để tiếp tục.");
           form.resetFields();
           setTimeout(() => {
-            if (company?.id) navigate(`/companies/${company.id}`);
-            else navigate("/loginCompany");
+            navigate("/loginCompany");
           }, 1200);
         } catch (e) {
-          messageApi.success("Đăng ký thành công! Vui lòng hoàn tất thiết lập doanh nghiệp sau khi đăng nhập.");
+          messageApi.success("Đăng ký thành công! Vui lòng đăng nhập trang công ty.");
           setTimeout(() => navigate("/loginCompany"), 1200);
         }
       } else {

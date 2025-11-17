@@ -123,7 +123,7 @@ function JobDetail() {
           }
         }
 
-        // Fetch location data if location_id exists
+        // Fetch location data if location_id exists, otherwise fall back to job.location text
         if (jobData.location_id) {
           try {
             const locationData = await getLocationById(jobData.location_id);
@@ -136,6 +136,8 @@ function JobDetail() {
             console.error("Error fetching location:", error);
             setLocationName("Unknown Location");
           }
+        } else if (jobData.location) {
+          setLocationName(jobData.location);
         }
 
         // Set mock candidates
@@ -213,22 +215,24 @@ function JobDetail() {
       };
 
       const updateData = {
-        ...job, // Giữ nguyên tất cả các trường hiện có
+        // các field theo UpdateJobDto / CreateJobDto
         title: values.title,
-        type: values.jobType,
-        salary: values.salary,
-        jobLevel: values.level,
-        level: values.level,
         description: values.description,
+        company: job.company,
+        salary: values.salary,
+        type: values.jobType,
+        jobLevel: values.level,
         requirements: convertToArray(values.requirements),
-        experience: values.experience || "",
-        education: values.education || "",
         desirable: convertToArray(values.desirable),
         benefits: convertToArray(values.benefits),
-        location: values.location || "",
-        status: values.status || "active",
-        expire_at: values.endDate ? values.endDate.toISOString() : job.expire_at,
-        updated_at: new Date().toISOString(), // Cập nhật thời gian chỉnh sửa
+        experience: values.experience || "",
+        education: values.education || "",
+        location_id: job.location_id || undefined,
+        company_id: job.company_id || undefined,
+        status: values.status || job.status || "active",
+        expire_at: values.endDate
+          ? values.endDate.format("YYYY-MM-DD")
+          : job.expire_at,
       };
 
       await updateJob(id, updateData);
@@ -423,7 +427,7 @@ function JobDetail() {
             <div className="location-section">
               <Text className="location-label">Job Location</Text>
               <Text className="location-value">
-                {locationName || "Unknown"}
+                {job.location || locationName || "Unknown"}
               </Text>
             </div>
             {/* Job Overview */}

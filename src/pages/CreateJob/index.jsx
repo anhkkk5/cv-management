@@ -25,7 +25,8 @@ function CreateJob() {
   const navigate = useNavigate();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-  const companyId = getCookie("id");
+  const companyId = getCookie("companyId") || getCookie("id");
+  const companyName = getCookie("companyName") || "";
 
   const handleSubmit = async (values) => {
     try {
@@ -34,14 +35,17 @@ function CreateJob() {
       const jobData = {
         title: values.title,
         description: values.description,
+        company: companyName,
         salary: values.salary,
         location: values.location,
+        location_id: values.location,
         type: values.type,
-        level: values.level,
+        jobLevel: values.level,
         company_id: companyId,
-        startDate: values.dateRange ? values.dateRange[0].format("DD MMM YYYY") : "",
-        endDate: values.dateRange ? values.dateRange[1].format("DD MMM YYYY") : "",
-        created_at: new Date().toISOString().split('T')[0],
+        expire_at: values.dateRange
+          ? values.dateRange[1].format("YYYY-MM-DD")
+          : undefined,
+        created_at: new Date().toISOString().split("T")[0],
         status: "active",
       };
 
