@@ -19,7 +19,7 @@ export class JobsController {
 
 
   @Post()
-  @Roles(Role.Recruiter)
+  @Roles(Role.Recruiter, Role.Admin)
   @HttpCode(HttpStatus.CREATED)
   create(@Body() createJobDto: CreateJobDto, @Request() req) {
     const recruiterId = req.user.userId;
@@ -27,22 +27,24 @@ export class JobsController {
   }
 
   @Patch(':id')
-  @Roles(Role.Recruiter)
+  @Roles(Role.Recruiter, Role.Admin)
   update(
     @Param('id', ParseIntPipe) id: number,
     @Body() updateJobDto: UpdateJobDto,
     @Request() req,
   ) {
     const recruiterId = req.user.userId;
-    return this.jobsService.update(id, updateJobDto, recruiterId);
+    const isAdmin = req.user.role === Role.Admin;
+    return this.jobsService.update(id, updateJobDto, recruiterId, isAdmin);
   }
 
   @Delete(':id')
-  @Roles(Role.Recruiter) 
+  @Roles(Role.Recruiter, Role.Admin) 
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseIntPipe) id: number, @Request() req) {
     const recruiterId = req.user.userId;
-    return this.jobsService.remove(id, recruiterId);
+    const isAdmin = req.user.role === Role.Admin;
+    return this.jobsService.remove(id, recruiterId, isAdmin);
   }
 
   @Public() 

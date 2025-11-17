@@ -32,8 +32,6 @@ export class UsersService {
         'name',
         'email',
         'role',
-        'status',
-        'created_at',
       ],
       order: { id: 'ASC' },
     });
@@ -47,8 +45,6 @@ export class UsersService {
         'name',
         'email',
         'role',
-        'status',
-        'created_at',
       ],
       order: { id: 'ASC' },
     });

@@ -51,4 +51,17 @@ export class CandidatesService {
     if (!profile) throw new NotFoundException('Candidate not found');
     return profile;
   }
+
+  // Admin update candidate directly by id
+  async updateByAdmin(id: number, updateDto: UpdateCandidateDto): Promise<Candidate> {
+    const profile = await this.findById(id);
+    Object.assign(profile, updateDto);
+    return this.candidateRepository.save(profile);
+  }
+
+  // Admin delete candidate by id
+  async remove(id: number): Promise<void> {
+    const profile = await this.findById(id);
+    await this.candidateRepository.remove(profile);
+  }
 }

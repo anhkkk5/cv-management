@@ -21,17 +21,20 @@ export class Company {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column()
   fullName: string;
 
   @Column({ unique: true })
   email: string;
 
-  @Column({ unique: true })
+  @Column()
   companyName: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
+
+  @Column({ type: 'text', nullable: true })
+  policies: string;
 
   @Column({ nullable: true })
   address: string;
@@ -41,6 +44,15 @@ export class Company {
 
   @Column({ nullable: true })
   website: string;
+
+  @Column({ nullable: true })
+  facebook: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
+  @Column({ nullable: true })
+  github: string;
 
   @OneToMany(() => User, (user) => user.company)
   recruiters: User[];

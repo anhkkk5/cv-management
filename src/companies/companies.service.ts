@@ -57,11 +57,14 @@ export class CompaniesService {
       // Also link back from user -> company
       user.company = savedCompany as Company;
       await this.usersRepository.save(user);
-      return savedCompany;
+      // Reload without circular relations
+      return this.findOne(savedCompany.id);
     }
 
     const companyId = user.company.id;
-    return this.updateByAdmin(companyId, updateDto); 
+    // Update and reload without relations
+    const updated = await this.updateByAdmin(companyId, updateDto);
+    return this.findOne(updated.id);
   }
 
   async getMyCompany(userId: number): Promise<Company> {
@@ -75,7 +78,7 @@ export class CompaniesService {
     if (user.company) {
       return this.findOne(user.company.id);
     }
-    // Fallback: find by companies.user relation
+    // Fallback: find by companies.user relation, then reload without relations
     const byUser = await this.companyRepository.findOne({
       where: { user: { id: userId } },
       relations: ['user'],
@@ -84,13 +87,27 @@ export class CompaniesService {
       // link back for next calls
       user.company = byUser;
       await this.usersRepository.save(user);
-      return byUser;
+      return this.findOne(byUser.id);
     }
     throw new NotFoundException('Bạn chưa thuộc công ty nào');
   }
 
   async remove(id: number): Promise<void> {
     const company = await this.findOne(id);
+
+    // Clear recruiters' company relation to satisfy FK constraint
+    const recruiters = await this.usersRepository.find({
+      where: { company: { id } },
+      relations: ['company'],
+    });
+
+    if (recruiters.length > 0) {
+      for (const user of recruiters) {
+        user.company = null as any;
+      }
+      await this.usersRepository.save(recruiters);
+    }
+
     await this.companyRepository.remove(company);
   }
 }

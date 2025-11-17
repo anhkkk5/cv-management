@@ -19,7 +19,6 @@ export class CompaniesController {
     return this.companiesService.findAll();
   }
 
-  @Public()
   @Roles(Role.Recruiter)
   @Patch('my-company')
   updateMyCompany(@Request() req, @Body() updateDto: UpdateCompanyDto) {

@@ -20,12 +20,21 @@ export class JobsService {
   ) {}
 
   async create(createJobDto: CreateJobDto, recruiterId: number): Promise<Job> {
-    const { location_id, ...restDto } = createJobDto
+    // Explicitly strip any "location" field coming from the client so it
+    // does not bind to the Location relation and generate a wrong locationId.
+    const { location_id, /* eslint-disable-line @typescript-eslint/no-unused-vars */
+      // @ts-ignore - location may exist on incoming payload
+      location,
+      ...restDto } = createJobDto as any;
+
     const newJob = this.jobRepository.create({
-    ...restDto,
-    postedBy: { id: recruiterId },
-    location: location_id ? ({ id: location_id } as DeepPartial<any>) : undefined,
-} as DeepPartial<Job>);
+      ...restDto,
+      location_id,
+      postedBy: { id: recruiterId },
+      // make sure relation is unset
+      location: null,
+    } as DeepPartial<Job>);
+
     return this.jobRepository.save(newJob);
   }
 
@@ -62,23 +71,39 @@ export class JobsService {
     return job;
   }
 
-  async update(id: number, updateJobDto: UpdateJobDto, recruiterId: number): Promise<Job> {
+  async update(
+    id: number,
+    updateJobDto: UpdateJobDto,
+    recruiterId: number,
+    isAdmin = false,
+  ): Promise<Job> {
     const job = await this.findOne(id);
 
-    if (job.postedBy.id !== recruiterId) {
+    if (!isAdmin && job.postedBy.id !== recruiterId) {
       throw new ForbiddenException('Bạn không có quyền chỉnh sửa công việc này.');
     }
 
-    const { location_id, ...restDto } = updateJobDto;
+    // Strip any free-text 'location' field so it does not bind to the
+    // Location relation and corrupt the numeric locationId column.
+    const {
+      location_id,
+      // @ts-ignore - location may exist on incoming payload
+      location,
+      ...restDto
+    } = updateJobDto as any;
 
     Object.assign(job, restDto);
-    if (location_id) job.location = { id: location_id } as any;
+    if (typeof location_id !== 'undefined') {
+      job.location_id = location_id;
+    }
+    // Ensure relation is not updated using free-text value
+    job.location = job.location; // keep existing relation (usually null)
     return this.jobRepository.save(job);
   }
 
-  async remove(id: number, recruiterId: number): Promise<void> {
+  async remove(id: number, recruiterId: number, isAdmin = false): Promise<void> {
     const job = await this.findOne(id);
-    if (job.postedBy.id !== recruiterId) {
+    if (!isAdmin && job.postedBy.id !== recruiterId) {
       throw new ForbiddenException('Bạn không có quyền xóa công việc này.');
     }
     await this.jobRepository.remove(job);

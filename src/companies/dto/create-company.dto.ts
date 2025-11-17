@@ -30,7 +30,23 @@ export class CreateCompanyDto {
   @IsOptional() @IsUrl()
   logo?: string;
 
+  @ApiProperty({ example: 'https://facebook.com/your-company', required: false })
+  @IsOptional() @IsUrl()
+  facebook?: string;
+
+  @ApiProperty({ example: 'https://linkedin.com/company/your-company', required: false })
+  @IsOptional() @IsUrl()
+  linkedin?: string;
+
+  @ApiProperty({ example: 'https://github.com/your-company', required: false })
+  @IsOptional() @IsUrl()
+  github?: string;
+
   @ApiProperty({ example: 'active', required: false })
   @IsOptional() @IsString()
   status?: string;
+
+  @ApiProperty({ example: 'Great culture, flexible working hours, ...', required: false })
+  @IsOptional() @IsString()
+  policies?: string;
 }
