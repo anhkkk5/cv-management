@@ -18,9 +18,12 @@ export class AuthService {
     if (existingUser) {
       throw new ConflictException('Email already exists');
     }
-    const user = await this.usersService.create(registerDto);
+
+    const { email, password, name, role, confirmPassword } = registerDto;
+
+    const user = await this.usersService.create({ email, password, name, role, confirmPassword });
     // Không trả về password
-    const { password, ...result } = user;
+    const { password: _, ...result } = user;
     return result;
   }
 

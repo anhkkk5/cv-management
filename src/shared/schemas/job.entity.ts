@@ -1,5 +1,6 @@
-// src/jobs/entities/job.entity.ts
+// src/shared/schemas/job.entity.ts
 import { User } from '../schemas/user.entity';
+import { Location } from '../schemas/location.entity';
 import {
   Column,
   CreateDateColumn,
@@ -25,9 +26,6 @@ export class Job {
 
   @Column({ type: 'text', nullable: true })
   requirements: string;
-
-  @Column({ nullable: true })
-  location: string;
 
   @Column({ nullable: true })
   salary: string;
@@ -64,6 +62,9 @@ export class Job {
 
   @ManyToOne(() => User, (user) => user.jobs, { onDelete: 'CASCADE' })
   postedBy: User;
+
+  @ManyToOne(() => Location, (location) => location.jobs, { nullable: true })
+  location: Location;
 
   @CreateDateColumn()
   createdAt: Date;

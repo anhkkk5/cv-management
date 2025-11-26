@@ -17,6 +17,8 @@ import { CandidatesModule } from './candidates/candidates.module';
 import { CertificatesModule } from './certificates/certificates.module';
 import { SkillsModule } from './skills/skills.module';
 import { CompaniesModule } from './companies/companies.module';
+import { LocationsModule } from './locations/locations.module';
+import { CompanyAddressModule } from './company-address/company-address.module';
 
 const dbPortStr = process.env.DB_PORT;
 const dbPort = dbPortStr ? parseInt(dbPortStr, 10) : 3306;
@@ -48,6 +50,8 @@ if (Number.isNaN(dbPort)) {
     CertificatesModule,
     SkillsModule,
     CompaniesModule,
+    LocationsModule,
+    CompanyAddressModule,
   ],
   controllers: [AppController, CvsController],
   providers: [AppService,
