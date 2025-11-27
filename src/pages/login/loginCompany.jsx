@@ -1,7 +1,8 @@
 import React from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
-import { loginCompany } from "../../services/getAllCompany/companyServices";
+import { login, decodeJwt } from "../../services/auth/authServices";
+import { getMyCompany } from "../../services/getAllLocation/../getAllCompany/companyServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -25,35 +26,41 @@ function Login() {
 
   const onFinish = async (values) => {
     try {
-      const result = await loginCompany(values.email, values.password);
+      const res = await login({ email: values.email, password: values.password });
+      const token = res?.access_token;
+      if (!token) throw new Error("No token returned");
+      localStorage.setItem("token", token);
+      const payload = decodeJwt(token);
+      const role = payload?.role;
+      const userId = payload?.sub;
 
-      // Filter by password on client side since json-server doesn't support multiple query params properly
-      const matchedCompany = result.find(company => 
-        company.email === values.email && company.password === values.password
-      );
-
-      if (matchedCompany) {
-        const time = 1; // 1 day
-        const companyData = matchedCompany;
-
-        // Set cookies with user data
-        setCookie("id", companyData.id, time);
-        setCookie("companyName", companyData.companyName || companyData.name || companyData.fullName, time);
-        setCookie("email", companyData.email, time);
-        setCookie("token", companyData.token, time);
-        setCookie("userType", "company", time);
-        dispatch(checkLogin(true));
-        messageApi.success("Đăng nhập thành công!");
-
-        // Navigate after showing success message
-        setTimeout(() => {
-          navigate("/");
-        }, 1500);
-      } else {
-        messageApi.error("Email hoặc mật khẩu không đúng!");
+      if (role !== 'recruiter') {
+        messageApi.error("Bạn không có quyền đăng nhập trang công ty.");
+        return;
       }
+
+      const time = 1; // 1 day
+      setCookie("id", userId, time);
+      setCookie("userType", "company", time);
+      setCookie("token", token, time);
+      dispatch(checkLogin(true));
+      // fetch my company info and navigate to its page
+      try {
+        const company = await getMyCompany();
+        if (company) {
+          setCookie("companyName", company.companyName || company.fullName || "", time);
+          setCookie("companyId", company.id, time);
+          messageApi.success("Đăng nhập thành công!");
+          setTimeout(() => navigate(`/companies/${company.id}`), 600);
+          return;
+        }
+      } catch (_) {}
+      messageApi.success("Đăng nhập thành công!");
+      setTimeout(() => navigate("/"), 800);
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      const backendMsg = error?.response?.data?.message;
+      if (backendMsg) messageApi.error(Array.isArray(backendMsg) ? backendMsg.join(", ") : backendMsg);
+      else messageApi.error("Đăng nhập thất bại. Vui lòng thử lại!");
       console.error("Login error:", error);
     }
   };

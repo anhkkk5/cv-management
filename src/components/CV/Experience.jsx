@@ -5,12 +5,17 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-function Experience({ experienceList, onAdd, onDelete }) {
+function Experience({ experienceList, onAdd, onDelete, readOnly = false }) {
   return (
     <Card className="section-card">
       <div className="section-header">
         <Title level={4}>Kinh Nghiệm Làm Việc</Title>
-        <PlusOutlined className="add-icon" onClick={onAdd} />
+        {!readOnly && (
+          <PlusOutlined
+            className="add-icon"
+            onClick={() => onAdd && onAdd()}
+          />
+        )}
       </div>
       {experienceList.length > 0 ? (
         experienceList.map((exp, index) => (
@@ -33,10 +38,19 @@ function Experience({ experienceList, onAdd, onDelete }) {
                   <Text style={{ display: "block", marginTop: 8 }}>{exp.info || exp.description}</Text>
                 )}
               </div>
-              <div>
-                <EditOutlined className="edit-icon" style={{ marginRight: 10 }} onClick={() => onAdd(exp)} />
-                <DeleteOutlined className="delete-icon" onClick={() => onDelete && onDelete(exp.id)} />
-              </div>
+              {!readOnly && (
+                <div>
+                  <EditOutlined
+                    className="edit-icon"
+                    style={{ marginRight: 10 }}
+                    onClick={() => onAdd && onAdd(exp)}
+                  />
+                  <DeleteOutlined
+                    className="delete-icon"
+                    onClick={() => onDelete && onDelete(exp.id)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))

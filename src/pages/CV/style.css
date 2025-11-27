@@ -109,6 +109,94 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Draggable wrappers */
+.draggable-section {
+  cursor: grab;
+}
+.draggable-section:active {
+  cursor: grabbing;
+}
+.draggable-section.dragging {
+  outline: 2px dashed #c41e3a;
+  border-radius: 8px;
+}
+
+/* Print only the CV area on the right */
+@media print {
+  body {
+    background: #fff !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif !important;
+  }
+  /* Hide everything by default */
+  body * {
+    visibility: hidden !important;
+    box-shadow: none !important;
+  }
+  /* Only show CV printable area */
+  .cv-print-area, .cv-print-area * {
+    visibility: visible !important;
+  }
+  .cv-print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #fff !important;
+  }
+  /* Remove UI controls when printing */
+  .section-toolbar,
+  .action-item,
+  .breadcrumb,
+  .ant-btn,
+  .ant-card-extra {
+    display: none !important;
+  }
+  /* Hide inline action icons in headers */
+  .cv-print-area .edit-icon,
+  .cv-print-area .add-icon,
+  .cv-print-area .delete-icon,
+  .cv-print-area .anticon-plus,
+  .cv-print-area .anticon-edit,
+  .cv-print-area .anticon-delete {
+    display: none !important;
+  }
+  .ant-card,
+  .section-card,
+  .profile-card {
+    box-shadow: none !important;
+    border: 0 !important;
+    background: #fff !important;
+  }
+  /* Tighten paddings for print */
+  .cv-print-area .ant-card-body { padding: 8px 0 !important; }
+  .cv-print-area .ant-typography { color: #111 !important; }
+  .cv-print-area h1, .cv-print-area h2, .cv-print-area h3, .cv-print-area h4 { color: #111 !important; margin: 8px 0 6px 0 !important; }
+  .cv-print-area h1 { font-size: 22px !important; }
+  .cv-print-area h2 { font-size: 18px !important; }
+  .cv-print-area h3 { font-size: 16px !important; }
+  .cv-print-area h4 { font-size: 14px !important; text-transform: uppercase; letter-spacing: .3px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+  .cv-print-area p { margin: 4px 0 !important; line-height: 1.35; }
+
+  /* Avoid breaking a section across pages */
+  .cv-print-area .draggable-section { page-break-inside: avoid; break-inside: avoid; margin-bottom: 10px; }
+  .cv-print-area #section-profile { page-break-inside: avoid; break-inside: avoid; }
+
+  /* Remove backgrounds of tags or badges for clarity */
+  .cv-print-area .ant-tag { background: #f5f5f5 !important; color: #333 !important; border-color: #e5e5e5 !important; }
+
+  /* Icons color neutral */
+  .cv-print-area .anticon { color: #444 !important; }
+
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+}
+
 .section-header {
   display: flex;
   justify-content: space-between;

@@ -14,13 +14,22 @@ function Logout() {
       // Delete all cookies first
       deleteAllCookies();
 
+      // Clear auth from localStorage
+      try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("userType");
+        localStorage.removeItem("companyId");
+        localStorage.removeItem("companyName");
+        localStorage.removeItem("fullName");
+      } catch (_) {}
+
       // Update Redux state
       dispatch(checkLogin(false));
 
-      // Navigate to login page after a short delay
+      // Navigate to home after a short delay
       setTimeout(() => {
         navigate("/");
-      }, 1000);
+      }, 200);
     };
 
     handleLogout();

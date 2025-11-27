@@ -14,7 +14,10 @@ function CompaniesPage() {
       try {
         setLoading(true);
         const data = await getAllCompany();
-        setCompanies(data);
+        const active = Array.isArray(data)
+          ? data.filter((c) => c?.status === "active")
+          : [];
+        setCompanies(active);
       } catch {
         setCompanies([]);
       } finally {

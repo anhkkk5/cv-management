@@ -4,6 +4,7 @@ import Home from "../pages/Home/index.jsx";
 import JobsPage from "../pages/Jobs/index.jsx";
 import CompaniesPage from "../pages/Companies/index.jsx";
 import JobDetail from "../pages/JobDetail/index.jsx";
+import CandidateDetail from "../pages/CandidateDetail/index.jsx";
 import CompanyDetail from "../pages/CompanyDetail/index.jsx";
 import CVPage from "../pages/CV/index.jsx";
 import Login from "../pages/login/index.jsx";
@@ -15,6 +16,17 @@ import RegisterCompany from "../pages/Register/registerCompany.jsx";
 import Search from "../pages/Search/index.jsx";
 import Post from "../pages/Post/index.jsx";
 import CreateJob from "../pages/CreateJob/index.jsx";
+import LoginAdmin from "../pages/login/loginAdmin.jsx";
+import AdminLayout from "../Layout/AdminLayout/index.jsx";
+import JobsManagement from "../pages/Admin/JobsManagement/index.jsx";
+import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
+import CompaniesManagement from "../pages/Admin/CompaniesManagement/index.jsx";
+import CandidateProfile from "../pages/CandidateProfile/index.jsx";
+import AppliedJobs from "../pages/AppliedJobs/index.jsx";
+import SavedJobs from "../pages/SavedJobs/index.jsx";
+import CVTemplatesList from "../pages/CVTemplates/List.jsx";
+import CVTemplatePreview from "../pages/CVTemplates/Preview.jsx";
+
 export const routes = [
   {
     path: "/",
@@ -49,6 +61,30 @@ export const routes = [
         element: <CVPage />,
       },
       {
+        path: "cv/templates",
+        element: <CVTemplatesList />,
+      },
+      {
+        path: "cv/templates/:id",
+        element: <CVTemplatePreview />,
+      },
+      {
+        path: "profile",
+        element: <CandidateProfile />,
+      },
+      {
+        path: "applications",
+        element: <AppliedJobs />,
+      },
+      {
+        path: "saved-jobs",
+        element: <SavedJobs />,
+      },
+      {
+        path: "candidates/:id",
+        element: <CandidateDetail />,
+      },
+      {
         path: "search",
         element: <Search />,
       },
@@ -79,7 +115,29 @@ export const routes = [
     element: <RegisterCompany />,
   },
   {
+    path: "/loginAdmin",
+    element: <LoginAdmin />,
+  },
+  {
     path: "/post",
     element: <Post />,
-  }
+  },
+  {
+    path: "/admin",
+    element: <AdminLayout />,
+    children: [
+      {
+        path: "jobs",
+        element: <JobsManagement />,
+      },
+      {
+        path: "users",
+        element: <UsersManagement />,
+      },
+      {
+        path: "companies",
+        element: <CompaniesManagement />,
+      },
+    ],
+  },
 ];

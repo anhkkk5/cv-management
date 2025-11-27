@@ -5,12 +5,17 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-function Certificates({ certificatesList, onAdd, onDelete }) {
+function Certificates({ certificatesList, onAdd, onDelete, readOnly = false }) {
   return (
     <Card className="section-card">
       <div className="section-header">
         <Title level={4}>Chứng Chỉ</Title>
-        <PlusOutlined className="add-icon" onClick={onAdd} />
+        {!readOnly && (
+          <PlusOutlined
+            className="add-icon"
+            onClick={() => onAdd && onAdd()}
+          />
+        )}
       </div>
       {certificatesList.length > 0 ? (
         certificatesList.map((cert, index) => (
@@ -33,10 +38,19 @@ function Certificates({ certificatesList, onAdd, onDelete }) {
                   <Text style={{ display: "block", marginTop: 8 }}>{cert.description}</Text>
                 )}
               </div>
-              <div>
-                <EditOutlined className="edit-icon" style={{ marginRight: 10 }} onClick={() => onAdd(cert)} />
-                <DeleteOutlined className="delete-icon" onClick={() => onDelete && onDelete(cert.id)} />
-              </div>
+              {!readOnly && (
+                <div>
+                  <EditOutlined
+                    className="edit-icon"
+                    style={{ marginRight: 10 }}
+                    onClick={() => onAdd && onAdd(cert)}
+                  />
+                  <DeleteOutlined
+                    className="delete-icon"
+                    onClick={() => onDelete && onDelete(cert.id)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))

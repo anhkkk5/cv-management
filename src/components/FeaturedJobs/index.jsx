@@ -20,7 +20,8 @@ function FeaturedJobs() {
         setLoading(true);
         const data = await getAlljob();
         if (Array.isArray(data) && data.length) {
-          setJobs(data.slice(0, 12));
+          const activeJobs = data.filter((j) => j?.status === "active");
+          setJobs(activeJobs.slice(0, 12));
         } else {
           setJobs([]);
         }

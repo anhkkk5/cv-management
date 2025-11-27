@@ -2,7 +2,7 @@ import { Input, Button, Space, Select } from "antd";
 import { SearchOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
 import React from "react";
-import { getListCity } from "../../services/cityServices/cityServices";
+import { getLocation } from "../../services/getAllLocation/locationServices";
 
 function SearchListJob({ reverse = false, showButton = true }) {
  const navigate = useNavigate();
@@ -14,12 +14,12 @@ function SearchListJob({ reverse = false, showButton = true }) {
 
   React.useEffect(() => {
     const featchApi = async () => {
-      const response = await getListCity(); // Gọi API lấy danh sách thành phố
+      const response = await getLocation(); // Gọi API lấy danh sách thành phố từ backend
       if (response) {
         // Map dữ liệu sang format của Ant Design Select
         const cityOptions = response.map(item => ({
-          label: item.name,  // Hiển thị tên thành phố
-          value: item.name   // Giá trị khi chọn
+          label: item.name || item.city,  // Hiển thị tên thành phố
+          value: item.name || item.city   // Giá trị khi chọn
         }));
         
         const objAll = {

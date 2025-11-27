@@ -7,59 +7,9 @@ function Testimonials() {
   const [loading, setLoading] = React.useState(false);
 
   React.useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        const [candidatesRes, expRes, projRes] = await Promise.all([
-          fetch("http://localhost:3002/Candidates"),
-          fetch("http://localhost:3002/Experience_Candidate"),
-          fetch("http://localhost:3002/Project_Candidate"),
-        ]);
-        const [candidates, experiences, projects] = await Promise.all([
-          candidatesRes.json(),
-          expRes.json(),
-          projRes.json(),
-        ]);
-
-        const candidateIdToExp = {};
-        (experiences || []).forEach((ex) => {
-          candidateIdToExp[ex.candidate_id] = ex;
-        });
-
-        const candidateIdToQuote = {};
-        (projects || []).forEach((p) => {
-          if (!candidateIdToQuote[p.candidate_id]) {
-            candidateIdToQuote[p.candidate_id] = p.info || p.name;
-          }
-        });
-
-        const normalized = (candidates || []).map((c) => {
-          const ex = candidateIdToExp[c.id];
-          const displayRole = ex ? ex.position : "Professional";
-          const displayQuote =
-            candidateIdToQuote[c.id] ||
-            "Class aptent taciti sociosqu ad litora torquent per conubia nostra.";
-          const avatarUrl = `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(
-            c.name || "User"
-          )}`;
-          return {
-            id: c.id,
-            name: c.name,
-            role: displayRole,
-            quote: displayQuote,
-            avatar: avatarUrl,
-          };
-        });
-
-        setItems(normalized.slice(0, 9));
-      } catch (error) {
-        console.error('Testimonials fetch error:', error);
-        setItems([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchData();
+    // Use static fallback data; backend does not expose public aggregated endpoint yet.
+    setItems([]);
+    setLoading(false);
   }, []);
 
   const fallback = React.useMemo(

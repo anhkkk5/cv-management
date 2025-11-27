@@ -5,12 +5,17 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-function Education({ educationList, onAdd, onDelete }) {
+function Education({ educationList, onAdd, onDelete, readOnly = false }) {
   return (
     <Card className="section-card">
       <div className="section-header">
         <Title level={4}>Học Vấn</Title>
-        <PlusOutlined className="add-icon" onClick={onAdd} />
+        {!readOnly && (
+          <PlusOutlined
+            className="add-icon"
+            onClick={() => onAdd && onAdd()}
+          />
+        )}
       </div>
       {educationList.length > 0 ? (
         educationList.map((edu, index) => (
@@ -33,20 +38,19 @@ function Education({ educationList, onAdd, onDelete }) {
                   <Text style={{ display: "block", marginTop: 8 }}>{edu.info || edu.description}</Text>
                 )}
               </div>
-              <div>
-                <EditOutlined className="edit-icon" style={{ marginRight: 10 }} onClick={() => onAdd(edu)} />
-                <DeleteOutlined 
-                  className="delete-icon" 
-                  onClick={() => {
-                    console.log("Delete clicked, edu.id:", edu.id);
-                    if (onDelete) {
-                      onDelete(edu.id);
-                    } else {
-                      console.error("onDelete is not defined");
-                    }
-                  }} 
-                />
-              </div>
+              {!readOnly && (
+                <div>
+                  <EditOutlined
+                    className="edit-icon"
+                    style={{ marginRight: 10 }}
+                    onClick={() => onAdd && onAdd(edu)}
+                  />
+                  <DeleteOutlined
+                    className="delete-icon"
+                    onClick={() => onDelete && onDelete(edu.id)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))

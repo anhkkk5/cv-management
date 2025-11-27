@@ -5,12 +5,12 @@ import { EditOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
-function ProfileInfo({ candidate, onEdit }) {
+function ProfileInfo({ candidate, onEdit, readOnly = false }) {
   return (
     <Card className="profile-card">
       <div className="profile-header">
         <div className="profile-avatar">
-          <img src="/src/assets/logologin.png" alt="Avatar" />
+          <img src={candidate.avatar || "/src/assets/logologin.png"} alt="Avatar" />
           <Text className="company-label">Software</Text>
         </div>
         <div className="profile-info">
@@ -37,7 +37,9 @@ function ProfileInfo({ candidate, onEdit }) {
             </Col>
           </Row>
         </div>
-        <EditOutlined className="edit-icon" onClick={onEdit} />
+        {!readOnly && onEdit && (
+          <EditOutlined className="edit-icon" onClick={onEdit} />
+        )}
       </div>
     </Card>
   );
