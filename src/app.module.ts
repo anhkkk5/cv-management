@@ -19,6 +19,7 @@ import { CertificatesModule } from './certificates/certificates.module';
 import { SkillsModule } from './skills/skills.module';
 import { CompaniesModule } from './companies/companies.module';
 import { LocationsModule } from './locations/locations.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CompanyAddressModule } from './company-address/company-address.module';
 import { Role } from './common/enums/role.enum';
 
@@ -53,6 +54,7 @@ if (Number.isNaN(dbPort)) {
     SkillsModule,
     CompaniesModule,
     LocationsModule,
+    CloudinaryModule,
     CompanyAddressModule,
   ],
   controllers: [AppController, CvsController],
