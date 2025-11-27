@@ -2,7 +2,7 @@
 
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe } from '@nestjs/common';
+import { ValidationPipe, Logger } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 
 async function bootstrap() {
@@ -29,6 +29,11 @@ async function bootstrap() {
     swaggerOptions: { persistAuthorization: true }, // giữ token sau refresh
   });
 
-  await app.listen(3000);
-}
+const port = 3000;
+  await app.listen(port);
+
+  Logger.log(`🚀 Application is running on: http://localhost:${port}`);
+  Logger.log(`📑 Swagger UI is available at: http://localhost:${port}/api`);
+  Logger.log("    Follow link (ctrl + click) to open Swagger UI");
+  Logger.log("----------------------------------------------------------");}
 bootstrap();
