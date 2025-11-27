@@ -16,6 +16,8 @@ import Search from "../pages/Search/index.jsx";
 import Post from "../pages/Post/index.jsx";
 import CreateJob from "../pages/CreateJob/index.jsx";
 import LoginAdmin from "../pages/login/loginAdmin.jsx";
+import SavedJobs from "../pages/SavedJobs/index.jsx";
+import GrossNet from "../pages/GrossNet/index.jsx";
 import AdminLayout from "../Layout/AdminLayout/index.jsx";
 import JobsManagement from "../pages/Admin/JobsManagement/index.jsx";
 import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
@@ -33,6 +35,14 @@ export const routes = [
       {
         path: "jobs",
         element: <JobsPage />,
+      },
+      {
+        path: "saved-jobs",
+        element: <SavedJobs />,
+      },
+      {
+        path: "gross-net",
+        element: <GrossNet />,
       },
       {
         path: "jobs/:id",

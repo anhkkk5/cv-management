@@ -3,8 +3,24 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import SearchListJob from "../../components/SearchForm/searchJob";
 import { getCookie, setCookie } from "../../helpers/cookie";
 import { useEffect, useState } from "react";
-import { BellOutlined, UserOutlined, ShopOutlined } from "@ant-design/icons";
-import { Dropdown, Menu } from "antd";
+import {
+  BellOutlined,
+  BookOutlined,
+  CrownOutlined,
+  FileTextOutlined,
+  LikeOutlined,
+  SearchOutlined,
+  ShopOutlined,
+  UnorderedListOutlined,
+  UserOutlined,
+  WalletOutlined,
+  CalculatorOutlined,
+  LineChartOutlined,
+  SafetyCertificateOutlined,
+  MobileOutlined,
+  SolutionOutlined,
+} from "@ant-design/icons";
+import { Dropdown } from "antd";
 import { getAllCompany, getMyCompany } from "../../services/getAllCompany/companyServices";
 import { getMyCandidateProfile } from "../../services/Candidates/candidatesServices";
 import { decodeJwt } from "../../services/auth/authServices";
@@ -18,6 +34,47 @@ function Header() {
   const [userType, setUserType] = useState("");
   const [companyId, setCompanyId] = useState("");
   const [companies, setCompanies] = useState([]);
+  const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
+  const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+
+  const jobShortcuts = [
+    { key: "search-job", icon: <SearchOutlined />, label: "Tìm việc làm", path: "/jobs" },
+    { key: "saved", icon: <BookOutlined />, label: "Việc làm đã lưu", path: "/saved-jobs" },
+    { key: "applied", icon: <FileTextOutlined />, label: "Việc làm đã ứng tuyển", path: "/jobs" },
+    { key: "match", icon: <LikeOutlined />, label: "Việc làm phù hợp", path: "/jobs" },
+  ];
+
+  const toolShortcuts = [
+    { key: "gross-net", icon: <WalletOutlined />, label: "Tính lương Gross - Net", path: "/gross-net" },
+    { key: "tax", icon: <CalculatorOutlined />, label: "Tính thuế thu nhập cá nhân" },
+    { key: "compound", icon: <LineChartOutlined />, label: "Tính lãi suất kép" },
+    { key: "unemployment", icon: <SafetyCertificateOutlined />, label: "Tính bảo hiểm thất nghiệp" },
+    { key: "social", icon: <SolutionOutlined />, label: "Tính bảo hiểm xã hội một lần" },
+    { key: "saving-plan", icon: <CalculatorOutlined />, label: "Lập kế hoạch tiết kiệm" },
+    { key: "mobile", icon: <MobileOutlined />, label: "Mobile App TopCV" },
+  ];
+
+  const companyShortcuts = [
+    { key: "companies", icon: <UnorderedListOutlined />, label: "Danh sách công ty", path: "/companies" },
+    { key: "top-companies", icon: <CrownOutlined />, label: "Top công ty", path: "/companies" },
+  ];
+
+  const jobPositions = [
+    { key: "sales", label: "Việc làm Nhân viên kinh doanh" },
+    { key: "accounting", label: "Việc làm Kế toán" },
+    { key: "marketing", label: "Việc làm Marketing" },
+    { key: "hr", label: "Việc làm Hành chính nhân sự" },
+    { key: "customer-care", label: "Việc làm Chăm sóc khách hàng" },
+    { key: "banking", label: "Việc làm Ngân hàng" },
+    { key: "it", label: "Việc làm IT" },
+    { key: "labor", label: "Việc làm Lao động phổ thông" },
+    { key: "senior", label: "Việc làm Senior" },
+    { key: "construction", label: "Việc làm Kỹ sư xây dựng" },
+    { key: "design", label: "Việc làm Thiết kế đồ họa" },
+    { key: "real-estate", label: "Việc làm Bất động sản" },
+    { key: "education", label: "Việc làm Giáo dục" },
+    { key: "telesales", label: "Việc làm telesales" },
+  ];
 
   useEffect(() => {
     const cookieToken = getCookie("token");
@@ -126,6 +183,14 @@ function Header() {
     navigate("/logout");
   };
 
+  const handleNavigateAndClose = (path) => {
+    if (path) {
+      navigate(path);
+    }
+    setIsJobMenuOpen(false);
+    setIsToolsMenuOpen(false);
+  };
+
   const handleGoCompany = async () => {
     if (companyId) {
       navigate(`/companies/${companyId}`);
@@ -229,12 +294,108 @@ function Header() {
                 <NavLink to="/" className="header__top-link">
                   Trang chủ
                 </NavLink>
-                <NavLink
-                  to="/jobs"
-                  className="header__top-link header__top-link--active"
+                <div
+                  className={`header__job-menu ${isJobMenuOpen ? "header__job-menu--open" : ""}`}
+                  onMouseEnter={() => setIsJobMenuOpen(true)}
+                  onMouseLeave={() => setIsJobMenuOpen(false)}
                 >
-                  Việc làm
-                </NavLink>
+                  <NavLink
+                    to="/jobs"
+                    className={`header__top-link ${
+                      location.pathname.startsWith("/jobs") || location.pathname.startsWith("/job")
+                        ? "header__top-link--active"
+                        : ""
+                    }`}
+                  >
+                    Việc làm
+                  </NavLink>
+                  <div
+                    className="header__job-dropdown"
+                    onMouseEnter={() => setIsJobMenuOpen(true)}
+                    onMouseLeave={() => setIsJobMenuOpen(false)}
+                  >
+                    <div className="header__job-dropdown-left">
+                      <div className="header__job-group">
+                        <div className="header__job-group-title">VIỆC LÀM</div>
+                        <div className="header__job-list">
+                          {jobShortcuts.map((item) => (
+                            <button
+                              key={item.key}
+                              type="button"
+                              className="header__job-item"
+                              onClick={() => handleNavigateAndClose(item.path)}
+                            >
+                              <span className="header__job-item-icon">{item.icon}</span>
+                              <span>{item.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div className="header__job-group">
+                        <div className="header__job-group-title">CÔNG TY</div>
+                        <div className="header__job-list">
+                          {companyShortcuts.map((item) => (
+                            <button
+                              key={item.key}
+                              type="button"
+                              className="header__job-item"
+                              onClick={() => handleNavigateAndClose(item.path)}
+                            >
+                              <span className="header__job-item-icon">{item.icon}</span>
+                              <span>{item.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="header__job-dropdown-right">
+                      <div className="header__job-group-title header__job-group-title--muted">
+                        VIỆC LÀM THEO VỊ TRÍ
+                      </div>
+                      <div className="header__job-position-grid">
+                        {jobPositions.map((item) => (
+                          <button
+                            key={item.key}
+                            type="button"
+                            className="header__job-position"
+                            onClick={() => handleNavigateAndClose("/jobs")}
+                          >
+                            {item.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div
+                  className={`header__tools-menu ${isToolsMenuOpen ? "header__tools-menu--open" : ""}`}
+                  onMouseEnter={() => setIsToolsMenuOpen(true)}
+                  onMouseLeave={() => setIsToolsMenuOpen(false)}
+                >
+                  <span className="header__top-link" style={{ cursor: "pointer" }}>
+                    Công cụ
+                  </span>
+                  <div
+                    className="header__tools-dropdown"
+                    onMouseEnter={() => setIsToolsMenuOpen(true)}
+                    onMouseLeave={() => setIsToolsMenuOpen(false)}
+                  >
+                    <div className="header__tools-title">CÔNG CỤ</div>
+                    <div className="header__tools-grid">
+                      {toolShortcuts.map((item) => (
+                        <button
+                          key={item.key}
+                          type="button"
+                          className="header__tools-item"
+                          onClick={() => handleNavigateAndClose(item.path)}
+                        >
+                          <span className="header__tools-icon">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
                 <NavLink to="/cv" className="header__top-link">
                   CV của bạn
                 </NavLink>
@@ -251,35 +412,35 @@ function Header() {
                   ) : (
                     // If logged in as candidate, show dropdown with all companies
                     <Dropdown
-                      overlay={
-                        <Menu>
-                          {companies.length > 0 ? (
-                            companies.map((company) => (
-                              <Menu.Item
-                                key={company.id}
-                                onClick={() =>
-                                  navigate(`/companies/${company.id}`)
-                                }
-                              >
-                                <div
-                                  style={{
-                                    display: "flex",
-                                    alignItems: "center",
-                                    gap: "10px",
-                                  }}
-                                >
-                                  <ShopOutlined />
-                                  <span>{company.fullName}</span>
-                                </div>
-                              </Menu.Item>
-                            ))
-                          ) : (
-                            <Menu.Item disabled>
-                              <span>Không có công ty nào</span>
-                            </Menu.Item>
-                          )}
-                        </Menu>
-                      }
+                      menu={{
+                        items:
+                          companies.length > 0
+                            ? companies.map((company) => ({
+                                key: company.id,
+                                label: (
+                                  <div
+                                    style={{
+                                      display: "flex",
+                                      alignItems: "center",
+                                      gap: "10px",
+                                    }}
+                                    onClick={() =>
+                                      navigate(`/companies/${company.id}`)
+                                    }
+                                  >
+                                    <ShopOutlined />
+                                    <span>{company.fullName}</span>
+                                  </div>
+                                ),
+                              }))
+                            : [
+                                {
+                                  key: "empty",
+                                  label: "Không có công ty nào",
+                                  disabled: true,
+                                },
+                              ],
+                      }}
                       trigger={["click"]}
                     >
                       <span
