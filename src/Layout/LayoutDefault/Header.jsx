@@ -3,7 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import SearchListJob from "../../components/SearchForm/searchJob";
 import { getCookie, setCookie } from "../../helpers/cookie";
 import { useEffect, useState } from "react";
-import { BellOutlined, UserOutlined, ShopOutlined } from "@ant-design/icons";
+import { BellOutlined, UserOutlined, ShopOutlined, AppstoreOutlined, HighlightOutlined, StarOutlined, RadarChartOutlined, FileTextOutlined, UploadOutlined, ReadOutlined, EditOutlined } from "@ant-design/icons";
 import { Dropdown, Menu } from "antd";
 import { getAllCompany, getMyCompany } from "../../services/getAllCompany/companyServices";
 import { getMyCandidateProfile } from "../../services/Candidates/candidatesServices";
@@ -163,6 +163,20 @@ function Header() {
           },
         ]
       : []),
+    ...(userType === "candidate"
+      ? [
+          {
+            key: "my-applications",
+            label: "Công việc đã ứng tuyển",
+            onClick: () => navigate("/applications"),
+          },
+          {
+            key: "saved-jobs",
+            label: "Công việc đã lưu",
+            onClick: () => navigate("/saved-jobs"),
+          },
+        ]
+      : []),
     {
       key: "profile",
       label: "Thông tin cá nhân",
@@ -238,6 +252,52 @@ function Header() {
                 <NavLink to="/cv" className="header__top-link">
                   CV của bạn
                 </NavLink>
+                {isLoggedIn && userType === "candidate" && (
+                  <Dropdown
+                    overlay={
+                      <div style={{
+                        background: "#fff",
+                        padding: 16,
+                        borderRadius: 8,
+                        boxShadow: "0 12px 24px rgba(0,0,0,.12)",
+                        width: 520
+                      }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                          <div>
+                            <div style={{ color: "#16a34a", fontWeight: 700, marginBottom: 8 }}>Mẫu CV theo style →</div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=simple")}> <AppstoreOutlined style={{ marginRight: 8 }}/><span>Mẫu CV Đơn giản</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=impressive")}> <HighlightOutlined style={{ marginRight: 8 }}/><span>Mẫu CV Ấn tượng</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=professional")}> <StarOutlined style={{ marginRight: 8 }}/><span>Mẫu CV Chuyên nghiệp</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=modern")}> <RadarChartOutlined style={{ marginRight: 8 }}/><span>Mẫu CV Hiện đại</span></div>
+
+                            <div style={{ color: "#16a34a", fontWeight: 700, margin: "12px 0 8px" }}>Mẫu CV theo vị trí ứng tuyển →</div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=sales")}> <AppstoreOutlined style={{ marginRight: 8 }}/><span>Nhân viên kinh doanh</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=developer")}> <AppstoreOutlined style={{ marginRight: 8 }}/><span>Lập trình viên</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=accounting")}> <AppstoreOutlined style={{ marginRight: 8 }}/><span>Nhân viên kế toán</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=marketing")}> <AppstoreOutlined style={{ marginRight: 8 }}/><span>Chuyên viên marketing</span></div>
+                          </div>
+                          <div>
+                            <div className="createcv-item" onClick={() => navigate("/cv")}> <FileTextOutlined style={{ marginRight: 8 }}/><span>Quản lý CV</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates")}> <UploadOutlined style={{ marginRight: 8 }}/><span>Tải CV lên</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/guide")}> <ReadOutlined style={{ marginRight: 8 }}/><span>Hướng dẫn viết CV</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/cover-letter")}> <EditOutlined style={{ marginRight: 8 }}/><span>Quản lý Cover Letter</span></div>
+                            <div className="createcv-item" onClick={() => navigate("/cv/cover-letter/templates")}> <EditOutlined style={{ marginRight: 8 }}/><span>Mẫu Cover Letter</span></div>
+                          </div>
+                        </div>
+                        <style>{`
+                          .createcv-item { display:flex; align-items:center; padding:6px 8px; border-radius:6px; cursor:pointer; }
+                          .createcv-item:hover { background:#f5f5f5; }
+                        `}</style>
+                      </div>
+                    }
+                    trigger={["hover"]}
+                    placement="bottom"
+                  >
+                    <span className="header__top-link" style={{ cursor: "pointer" }}>
+                      Tạo CV
+                    </span>
+                  </Dropdown>
+                )}
                 {isLoggedIn ? (
                   userType === "company" ? (
                     // If logged in as company, navigate directly to company detail

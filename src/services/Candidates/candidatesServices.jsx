@@ -1,4 +1,4 @@
-import { get, post, edit, del } from "../../utils/axios/request";
+import { get, post, edit, del, editForm } from "../../utils/axios/request";
 
 // Backend uses authenticated user context for candidate profile
 export const getMyCandidateProfile = async () => {
@@ -22,6 +22,25 @@ export const updateMyCandidateProfile = async (options) => {
 
 export const updateIntroduction = async (intro) => {
   const result = await edit("candidates/me", { introduction: intro });
+  return result;
+};
+
+export const uploadMyAvatar = async (file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const result = await editForm("candidates/me/avatar", formData);
+  return result;
+};
+
+export const deleteMyAvatar = async () => {
+  const result = await del("candidates/me/avatar");
+  return result;
+};
+
+export const uploadTemplateAvatar = async (templateId, file) => {
+  const formData = new FormData();
+  formData.append("file", file);
+  const result = await editForm(`candidates/me/template-avatar/${templateId}`, formData);
   return result;
 };
 

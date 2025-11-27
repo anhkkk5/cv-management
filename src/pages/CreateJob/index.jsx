@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Card,
@@ -14,6 +14,7 @@ import {
 } from "antd";
 import { getCookie } from "../../helpers/cookie";
 import { createJob } from "../../services/jobServices/jobServices";
+import { getLocation } from "../../services/getAllLocation/locationServices";
 import dayjs from "dayjs";
 import "./style.css";
 
@@ -27,17 +28,35 @@ function CreateJob() {
   const [loading, setLoading] = useState(false);
   const companyId = getCookie("companyId") || getCookie("id");
   const companyName = getCookie("companyName") || "";
+  const [locations, setLocations] = useState([]);
+
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const data = await getLocation();
+        setLocations(Array.isArray(data) ? data : []);
+      } catch (e) {
+        setLocations([]);
+      }
+    };
+    fetchLocations();
+  }, []);
 
   const handleSubmit = async (values) => {
     try {
       setLoading(true);
+
+      const selectedLocation = locations.find(
+        (loc) => String(loc.id) === String(values.location)
+      );
 
       const jobData = {
         title: values.title,
         description: values.description,
         company: companyName,
         salary: values.salary,
-        location: values.location,
+        // lưu tên city để FE dễ hiển thị fallback, đồng thời gán location_id đúng ID
+        location: selectedLocation?.name || selectedLocation?.city || undefined,
         location_id: values.location,
         type: values.type,
         jobLevel: values.level,
@@ -117,10 +136,22 @@ function CreateJob() {
                 label="Địa điểm"
                 name="location"
                 rules={[
-                  { required: true, message: "Vui lòng nhập địa điểm" },
+                  { required: true, message: "Vui lòng chọn địa điểm" },
                 ]}
               >
-                <Input placeholder="Ha Noi" size="large" />
+                <Select
+                  placeholder="Chọn thành phố"
+                  size="large"
+                  loading={locations.length === 0}
+                  showSearch
+                  optionFilterProp="children"
+                >
+                  {locations.map((loc) => (
+                    <Option key={loc.id} value={String(loc.id)}>
+                      {loc.name || loc.city}
+                    </Option>
+                  ))}
+                </Select>
               </Form.Item>
             </Col>
 

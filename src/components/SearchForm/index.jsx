@@ -1,14 +1,17 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Row, Col } from "antd";
 import { ProfileOutlined, BankOutlined, TeamOutlined, InboxOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import {getAlljob} from "../../services/jobServices/jobServices";
+import { getAlljob } from "../../services/jobServices/jobServices";
+import { getAllCompany } from "../../services/getAllCompany/companyServices";
+import { getAllCandidates } from "../../services/Candidates/candidatesServices";
 import SearchListJob from "./searchJob";
 import heroImg from "../../assets/anh1.png";
 import "./style.css";
 
 function Search() {
   const navigate = useNavigate();
+  const [counts, setCounts] = useState({ jobs: 0, companies: 0, candidates: 0, newJobs: 0 });
 
   const suggestions = [
     { label: "Thiết kế" },
@@ -22,11 +25,54 @@ function Search() {
     navigate(`/search?city=&keyword=${encodeURIComponent(text)}`);
   };
 
+  useEffect(() => {
+    const loadCounts = async () => {
+      const results = await Promise.allSettled([
+        getAlljob(),
+        getAllCompany(),
+        getAllCandidates(),
+      ]);
+      const jobs = results[0].status === "fulfilled" ? results[0].value : [];
+      const companies = results[1].status === "fulfilled" ? results[1].value : [];
+      const candidates = results[2].status === "fulfilled" ? results[2].value : [];
+
+      if (results[2].status === "rejected") {
+        // Có thể API /candidates yêu cầu quyền → bỏ qua, không chặn các số khác
+        // console.warn("Cannot load candidates count:", results[2].reason);
+      }
+
+      const jobsArr = Array.isArray(jobs) ? jobs : [];
+      const companiesArr = Array.isArray(companies) ? companies : [];
+      const candidatesArr = Array.isArray(candidates) ? candidates : [];
+
+      // Tính số việc mới 7 ngày qua
+      const now = new Date();
+      const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const isRecent = (j) => {
+        const t = j?.created_at || j?.createdAt || j?.posted_at || j?.postedAt || j?.updated_at || j?.updatedAt;
+        if (!t) return false;
+        const d = new Date(t);
+        return !isNaN(d.getTime()) && d >= sevenDaysAgo;
+      };
+      const newJobsCount = jobsArr.filter(isRecent).length;
+
+      setCounts({
+        jobs: jobsArr.length,
+        companies: companiesArr.length,
+        candidates: candidatesArr.length,
+        newJobs: newJobsCount,
+      });
+    };
+    loadCounts();
+  }, []);
+
+  const fmt = (n) => (typeof n === "number" ? n.toLocaleString("vi-VN") : n);
+
   const stats = [
-    { icon: <ProfileOutlined />, number: "1,75,324", label: "Việc làm", variant: "soft" },
-    { icon: <BankOutlined />, number: "97,354", label: "Công ty", variant: "filled" },
-    { icon: <TeamOutlined />, number: "38,47,154", label: "Ứng viên", variant: "soft" },
-    { icon: <InboxOutlined />, number: "7,532", label: "Việc mới", variant: "soft" },
+    { icon: <ProfileOutlined />, number: fmt(counts.jobs), label: "Việc làm", variant: "soft" },
+    { icon: <BankOutlined />, number: fmt(counts.companies), label: "Công ty", variant: "filled" },
+    { icon: <TeamOutlined />, number: fmt(counts.candidates), label: "Ứng viên", variant: "soft" },
+    { icon: <InboxOutlined />, number: fmt(counts.newJobs), label: "Việc mới", variant: "soft" },
   ];
 
   return (

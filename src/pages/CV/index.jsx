@@ -1,15 +1,16 @@
-import React, { useEffect, useState } from "react";
-import { Card, Row, Col, Typography, Button, message, Modal, Input, Form, DatePicker, Select } from "antd";
-import { PlusOutlined, CameraOutlined } from "@ant-design/icons";
+import React, { useEffect, useState, useRef } from "react";
+import { Card, Row, Col, Typography, Button, message, Modal, Input, Form, DatePicker, Select, Tooltip } from "antd";
+import { PlusOutlined, CameraOutlined, UpOutlined, DownOutlined, DeleteOutlined } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getCookie } from "../../helpers/cookie";
-import { getMyCandidateProfile, updateMyCandidateProfile, createMyCandidateProfile } from "../../services/Candidates/candidatesServices";
+import { getMyCandidateProfile, updateMyCandidateProfile, createMyCandidateProfile, uploadMyAvatar, deleteMyAvatar } from "../../services/Candidates/candidatesServices";
 import { 
   
   getCertificatesByCandidate, createCertificate, updateCertificate, deleteCertificate
 } from "../../services/Certificates/CertificatesServices";
 import {getEducationByCandidate, createEducation, updateEducation, deleteEducation} from "../../services/educationServices/educationServices"
 import {getExperienceByCandidate, createExperience, updateExperience, deleteExperience} from "../../services/Experience/ExperienceServices"
+import { getActivities, createActivity, updateActivity, deleteActivity } from "../../services/Activities/ActivitiesServices";
 import {getProjectsByCandidate, createProject, updateProject, deleteProject} from "../../services/project/ProjectServices"
 import { useNavigate } from "react-router-dom";
 import { decodeJwt } from "../../services/auth/authServices";
@@ -17,6 +18,7 @@ import ProfileInfo from "../../components/CV/ProfileInfo";
 import Introduction from "../../components/CV/Introduction";
 import Education from "../../components/CV/Education";
 import Experience from "../../components/CV/Experience";
+import Activities from "../../components/CV/Activities";
 import Projects from "../../components/CV/Projects";
 import Certificates from "../../components/CV/Certificates";
 import "./style.css";
@@ -32,6 +34,37 @@ function CVPage() {
   const [modalType, setModalType] = useState("");
   const [editingItem, setEditingItem] = useState(null);
   const [form] = Form.useForm();
+  const avatarInputRef = useRef(null);
+  // Refs tới các section để scroll
+  const sectionRefs = {
+    profile: useRef(null),
+    intro: useRef(null),
+    education: useRef(null),
+    experience: useRef(null),
+    projects: useRef(null),
+    certificates: useRef(null),
+    activities: useRef(null),
+  };
+
+  // Lưu CV (thứ tự + intro hiện tại nếu chưa lưu)
+  const handleSaveCV = async () => {
+    try {
+      await updateMyCandidateProfile({
+        cvOrder: sectionOrder,
+        // Không ghi đè nội dung khác; intro được lưu khi bấm Cập nhật modal
+      });
+      message.success("Đã lưu CV thành công");
+    } catch (_) {
+      message.error("Lưu CV thất bại, vui lòng thử lại");
+    }
+  };
+
+  // In/Tải CV dạng PDF (sử dụng print)
+  const printAreaRef = useRef(null);
+  const handleDownloadCV = () => {
+    // Sử dụng @media print trong CSS để chỉ in khu vực CV
+    window.print();
+  };
   
   // State để lưu dữ liệu các section
   const [cvData, setCvData] = useState({
@@ -39,8 +72,20 @@ function CVPage() {
     education: [],
     experience: [],
     projects: [],
-    certificates: []
+    certificates: [],
+    activities: [],
   });
+
+  // Thứ tự hiển thị các section có thể kéo thả
+  const [sectionOrder, setSectionOrder] = useState([
+    "intro",
+    "education",
+    "experience",
+    "projects",
+    "certificates",
+    "activities",
+  ]);
+  const [dragging, setDragging] = useState(null);
 
   useEffect(() => {
     const fetchCandidateData = async () => {
@@ -86,22 +131,36 @@ function CVPage() {
 
         // Load dữ liệu CV từ database
         const idForSections = data?.id;
-        const [educationData, experienceData, projectsData, certificatesData] = idForSections
+        const [educationData, experienceData, projectsData, certificatesData, activitiesData] = idForSections
           ? await Promise.all([
               getEducationByCandidate(idForSections),
               getExperienceByCandidate(idForSections),
               getProjectsByCandidate(idForSections),
               getCertificatesByCandidate(idForSections),
+              getActivities(),
             ])
-          : [[], [], [], []];
+          : [[], [], [], [], []];
 
         setCvData({
           intro: data.introduction || "",
           education: educationData || [],
           experience: experienceData || [],
           projects: projectsData || [],
-          certificates: certificatesData || []
+          certificates: certificatesData || [],
+          activities: activitiesData || [],
         });
+
+        // Khởi tạo thứ tự section: ưu tiên localStorage, sau đó backend (cvOrder)
+        try {
+          const ls = localStorage.getItem("cv_section_order");
+          const fromLs = ls ? JSON.parse(ls) : null;
+          const fromBe = Array.isArray(data?.cvOrder) ? data.cvOrder : null;
+          const base = ["intro", "education", "experience", "projects", "certificates", "activities"];
+          // Hợp lệ nếu là tập con có phần tử thuộc base và không trùng lặp
+          const valid = (arr) => Array.isArray(arr) && arr.length >= 1 && arr.every((x) => base.includes(x)) && new Set(arr).size === arr.length;
+          if (valid(fromLs)) setSectionOrder(fromLs);
+          else if (valid(fromBe)) setSectionOrder(fromBe);
+        } catch (_) {}
       } catch (error) {
         message.error("Không thể tải thông tin CV");
         console.error(error);
@@ -171,10 +230,178 @@ function CVPage() {
     }
   };
 
+  // Click nhanh ở sidebar: scroll tới section và mở modal, focus vào input đầu tiên
+  const handleQuickEdit = (type) => {
+    const el = sectionRefs[type]?.current;
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    // đợi scroll rồi mở modal và focus
+    setTimeout(() => {
+      const modalT =
+        type === "projects"
+          ? "project"
+          : type === "certificates"
+          ? "certificate"
+          : type === "activities"
+          ? "activity"
+          : type;
+      showModal(modalT);
+      setTimeout(() => {
+        try {
+          if (modalT === "intro") form.getFieldInstance("content")?.focus();
+          else if (modalT === "education") form.getFieldInstance("school")?.focus();
+          else if (modalT === "experience") form.getFieldInstance("position")?.focus();
+          else if (modalT === "project") form.getFieldInstance("projectName")?.focus();
+          else if (modalT === "certificate") form.getFieldInstance("certificateName")?.focus();
+          else if (modalT === "activity") form.getFieldInstance("organization")?.focus();
+          else if (modalT === "profile") form.getFieldInstance("fullName")?.focus();
+        } catch (_) {}
+      }, 50);
+    }, 300);
+  };
+
   const handleCancel = () => {
     setIsModalOpen(false);
     setEditingItem(null);
     form.resetFields();
+  };
+
+  const handleChooseAvatar = () => {
+    if (avatarInputRef.current) {
+      avatarInputRef.current.click();
+    }
+  };
+
+  const handleAvatarFileChange = async (event) => {
+    const file = event.target.files && event.target.files[0];
+    if (!file) return;
+    try {
+      const result = await uploadMyAvatar(file);
+      const avatarUrl = result?.avatarUrl || result?.data?.avatarUrl || result?.url;
+      if (avatarUrl) {
+        setCandidate((prev) => ({ ...prev, avatar: avatarUrl }));
+        message.success("Cập nhật ảnh đại diện thành công");
+      } else {
+        message.warning("Không nhận được đường dẫn ảnh từ server");
+      }
+    } catch (error) {
+      console.error("Upload avatar error", error);
+      message.error("Tải ảnh đại diện thất bại, vui lòng thử lại");
+    } finally {
+      // reset input để có thể chọn lại cùng 1 file nếu cần
+      event.target.value = "";
+    }
+  };
+
+  const handleAvatarDelete = async () => {
+    try {
+      await deleteMyAvatar();
+      setCandidate((prev) => ({ ...prev, avatar: null }));
+      message.success("Đã xóa ảnh đại diện");
+    } catch (error) {
+      console.error("Delete avatar error", error);
+      message.error("Xóa ảnh đại diện thất bại, vui lòng thử lại");
+    }
+  };
+
+  // DnD handlers
+  const onDragStart = (e, key) => {
+    setDragging(key);
+    try { e.dataTransfer.setData("text/plain", key); } catch (_) {}
+  };
+  const onDragOver = (e) => {
+    e.preventDefault();
+  };
+  const onDrop = async (e, targetKey) => {
+    e.preventDefault();
+    const sourceKey = dragging || (e.dataTransfer ? e.dataTransfer.getData("text/plain") : null);
+    if (!sourceKey || sourceKey === targetKey) return;
+    const newOrder = [...sectionOrder];
+    const from = newOrder.indexOf(sourceKey);
+    const to = newOrder.indexOf(targetKey);
+    if (from === -1 || to === -1) return;
+    newOrder.splice(to, 0, newOrder.splice(from, 1)[0]);
+    setSectionOrder(newOrder);
+    setDragging(null);
+
+    // Lưu localStorage và cố gắng sync backend
+    try {
+      localStorage.setItem("cv_section_order", JSON.stringify(newOrder));
+      await updateMyCandidateProfile({ cvOrder: newOrder });
+    } catch (_) {
+      // bỏ qua lỗi, vẫn giữ local
+    }
+  };
+
+  const draggableWrap = (key, nodeRef, children) => (
+    <div
+      key={key}
+      ref={nodeRef}
+      className={`draggable-section${dragging===key?" dragging":""}`}
+      draggable
+      onDragStart={(e) => onDragStart(e, key)}
+      onDragOver={onDragOver}
+      onDrop={(e) => onDrop(e, key)}
+    >
+      <div className="section-toolbar">
+        <div className="toolbar-left">
+          <span className="drag-hint">Kéo để sắp xếp</span>
+        </div>
+        <div className="toolbar-actions">
+          <Tooltip title="Di chuyển lên trên">
+            <Button size="small" onClick={() => moveUp(key)} icon={<UpOutlined />} />
+          </Tooltip>
+          <Tooltip title="Di chuyển xuống dưới">
+            <Button size="small" onClick={() => moveDown(key)} icon={<DownOutlined />} />
+          </Tooltip>
+          <Tooltip title="Xóa mục này">
+            <Button size="small" danger onClick={() => removeSection(key)} icon={<DeleteOutlined />} />
+          </Tooltip>
+        </div>
+      </div>
+      {children}
+    </div>
+  );
+
+  const persistOrder = async (order) => {
+    try {
+      localStorage.setItem("cv_section_order", JSON.stringify(order));
+      await updateMyCandidateProfile({ cvOrder: order });
+    } catch (_) {}
+  };
+
+  const addSection = async (key) => {
+    if (sectionOrder.includes(key)) return;
+    const order = [...sectionOrder, key];
+    setSectionOrder(order);
+    await persistOrder(order);
+  };
+
+  const removeSection = async (key) => {
+    const order = sectionOrder.filter((k) => k !== key);
+    setSectionOrder(order);
+    await persistOrder(order);
+  };
+
+  const moveUp = async (key) => {
+    const idx = sectionOrder.indexOf(key);
+    if (idx <= 0) return;
+    const order = [...sectionOrder];
+    [order[idx - 1], order[idx]] = [order[idx], order[idx - 1]];
+    setSectionOrder(order);
+    await persistOrder(order);
+    sectionRefs[key]?.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  };
+
+  const moveDown = async (key) => {
+    const idx = sectionOrder.indexOf(key);
+    if (idx === -1 || idx >= sectionOrder.length - 1) return;
+    const order = [...sectionOrder];
+    [order[idx + 1], order[idx]] = [order[idx], order[idx + 1]];
+    setSectionOrder(order);
+    await persistOrder(order);
+    sectionRefs[key]?.current?.scrollIntoView({ behavior: "smooth", block: "center" });
   };
 
   const handleDelete = async (type, id) => {
@@ -215,6 +442,12 @@ function CVPage() {
         setCvData(prev => ({
           ...prev,
           certificates: prev.certificates.filter(cert => cert.id !== id)
+        }));
+      } else if (type === "activity") {
+        await deleteActivity(id);
+        setCvData(prev => ({
+          ...prev,
+          activities: prev.activities.filter(act => act.id !== id),
         }));
       }
       message.success("Đã xóa thành công!");
@@ -355,6 +588,30 @@ function CVPage() {
           const newCertificate = await createCertificate(certificateData);
           setCvData(prev => ({ ...prev, certificates: [...prev.certificates, newCertificate] }));
         }
+      } else if (modalType === "activity") {
+        const activityData = {
+          started_at: values.startDate ? values.startDate.format("YYYY-MM-DD") : null,
+          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+          organization: values.organization,
+          role: values.role,
+          description: values.description || "",
+        };
+
+        if (editingItem && editingItem.id) {
+          await updateActivity(editingItem.id, activityData);
+          setCvData((prev) => ({
+            ...prev,
+            activities: prev.activities.map((act) =>
+              act.id === editingItem.id ? { ...act, ...activityData } : act
+            ),
+          }));
+        } else {
+          const newActivity = await createActivity(activityData);
+          setCvData((prev) => ({
+            ...prev,
+            activities: [...prev.activities, newActivity],
+          }));
+        }
       }
       
       message.success("Đã lưu thông tin thành công!");
@@ -387,73 +644,151 @@ function CVPage() {
           {/* Left Sidebar */}
           <Col xs={24} md={8}>
             <Card className="sidebar-card">
-              <Title level={4}>Nâng cấp hồ sơ xin việc của bạn bằng việc bổ sung các trường sau</Title>
-              
-              <div className="action-item" onClick={() => showModal("intro")}>
+              <Title level={4}>Nâng cấp hồ sơ của bạn</Title>
+
+              <div className="action-item" onClick={() => handleQuickEdit("profile")}> 
                 <PlusOutlined style={{ color: "#c41e3a" }} />
-                <Text>Thêm giới thiệu bản thân</Text>
+                <Text>Chỉnh sửa thông tin cá nhân</Text>
               </div>
 
-              <div className="action-item" onClick={() => showModal("intro")}>
+              <div className="action-item" onClick={() => handleQuickEdit("intro")}>
                 <PlusOutlined style={{ color: "#c41e3a" }} />
-                <Text>Thêm giới thiệu bản thân</Text>
+                <Text>Giới thiệu bản thân</Text>
               </div>
 
-              <div className="action-item" onClick={() => showModal("intro")}>
+              <div className="action-item" onClick={() => handleQuickEdit("education")}>
                 <PlusOutlined style={{ color: "#c41e3a" }} />
-                <Text>Thêm giới thiệu bản thân</Text>
+                <Text>Học vấn</Text>
               </div>
 
-              <div className="action-item" onClick={() => showModal("intro")}>
+              <div className="action-item" onClick={() => handleQuickEdit("experience")}>
                 <PlusOutlined style={{ color: "#c41e3a" }} />
-                <Text>Thêm giới thiệu bản thân</Text>
+                <Text>Kinh nghiệm làm việc</Text>
               </div>
 
-              <div className="action-item">
-                <Text>Thêm thông tin khác</Text>
+              <div className="action-item" onClick={() => handleQuickEdit("projects")}>
+                <PlusOutlined style={{ color: "#c41e3a" }} />
+                <Text>Dự án</Text>
               </div>
 
-              <Button type="primary" danger block size="large" style={{ marginTop: 20 }}>
-                Xem Và Tải CV
-              </Button>
+              <div className="action-item" onClick={() => handleQuickEdit("certificates")}>
+                <PlusOutlined style={{ color: "#c41e3a" }} />
+                <Text>Chứng chỉ</Text>
+              </div>
+
+              <div className="action-item" onClick={() => handleQuickEdit("activities")}>
+                <PlusOutlined style={{ color: "#c41e3a" }} />
+                <Text>Hoạt động</Text>
+              </div>
+
+              {/* Thêm mục đã ẩn giống TopCV */}
+              <div style={{ marginTop: 12, fontWeight: 500 }}>Thêm mục</div>
+              {["intro","education","experience","projects","certificates","activities"].filter(k => !sectionOrder.includes(k)).map((k) => (
+                <div key={`add-${k}`} className="action-item" onClick={() => addSection(k)}>
+                  <PlusOutlined style={{ color: "#52c41a" }} />
+                  <Text>
+                    {
+                      k === "intro"
+                        ? "Giới thiệu bản thân"
+                        : k === "education"
+                        ? "Học vấn"
+                        : k === "experience"
+                        ? "Kinh nghiệm làm việc"
+                        : k === "projects"
+                        ? "Dự án"
+                        : k === "certificates"
+                        ? "Chứng chỉ"
+                        : "Hoạt động"
+                    }
+                  </Text>
+                </div>
+              ))}
+
+              <div style={{ display: "flex", gap: 8, marginTop: 20 }}>
+                <Button block onClick={handleSaveCV}>Lưu CV</Button>
+                <Button type="primary" danger block onClick={handleDownloadCV}>
+                  Xem Và Tải CV
+                </Button>
+              </div>
             </Card>
           </Col>
 
           {/* Main Content */}
           <Col xs={24} md={16}>
-            <ProfileInfo 
-              candidate={candidate} 
-              onEdit={() => showModal("profile", candidate)} 
-            />
-            
-            <Introduction 
-              intro={cvData.intro} 
-              onAdd={(item) => showModal("intro", item)} 
-            />
-            
-            <Education 
-              educationList={cvData.education} 
-              onAdd={(item) => showModal("education", item)}
-              onDelete={(id) => handleDelete("education", id)}
-            />
-            
-            <Experience 
-              experienceList={cvData.experience} 
-              onAdd={(item) => showModal("experience", item)}
-              onDelete={(id) => handleDelete("experience", id)}
-            />
-            
-            <Projects 
-              projectsList={cvData.projects} 
-              onAdd={(item) => showModal("project", item)}
-              onDelete={(id) => handleDelete("project", id)}
-            />
-            
-            <Certificates 
-              certificatesList={cvData.certificates} 
-              onAdd={(item) => showModal("certificate", item)}
-              onDelete={(id) => handleDelete("certificate", id)}
-            />
+            <div ref={printAreaRef} className="cv-print-area">
+            <div ref={sectionRefs.profile} id="section-profile">
+              <ProfileInfo 
+                candidate={candidate} 
+                onEdit={() => showModal("profile", candidate)} 
+              />
+            </div>
+
+            {sectionOrder.map((key) => {
+              if (key === "intro") {
+                return draggableWrap(
+                  key,
+                  sectionRefs.intro,
+                  <Introduction intro={cvData.intro} onAdd={(item) => showModal("intro", item)} />
+                );
+              }
+              if (key === "education") {
+                return draggableWrap(
+                  key,
+                  sectionRefs.education,
+                  <Education 
+                    educationList={cvData.education}
+                    onAdd={(item) => showModal("education", item)}
+                    onDelete={(id) => handleDelete("education", id)}
+                  />
+                );
+              }
+              if (key === "experience") {
+                return draggableWrap(
+                  key,
+                  sectionRefs.experience,
+                  <Experience 
+                    experienceList={cvData.experience}
+                    onAdd={(item) => showModal("experience", item)}
+                    onDelete={(id) => handleDelete("experience", id)}
+                  />
+                );
+              }
+              if (key === "projects") {
+                return draggableWrap(
+                  key,
+                  sectionRefs.projects,
+                  <Projects 
+                    projectsList={cvData.projects}
+                    onAdd={(item) => showModal("project", item)}
+                    onDelete={(id) => handleDelete("project", id)}
+                  />
+                );
+              }
+              if (key === "certificates") {
+                return draggableWrap(
+                  key,
+                  sectionRefs.certificates,
+                  <Certificates 
+                    certificatesList={cvData.certificates}
+                    onAdd={(item) => showModal("certificate", item)}
+                    onDelete={(id) => handleDelete("certificate", id)}
+                  />
+                );
+              }
+              if (key === "activities") {
+                return draggableWrap(
+                  key,
+                  sectionRefs.activities,
+                  <Activities
+                    activityList={cvData.activities}
+                    onAdd={(item) => showModal("activity", item)}
+                    onDelete={(id) => handleDelete("activity", id)}
+                  />
+                );
+              }
+              return null;
+            })}
+            </div>
           </Col>
         </Row>
       </div>
@@ -465,6 +800,7 @@ function CVPage() {
           modalType === "education" ? "Học vấn" :
           modalType === "experience" ? "Thêm kinh nghiệm làm việc" :
           modalType === "certificate" ? "Thêm chứng chỉ" :
+          modalType === "activity" ? "Thêm hoạt động" :
           modalType === "profile" ? "Cập nhật thông tin cá nhân" :
           modalType === "project" ? "Dự án cá nhân" :
           "Thêm thông tin"
@@ -472,7 +808,7 @@ function CVPage() {
         open={isModalOpen}
         onCancel={handleCancel}
         footer={null}
-        width={modalType === "education" || modalType === "experience" || modalType === "profile" || modalType === "project" || modalType === "certificate" ? 600 : 520}
+        width={modalType === "education" || modalType === "experience" || modalType === "profile" || modalType === "project" || modalType === "certificate" || modalType === "activity" ? 600 : 520}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           {modalType === "profile" && (
@@ -480,7 +816,7 @@ function CVPage() {
               <div style={{ textAlign: "center", marginBottom: 20 }}>
                 <div style={{ position: "relative", display: "inline-block" }}>
                   <img 
-                    src="/src/assets/logologin.png" 
+                    src={candidate?.avatar || "/src/assets/logologin.png"} 
                     alt="Avatar" 
                     style={{ width: 80, height: 80, borderRadius: "50%", objectFit: "cover" }}
                   />
@@ -489,11 +825,19 @@ function CVPage() {
                     shape="circle" 
                     size="small"
                     style={{ position: "absolute", bottom: 0, right: 0, backgroundColor: "#fff" }}
+                    onClick={handleChooseAvatar}
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={avatarInputRef}
+                    style={{ display: "none" }}
+                    onChange={handleAvatarFileChange}
                   />
                 </div>
                 <div style={{ marginTop: 10 }}>
-                  <Button size="small" style={{ marginRight: 8 }}>Sửa</Button>
-                  <Button size="small" danger>Xóa</Button>
+                  <Button size="small" style={{ marginRight: 8 }} onClick={handleChooseAvatar}>Sửa</Button>
+                  <Button size="small" danger onClick={handleAvatarDelete}>Xóa</Button>
                 </div>
               </div>
 
