@@ -1,10 +1,21 @@
-import React from "react";
-import { Row, Col, Card, Tag, Empty, Spin, Button, Space, Typography } from "antd";
-import { EnvironmentOutlined, DeleteOutlined } from "@ant-design/icons";
-import { getAlljob } from "../../services/jobServices/jobServices";
+import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { Row, Col, Card, Tag, Empty, Spin, Button, Space, Typography, Table, message } from "antd";
+import { EnvironmentOutlined, DeleteOutlined, StarFilled } from "@ant-design/icons";
+import { getCookie } from "../../helpers/cookie";
+import { getAlljob, getDetaiJob } from "../../services/jobServices/jobServices";
 
 const STORAGE_KEY = "saved_jobs";
+const { Title, Text } = Typography;
 
+const statusTag = (status) => {
+  if (status === "active") return <Tag color="green">Đang tuyển</Tag>;
+  if (status === "closed") return <Tag color="red">Đã đóng</Tag>;
+  if (status === "inactive") return <Tag>Ngừng tuyển</Tag>;
+  return null;
+};
+
+// READ SAVED JOBS
 const readSaved = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -16,12 +27,14 @@ const readSaved = () => {
 };
 
 function SavedJobsPage() {
-  const [savedData, setSavedData] = React.useState(readSaved());
-  const [allJobs, setAllJobs] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
+  const navigate = useNavigate();
+  const [savedData, setSavedData] = useState(readSaved());
+  const [allJobs, setAllJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [items, setItems] = useState([]);
 
-  // Fetch full jobs list so we can hydrate saved IDs with current data
-  React.useEffect(() => {
+  // Fetch full jobs list to hydrate saved IDs with current data
+  useEffect(() => {
     let mounted = true;
     const fetchJobs = async () => {
       setLoading(true);
@@ -68,76 +81,170 @@ function SavedJobsPage() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
   };
 
-  return (
-    <div style={{ padding: 24 }}>
-      <Typography.Title level={2} style={{ marginBottom: 12 }}>
-        Việc làm đã lưu
-      </Typography.Title>
-      <Typography.Paragraph type="secondary" style={{ marginBottom: 24 }}>
-        Danh sách các tin tuyển dụng bạn đã lưu lại để xem sau.
-      </Typography.Paragraph>
+  // Fetch saved jobs
+  useEffect(() => {
+    const token = getCookie("token") || localStorage.getItem("token");
+    const userType = getCookie("userType");
+    const userId = getCookie("id");
+    if (!token || userType !== "candidate") {
+      message.warning("Vui lòng đăng nhập bằng tài khoản ứng viên để xem danh sách đã lưu");
+      navigate("/login");
+      return;
+    }
 
-      {loading ? (
-        <div style={{ display: "flex", justifyContent: "center", padding: 48 }}>
-          <Spin />
-        </div>
-      ) : savedJobs.length === 0 ? (
-        <Empty description="Chưa có việc làm nào được lưu" />
-      ) : (
-        <Row gutter={[16, 16]}>
-          {savedJobs.map((job) => (
-            <Col xs={24} sm={12} md={12} lg={8} key={job.id || job.title}>
-              <Card
-                hoverable
-                onClick={() => (window.location.href = `/jobs/${job.id}`)}
-                actions={[
-                  <Button
-                    key="remove"
-                    type="text"
-                    icon={<DeleteOutlined />}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemove(job.id);
-                    }}
-                  >
-                    Bỏ lưu
-                  </Button>,
-                ]}
-              >
-                <Space direction="vertical" size={10} style={{ width: "100%" }}>
-                  <Space size={8} wrap>
-                    {job.type ? (
-                      <Tag
-                        color={
-                          job.type === "FULL-TIME"
-                            ? "green"
-                            : job.type === "PART-TIME"
-                            ? "blue"
-                            : "orange"
-                        }
-                      >
-                        {job.type}
-                      </Tag>
+    const load = async () => {
+      try {
+        const raw = userId ? localStorage.getItem(`saved_jobs_${userId}`) : null;
+        const ids = raw ? JSON.parse(raw) : [];
+        if (!Array.isArray(ids) || ids.length === 0) {
+          setItems([]);
+          return;
+        }
+
+        const jobs = [];
+        await Promise.all(
+          ids.map(async (jid) => {
+            try {
+              const job = await getDetaiJob(jid);
+              if (job) jobs.push(job);
+            } catch (_) {}
+          })
+        );
+
+        const mapped = jobs.map((job) => ({
+          key: job.id,
+          id: job.id,
+          title: job.title,
+          company: job.company,
+          location: job.location,
+          status: job.status,
+        }));
+        setItems(mapped);
+      } catch (e) {
+        console.error("Error loading saved jobs", e);
+        message.error("Không thể tải danh sách công việc đã lưu");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    load();
+  }, [navigate]);
+
+  const columns = [
+    {
+      title: "",
+      dataIndex: "favorite",
+      key: "favorite",
+      width: 60,
+      align: "center",
+      render: () => <StarFilled style={{ color: "#faad14", fontSize: 18 }} />,
+    },
+    {
+      title: "Công việc",
+      dataIndex: "title",
+      key: "title",
+      render: (text, record) => (
+        <span
+          style={{ fontWeight: 500, cursor: "pointer" }}
+          onClick={() => navigate(`/jobs/${record.id}`)}
+        >
+          {text}
+        </span>
+      ),
+    },
+    {
+      title: "Công ty",
+      dataIndex: "company",
+      key: "company",
+      render: (text) => <Text>{text}</Text>,
+    },
+    {
+      title: "Địa điểm",
+      dataIndex: "location",
+      key: "location",
+      render: (text) => <Text>{text || "-"}</Text>,
+    },
+    {
+      title: "Trạng thái tin tuyển dụng",
+      dataIndex: "status",
+      key: "status",
+      render: (value) => statusTag(value),
+    },
+  ];
+
+  if (loading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", padding: 40 }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ maxWidth: 1100, margin: "0 auto", padding: 24 }}>
+      <Card bodyStyle={{ padding: 24 }}>
+        <Title level={3} style={{ marginBottom: 24 }}>
+          Công việc đã lưu
+        </Title>
+        {savedJobs.length === 0 ? (
+          <Empty description="Chưa có việc làm nào được lưu" />
+        ) : (
+          <Row gutter={[16, 16]}>
+            {savedJobs.map((job) => (
+              <Col xs={24} sm={12} md={12} lg={8} key={job.id || job.title}>
+                <Card
+                  hoverable
+                  onClick={() => (window.location.href = `/jobs/${job.id}`)}
+                  actions={[
+                    <Button
+                      key="remove"
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(job.id);
+                      }}
+                    >
+                      Bỏ lưu
+                    </Button>,
+                  ]}
+                >
+                  <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                    <Space size={8} wrap>
+                      {job.type ? (
+                        <Tag
+                          color={
+                            job.type === "FULL-TIME"
+                              ? "green"
+                              : job.type === "PART-TIME"
+                              ? "blue"
+                              : "orange"
+                          }
+                        >
+                          {job.type}
+                        </Tag>
+                      ) : null}
+                      {job.salary ? <Tag color="gold">Salary: {job.salary}</Tag> : null}
+                    </Space>
+                    <Typography.Title level={4} style={{ margin: 0 }}>
+                      {job.title || job.name || "Chưa có tiêu đề"}
+                    </Typography.Title>
+                    {job.company ? (
+                      <Typography.Text style={{ color: "#666" }}>{job.company}</Typography.Text>
                     ) : null}
-                    {job.salary ? <Tag color="gold">Salary: {job.salary}</Tag> : null}
+                    {job.location ? (
+                      <Typography.Text style={{ color: "#666" }}>
+                        <EnvironmentOutlined /> {job.location}
+                      </Typography.Text>
+                    ) : null}
                   </Space>
-                  <Typography.Title level={4} style={{ margin: 0 }}>
-                    {job.title || job.name || "Chưa có tiêu đề"}
-                  </Typography.Title>
-                  {job.company ? (
-                    <Typography.Text style={{ color: "#666" }}>{job.company}</Typography.Text>
-                  ) : null}
-                  {job.location ? (
-                    <Typography.Text style={{ color: "#666" }}>
-                      <EnvironmentOutlined /> {job.location}
-                    </Typography.Text>
-                  ) : null}
-                </Space>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      )}
+                </Card>
+              </Col>
+            ))}
+          </Row>
+        )}
+      </Card>
     </div>
   );
 }

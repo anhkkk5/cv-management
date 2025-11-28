@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import SearchListJob from "../../components/SearchForm/searchJob";
 import { getCookie, setCookie } from "../../helpers/cookie";
 import { useEffect, useState } from "react";
+
 import {
   BellOutlined,
   BookOutlined,
@@ -19,8 +20,19 @@ import {
   SafetyCertificateOutlined,
   MobileOutlined,
   SolutionOutlined,
+
+  // icons từ develop
+  AppstoreOutlined,
+  HighlightOutlined,
+  StarOutlined,
+  RadarChartOutlined,
+  UploadOutlined,
+  ReadOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
-import { Dropdown } from "antd";
+
+import { Dropdown, Menu } from "antd";
+
 import { getAllCompany, getMyCompany } from "../../services/getAllCompany/companyServices";
 import { getMyCandidateProfile } from "../../services/Candidates/candidatesServices";
 import { decodeJwt } from "../../services/auth/authServices";
@@ -37,6 +49,7 @@ function Header() {
   const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
 
+  // ----- MENU DỮ LIỆU -----
   const jobShortcuts = [
     { key: "search-job", icon: <SearchOutlined />, label: "Tìm việc làm", path: "/jobs" },
     { key: "saved", icon: <BookOutlined />, label: "Việc làm đã lưu", path: "/saved-jobs" },
@@ -76,6 +89,7 @@ function Header() {
     { key: "telesales", label: "Việc làm telesales" },
   ];
 
+  // ----- XỬ LÝ TOKEN & USER -----
   useEffect(() => {
     const cookieToken = getCookie("token");
     const lsToken = localStorage.getItem("token");
@@ -113,7 +127,7 @@ function Header() {
     }
   }, [location.pathname]);
 
-  // Auto fetch my company if logged in as company but missing cache
+  // Company auto fetch
   useEffect(() => {
     const maybeFetch = async () => {
       const token = getCookie("token") || localStorage.getItem("token");
@@ -125,22 +139,16 @@ function Header() {
         const comp = await getMyCompany();
         if (comp?.id) {
           setCookie("companyId", comp.id, 1);
-          if (comp.companyName || comp.fullName) {
-            setCookie("companyName", comp.companyName || comp.fullName, 1);
-          }
+          setCookie("companyName", comp.companyName || comp.fullName, 1);
           setCompanyId(String(comp.id));
           setUserName(comp.companyName || comp.fullName || "");
         }
-      } catch (e) {
-        // ignore; user may not have company yet
-      }
+      } catch {}
     };
     maybeFetch();
-    // run once on mount and when auth changes by route change
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Auto fetch candidate name if logged in as candidate but missing name
+  // Candidate auto fetch
   useEffect(() => {
     const loadCandidateName = async () => {
       const token = getCookie("token") || localStorage.getItem("token");
@@ -153,40 +161,30 @@ function Header() {
           setCookie("fullName", me.fullName, 1);
           setUserName(me.fullName);
         }
-      } catch (_e) {
-        // ignore
-      }
+      } catch {}
     };
     loadCandidateName();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Fetch company list
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
         const result = await getAllCompany();
-        if (result) {
-          setCompanies(result);
-        }
+        if (result) setCompanies(result);
       } catch (error) {
         console.error("Error fetching companies:", error);
       }
     };
 
-    // Only fetch companies list if logged in as candidate
-    if (isLoggedIn && userType === "candidate") {
-      fetchCompanies();
-    }
+    if (isLoggedIn && userType === "candidate") fetchCompanies();
   }, [isLoggedIn, userType]);
 
-  const handleLogout = () => {
-    navigate("/logout");
-  };
+  // ----- HANDLERS -----
+  const handleLogout = () => navigate("/logout");
 
   const handleNavigateAndClose = (path) => {
-    if (path) {
-      navigate(path);
-    }
+    if (path) navigate(path);
     setIsJobMenuOpen(false);
     setIsToolsMenuOpen(false);
   };
@@ -199,22 +197,13 @@ function Header() {
     try {
       const comp = await getMyCompany();
       if (comp?.id) {
-        // cache for next times
         setCookie("companyId", comp.id, 1);
-        if (comp.companyName || comp.fullName) {
-          setCookie("companyName", comp.companyName || comp.fullName, 1);
-        }
+        setCookie("companyName", comp.companyName || comp.fullName, 1);
         navigate(`/companies/${comp.id}`);
       }
     } catch (e) {
       const status = e?.response?.status;
-      if (status === 404) {
-        // Chưa có thông tin doanh nghiệp -> chuyển tới trang đăng ký công ty
-        navigate("/registerCompany");
-        return;
-      }
-      // eslint-disable-next-line no-console
-      console.error("Cannot fetch my company:", e);
+      if (status === 404) navigate("/registerCompany");
     }
   };
 
@@ -225,6 +214,20 @@ function Header() {
             key: "my-company",
             label: "Thông tin doanh nghiệp",
             onClick: handleGoCompany,
+          },
+        ]
+      : []),
+    ...(userType === "candidate"
+      ? [
+          {
+            key: "my-applications",
+            label: "Công việc đã ứng tuyển",
+            onClick: () => navigate("/applications"),
+          },
+          {
+            key: "saved-jobs",
+            label: "Công việc đã lưu",
+            onClick: () => navigate("/saved-jobs"),
           },
         ]
       : []),
@@ -240,60 +243,28 @@ function Header() {
     },
   ];
 
+  // ===================== RENDER =====================
   return (
     <header className="header">
-      {/* Top Bar */}
+
+      {/* TOP BAR */}
       <div className="header__top-bar">
         <div className="header__top-bar-content">
           <nav className="header__top-nav">
             {userType === "admin" ? (
-              // Admin menu
               <>
-                <NavLink
-                  to="/"
-                  className={`header__top-link ${
-                    location.pathname === "/" ? "header__top-link--active" : ""
-                  }`}
-                >
-                  Trang chủ
-                </NavLink>
-                <NavLink
-                  to="/admin/jobs"
-                  className={`header__top-link ${
-                    location.pathname.includes("/admin/jobs")
-                      ? "header__top-link--active"
-                      : ""
-                  }`}
-                >
-                  Quản lý việc làm
-                </NavLink>
-                <NavLink
-                  to="/admin/companies"
-                  className={`header__top-link ${
-                    location.pathname.includes("/admin/companies")
-                      ? "header__top-link--active"
-                      : ""
-                  }`}
-                >
-                  Quản lý công ty
-                </NavLink>
-                <NavLink
-                  to="/admin/users"
-                  className={`header__top-link ${
-                    location.pathname.includes("/admin/users")
-                      ? "header__top-link--active"
-                      : ""
-                  }`}
-                >
-                  Quản lý người dùng
-                </NavLink>
+                <NavLink to="/" className="header__top-link">Trang chủ</NavLink>
+                <NavLink to="/admin/jobs" className="header__top-link">Quản lý việc làm</NavLink>
+                <NavLink to="/admin/companies" className="header__top-link">Quản lý công ty</NavLink>
+                <NavLink to="/admin/users" className="header__top-link">Quản lý người dùng</NavLink>
               </>
             ) : (
-              // Regular menu
               <>
                 <NavLink to="/" className="header__top-link">
                   Trang chủ
                 </NavLink>
+
+                {/* JOB MENU */}
                 <div
                   className={`header__job-menu ${isJobMenuOpen ? "header__job-menu--open" : ""}`}
                   onMouseEnter={() => setIsJobMenuOpen(true)}
@@ -302,27 +273,19 @@ function Header() {
                   <NavLink
                     to="/jobs"
                     className={`header__top-link ${
-                      location.pathname.startsWith("/jobs") || location.pathname.startsWith("/job")
-                        ? "header__top-link--active"
-                        : ""
+                      location.pathname.startsWith("/jobs") ? "header__top-link--active" : ""
                     }`}
                   >
                     Việc làm
                   </NavLink>
-                  <div
-                    className="header__job-dropdown"
-                    onMouseEnter={() => setIsJobMenuOpen(true)}
-                    onMouseLeave={() => setIsJobMenuOpen(false)}
-                  >
+
+                  <div className="header__job-dropdown">
                     <div className="header__job-dropdown-left">
                       <div className="header__job-group">
                         <div className="header__job-group-title">VIỆC LÀM</div>
                         <div className="header__job-list">
                           {jobShortcuts.map((item) => (
-                            <button
-                              key={item.key}
-                              type="button"
-                              className="header__job-item"
+                            <button key={item.key} className="header__job-item"
                               onClick={() => handleNavigateAndClose(item.path)}
                             >
                               <span className="header__job-item-icon">{item.icon}</span>
@@ -331,14 +294,12 @@ function Header() {
                           ))}
                         </div>
                       </div>
+
                       <div className="header__job-group">
                         <div className="header__job-group-title">CÔNG TY</div>
                         <div className="header__job-list">
                           {companyShortcuts.map((item) => (
-                            <button
-                              key={item.key}
-                              type="button"
-                              className="header__job-item"
+                            <button key={item.key} className="header__job-item"
                               onClick={() => handleNavigateAndClose(item.path)}
                             >
                               <span className="header__job-item-icon">{item.icon}</span>
@@ -348,16 +309,14 @@ function Header() {
                         </div>
                       </div>
                     </div>
+
                     <div className="header__job-dropdown-right">
                       <div className="header__job-group-title header__job-group-title--muted">
                         VIỆC LÀM THEO VỊ TRÍ
                       </div>
                       <div className="header__job-position-grid">
                         {jobPositions.map((item) => (
-                          <button
-                            key={item.key}
-                            type="button"
-                            className="header__job-position"
+                          <button key={item.key} className="header__job-position"
                             onClick={() => handleNavigateAndClose("/jobs")}
                           >
                             {item.label}
@@ -367,6 +326,8 @@ function Header() {
                     </div>
                   </div>
                 </div>
+
+                {/* TOOLS MENU */}
                 <div
                   className={`header__tools-menu ${isToolsMenuOpen ? "header__tools-menu--open" : ""}`}
                   onMouseEnter={() => setIsToolsMenuOpen(true)}
@@ -375,18 +336,12 @@ function Header() {
                   <span className="header__top-link" style={{ cursor: "pointer" }}>
                     Công cụ
                   </span>
-                  <div
-                    className="header__tools-dropdown"
-                    onMouseEnter={() => setIsToolsMenuOpen(true)}
-                    onMouseLeave={() => setIsToolsMenuOpen(false)}
-                  >
+
+                  <div className="header__tools-dropdown">
                     <div className="header__tools-title">CÔNG CỤ</div>
                     <div className="header__tools-grid">
                       {toolShortcuts.map((item) => (
-                        <button
-                          key={item.key}
-                          type="button"
-                          className="header__tools-item"
+                        <button key={item.key} className="header__tools-item"
                           onClick={() => handleNavigateAndClose(item.path)}
                         >
                           <span className="header__tools-icon">{item.icon}</span>
@@ -396,21 +351,125 @@ function Header() {
                     </div>
                   </div>
                 </div>
+
                 <NavLink to="/cv" className="header__top-link">
                   CV của bạn
                 </NavLink>
+
+                {/* TẠO CV MENU */}
+                {isLoggedIn && userType === "candidate" && (
+                  <Dropdown
+                    overlay={
+                      <div style={{ background: "#fff", padding: 16, borderRadius: 8, boxShadow: "0 12px 24px rgba(0,0,0,.12)", width: 520 }}>
+                        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 24 }}>
+                          <div>
+                            <div style={{ color: "#16a34a", fontWeight: 700, marginBottom: 8 }}>
+                              Mẫu CV theo style →
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=simple")}>
+                              <AppstoreOutlined style={{ marginRight: 8 }} />
+                              <span>Mẫu CV Đơn giản</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=impressive")}>
+                              <HighlightOutlined style={{ marginRight: 8 }} />
+                              <span>Mẫu CV Ấn tượng</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=professional")}>
+                              <StarOutlined style={{ marginRight: 8 }} />
+                              <span>Mẫu CV Chuyên nghiệp</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?style=modern")}>
+                              <RadarChartOutlined style={{ marginRight: 8 }} />
+                              <span>Mẫu CV Hiện đại</span>
+                            </div>
+
+                            <div style={{ color: "#16a34a", fontWeight: 700, margin: "12px 0 8px" }}>
+                              Mẫu CV theo vị trí ứng tuyển →
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=sales")}>
+                              <AppstoreOutlined style={{ marginRight: 8 }} />
+                              <span>Nhân viên kinh doanh</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=developer")}>
+                              <AppstoreOutlined style={{ marginRight: 8 }} />
+                              <span>Lập trình viên</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=accounting")}>
+                              <AppstoreOutlined style={{ marginRight: 8 }} />
+                              <span>Nhân viên kế toán</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates?role=marketing")}>
+                              <AppstoreOutlined style={{ marginRight: 8 }} />
+                              <span>Chuyên viên marketing</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <div className="createcv-item" onClick={() => navigate("/cv")}>
+                              <FileTextOutlined style={{ marginRight: 8 }} />
+                              <span>Quản lý CV</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/templates")}>
+                              <UploadOutlined style={{ marginRight: 8 }} />
+                              <span>Tải CV lên</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/guide")}>
+                              <ReadOutlined style={{ marginRight: 8 }} />
+                              <span>Hướng dẫn viết CV</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/cover-letter")}>
+                              <EditOutlined style={{ marginRight: 8 }} />
+                              <span>Quản lý Cover Letter</span>
+                            </div>
+
+                            <div className="createcv-item" onClick={() => navigate("/cv/cover-letter/templates")}>
+                              <EditOutlined style={{ marginRight: 8 }} />
+                              <span>Mẫu Cover Letter</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        <style>{`
+                          .createcv-item {
+                            display: flex;
+                            align-items: center;
+                            padding: 6px 8px;
+                            border-radius: 6px;
+                            cursor: pointer;
+                          }
+                          .createcv-item:hover {
+                            background: #f5f5f5;
+                          }
+                        `}</style>
+                      </div>
+                    }
+                    trigger={["hover"]}
+                    placement="bottom"
+                  >
+                    <span className="header__top-link" style={{ cursor: "pointer" }}>
+                      Tạo CV
+                    </span>
+                  </Dropdown>
+                )}
+
+                {/* COMPANY DROPDOWN */}
                 {isLoggedIn ? (
                   userType === "company" ? (
-                    // If logged in as company, navigate directly to company detail
-                    <span
-                      className="header__top-link"
-                      style={{ cursor: "pointer" }}
-                      onClick={handleGoCompany}
-                    >
+                    <span className="header__top-link" style={{ cursor: "pointer" }} onClick={handleGoCompany}>
                       Thông tin doanh nghiệp
                     </span>
                   ) : (
-                    // If logged in as candidate, show dropdown with all companies
                     <Dropdown
                       menu={{
                         items:
@@ -419,14 +478,8 @@ function Header() {
                                 key: company.id,
                                 label: (
                                   <div
-                                    style={{
-                                      display: "flex",
-                                      alignItems: "center",
-                                      gap: "10px",
-                                    }}
-                                    onClick={() =>
-                                      navigate(`/companies/${company.id}`)
-                                    }
+                                    style={{ display: "flex", alignItems: "center", gap: "10px" }}
+                                    onClick={() => navigate(`/companies/${company.id}`)}
                                   >
                                     <ShopOutlined />
                                     <span>{company.fullName}</span>
@@ -443,10 +496,7 @@ function Header() {
                       }}
                       trigger={["click"]}
                     >
-                      <span
-                        className="header__top-link"
-                        style={{ cursor: "pointer" }}
-                      >
+                      <span className="header__top-link" style={{ cursor: "pointer" }}>
                         Thông tin doanh nghiệp
                       </span>
                     </Dropdown>
@@ -459,6 +509,7 @@ function Header() {
               </>
             )}
           </nav>
+
           <div className="header__top-contact">
             <span className="header__phone">
               <i className="header__phone-icon">📞</i>
@@ -473,52 +524,28 @@ function Header() {
         </div>
       </div>
 
-      {/* Main Header */}
+      {/* MAIN HEADER */}
       <div className="header__main">
         <div className="header__main-content">
-          {/* Logo */}
           <div className="header__logo">
             <NavLink to="/" className="header__logo-link">
-              <img
-                src={logoImage}
-                alt="Logo"
-                className="header__logo-image"
-                style={{ height: "60px", objectFit: "contain" }}
-              />
+              <img src={logoImage} alt="Logo" className="header__logo-image"
+                style={{ height: "60px", objectFit: "contain" }} />
             </NavLink>
           </div>
 
-          {/* Search Bar */}
           <div className="header__search">
             <SearchListJob showButton={false} />
           </div>
 
-          {/* Action Buttons */}
+          {/* ACTION BUTTONS */}
           <div className="header__actions">
-            {isLoggedIn && userType === "candidate" ? (
-              // Logged in as Candidate
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "20px" }}
-              >
-                <BellOutlined
-                  style={{
-                    fontSize: "24px",
-                    color: "#c41e3a",
-                    cursor: "pointer",
-                  }}
-                />
-                <Dropdown
-                  menu={{ items: userMenuItems }}
-                  placement="bottomRight"
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      cursor: "pointer",
-                    }}
-                  >
+            {isLoggedIn ? (
+              <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
+                <BellOutlined style={{ fontSize: "24px", color: "#c41e3a", cursor: "pointer" }} />
+
+                <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>
                     <div
                       style={{
                         width: "40px",
@@ -533,111 +560,20 @@ function Header() {
                     >
                       <UserOutlined style={{ fontSize: "20px" }} />
                     </div>
-                    <span style={{ color: "#c41e3a", fontWeight: "500" }}>
-                      {userName}
-                    </span>
-                  </div>
-                </Dropdown>
-              </div>
-            ) : isLoggedIn && userType === "company" ? (
-              // Logged in as Company
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "20px" }}
-              >
-                <BellOutlined
-                  style={{
-                    fontSize: "24px",
-                    color: "#c41e3a",
-                    cursor: "pointer",
-                  }}
-                />
-                <Dropdown
-                  menu={{ items: userMenuItems }}
-                  placement="bottomRight"
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        backgroundColor: "#c41e3a",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                      }}
-                    >
-                      <UserOutlined style={{ fontSize: "20px" }} />
-                    </div>
-                    <span style={{ color: "#c41e3a", fontWeight: "500" }}>
-                      {userName}
-                    </span>
-                  </div>
-                </Dropdown>
-              </div>
-            ) : isLoggedIn && userType === "admin" ? (
-              // Logged in as Admin
-              <div
-                style={{ display: "flex", alignItems: "center", gap: "20px" }}
-              >
-                <BellOutlined
-                  style={{
-                    fontSize: "24px",
-                    color: "#c41e3a",
-                    cursor: "pointer",
-                  }}
-                />
-                <Dropdown
-                  menu={{ items: userMenuItems }}
-                  placement="bottomRight"
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "40px",
-                        height: "40px",
-                        borderRadius: "50%",
-                        backgroundColor: "#c41e3a",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "white",
-                      }}
-                    >
-                      <UserOutlined style={{ fontSize: "20px" }} />
-                    </div>
-                    <span style={{ color: "#c41e3a", fontWeight: "500" }}>
-                      {userName || "Admin"}
-                    </span>
+                    <span style={{ color: "#c41e3a", fontWeight: "500" }}>{userName || "User"}</span>
                   </div>
                 </Dropdown>
               </div>
             ) : (
-              // Not logged in
               <>
                 <button className="header__btn header__btn--login">
                   <NavLink to="/login">Đăng Nhập</NavLink>
                 </button>
-                
+
                 <button className="header__btn header__btn--register">
                   <NavLink to="/register">Đăng Kí</NavLink>
                 </button>
-              
+
                 <button className="header__btn header__btn--post">
                   <NavLink to="/Post">Đăng tuyển</NavLink>
                 </button>
@@ -646,6 +582,7 @@ function Header() {
           </div>
         </div>
       </div>
+
     </header>
   );
 }

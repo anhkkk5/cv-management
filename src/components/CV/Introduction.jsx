@@ -4,15 +4,23 @@ import { PlusOutlined, EditOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
-function Introduction({ intro, onAdd }) {
+function Introduction({ intro, onAdd, readOnly = false }) {
   return (
     <Card className="section-card">
       <div className="section-header">
         <Title level={4}>Giới Thiệu Bản Thân</Title>
-        {intro ? (
-          <EditOutlined className="edit-icon" onClick={() => onAdd(intro)} />
-        ) : (
-          <PlusOutlined className="add-icon" onClick={() => onAdd(null)} />
+        {!readOnly && (
+          intro ? (
+            <EditOutlined
+              className="edit-icon"
+              onClick={() => onAdd && onAdd(intro)}
+            />
+          ) : (
+            <PlusOutlined
+              className="add-icon"
+              onClick={() => onAdd && onAdd(null)}
+            />
+          )
         )}
       </div>
       {intro ? (

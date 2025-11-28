@@ -49,6 +49,18 @@ export const post = async (path, data) => {
   }
 };
 
+export const postForm = async (path, formData) => {
+  try {
+    const response = await axiosInstance.post(path, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("POST FORM request error:", error);
+    throw error;
+  }
+};
+
 export const del = async (path) => {
   try {
     // Gửi yêu cầu DELETE đến API với ID của sản phẩm cần xóa
@@ -66,6 +78,18 @@ export const edit = async (path, options) => {
     return response.data;
   } catch (error) {
     console.error("PATCH request error:", error);
+    throw error;
+  }
+};
+
+export const editForm = async (path, formData) => {
+  try {
+    const response = await axiosInstance.patch(path, formData, {
+      headers: { "Content-Type": "multipart/form-data" },
+    });
+    return response.data;
+  } catch (error) {
+    console.error("PATCH FORM request error:", error);
     throw error;
   }
 };

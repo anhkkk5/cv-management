@@ -5,12 +5,17 @@ import dayjs from "dayjs";
 
 const { Title, Text } = Typography;
 
-function Projects({ projectsList, onAdd, onDelete }) {
+function Projects({ projectsList, onAdd, onDelete, readOnly = false }) {
   return (
     <Card className="section-card">
       <div className="section-header">
         <Title level={4}>Dự Án Cá Nhân</Title>
-        <PlusOutlined className="add-icon" onClick={onAdd} />
+        {!readOnly && (
+          <PlusOutlined
+            className="add-icon"
+            onClick={() => onAdd && onAdd()}
+          />
+        )}
       </div>
       {projectsList.length > 0 ? (
         projectsList.map((project, index) => (
@@ -37,10 +42,19 @@ function Projects({ projectsList, onAdd, onDelete }) {
                   <Text style={{ display: "block", marginTop: 8 }}>{project.description}</Text>
                 )}
               </div>
-              <div>
-                <EditOutlined className="edit-icon" style={{ marginRight: 10 }} onClick={() => onAdd(project)} />
-                <DeleteOutlined className="delete-icon" onClick={() => onDelete && onDelete(project.id)} />
-              </div>
+              {!readOnly && (
+                <div>
+                  <EditOutlined
+                    className="edit-icon"
+                    style={{ marginRight: 10 }}
+                    onClick={() => onAdd && onAdd(project)}
+                  />
+                  <DeleteOutlined
+                    className="delete-icon"
+                    onClick={() => onDelete && onDelete(project.id)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         ))
