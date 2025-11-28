@@ -80,6 +80,205 @@ body {
     }
   }
 
+  &__job-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__job-menu--open .header__job-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  &__job-dropdown {
+    position: absolute;
+    top: 100%;
+    left: -16px;
+    display: flex;
+    gap: 24px;
+    min-width: 880px;
+    padding: 20px 24px;
+    background-color: #fff;
+    border: 1px solid #e9ecef;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    border-radius: 12px;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 120;
+  }
+
+  &__job-dropdown-left {
+    min-width: 260px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  &__job-group {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__job-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #8a9099;
+  }
+
+  &__job-group-title--muted {
+    color: #8a9099;
+  }
+
+  &__job-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  &__job-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 10px;
+    color: #2d3b4f;
+    font-size: 14px;
+    text-align: left;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  &__job-item:hover {
+    background-color: #ecfdf3;
+    color: #16a34a;
+  }
+
+  &__job-item-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+    background-color: #f0fdf4;
+    color: #16a34a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
+  &__job-dropdown-right {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    border-left: 1px solid #eef1f3;
+    padding-left: 24px;
+  }
+
+  &__job-position-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px 32px;
+  }
+
+  &__job-position {
+    border: none;
+    background: transparent;
+    padding: 6px 0;
+    text-align: left;
+    font-size: 15px;
+    color: #2d3b4f;
+    cursor: pointer;
+    transition: color 0.2s ease;
+  }
+
+  &__job-position:hover {
+    color: #16a34a;
+  }
+
+  // Tools dropdown
+  &__tools-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__tools-menu--open .header__tools-dropdown {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  &__tools-dropdown {
+    position: absolute;
+    top: 100%;
+    left: -12px;
+    min-width: 520px;
+    padding: 18px 20px;
+    background: #fff;
+    border: 1px solid #e9ecef;
+    border-radius: 12px;
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12);
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(10px);
+    transition: opacity 0.2s ease, transform 0.2s ease;
+    z-index: 120;
+  }
+
+  &__tools-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.6px;
+    color: #8a9099;
+    margin-bottom: 12px;
+  }
+
+  &__tools-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 22px;
+  }
+
+  &__tools-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 10px;
+    color: #2d3b4f;
+    font-size: 14px;
+    text-align: left;
+    transition: background-color 0.2s ease, color 0.2s ease;
+  }
+
+  &__tools-item:hover {
+    background: #ecfdf3;
+    color: #16a34a;
+  }
+
+  &__tools-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 10px;
+    background: #f0fdf4;
+    color: #16a34a;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+  }
+
   &__top-contact {
     display: flex;
     align-items: center;

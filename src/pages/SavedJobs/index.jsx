@@ -1,10 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, Table, Tag, Typography, Spin, message } from "antd";
-import { StarFilled } from "@ant-design/icons";
+import { Row, Col, Card, Tag, Empty, Spin, Button, Space, Typography, Table, message } from "antd";
+import { EnvironmentOutlined, DeleteOutlined, StarFilled } from "@ant-design/icons";
 import { getCookie } from "../../helpers/cookie";
-import { getDetaiJob } from "../../services/jobServices/jobServices";
+import { getAlljob, getDetaiJob } from "../../services/jobServices/jobServices";
 
+const STORAGE_KEY = "saved_jobs";
 const { Title, Text } = Typography;
 
 const statusTag = (status) => {
@@ -14,11 +15,73 @@ const statusTag = (status) => {
   return null;
 };
 
-function SavedJobs() {
+// READ SAVED JOBS
+const readSaved = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (_e) {
+    return [];
+  }
+};
+
+function SavedJobsPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
+  const [savedData, setSavedData] = useState(readSaved());
+  const [allJobs, setAllJobs] = useState([]);
+  const [loading, setLoading] = useState(false);
   const [items, setItems] = useState([]);
 
+  // Fetch full jobs list to hydrate saved IDs with current data
+  useEffect(() => {
+    let mounted = true;
+    const fetchJobs = async () => {
+      setLoading(true);
+      try {
+        const data = await getAlljob();
+        if (mounted && Array.isArray(data)) {
+          setAllJobs(data);
+        }
+      } catch (_e) {
+        if (mounted) {
+          setAllJobs([]);
+        }
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchJobs();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const savedJobs = React.useMemo(() => {
+    const ids = savedData
+      .filter((item) => typeof item === "number" || typeof item === "string")
+      .map((item) => String(item));
+    const objects = savedData.filter((item) => item && typeof item === "object");
+
+    const matchedFromIds = allJobs.filter((job) => ids.includes(String(job.id)));
+    const merged = [...matchedFromIds];
+
+    objects.forEach((obj) => {
+      const alreadyHas = merged.some((job) => String(job.id) === String(obj.id));
+      if (!alreadyHas) {
+        merged.push(obj);
+      }
+    });
+    return merged;
+  }, [savedData, allJobs]);
+
+  const handleRemove = (jobId) => {
+    const next = savedData.filter((item) => String(item?.id ?? item) !== String(jobId));
+    setSavedData(next);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+  };
+
+  // Fetch saved jobs
   useEffect(() => {
     const token = getCookie("token") || localStorage.getItem("token");
     const userType = getCookie("userType");
@@ -124,14 +187,66 @@ function SavedJobs() {
         <Title level={3} style={{ marginBottom: 24 }}>
           Công việc đã lưu
         </Title>
-        {items.length === 0 ? (
-          <Text>Hiện bạn chưa lưu công việc nào.</Text>
+        {savedJobs.length === 0 ? (
+          <Empty description="Chưa có việc làm nào được lưu" />
         ) : (
-          <Table columns={columns} dataSource={items} pagination={{ pageSize: 10 }} />
+          <Row gutter={[16, 16]}>
+            {savedJobs.map((job) => (
+              <Col xs={24} sm={12} md={12} lg={8} key={job.id || job.title}>
+                <Card
+                  hoverable
+                  onClick={() => (window.location.href = `/jobs/${job.id}`)}
+                  actions={[
+                    <Button
+                      key="remove"
+                      type="text"
+                      icon={<DeleteOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemove(job.id);
+                      }}
+                    >
+                      Bỏ lưu
+                    </Button>,
+                  ]}
+                >
+                  <Space direction="vertical" size={10} style={{ width: "100%" }}>
+                    <Space size={8} wrap>
+                      {job.type ? (
+                        <Tag
+                          color={
+                            job.type === "FULL-TIME"
+                              ? "green"
+                              : job.type === "PART-TIME"
+                              ? "blue"
+                              : "orange"
+                          }
+                        >
+                          {job.type}
+                        </Tag>
+                      ) : null}
+                      {job.salary ? <Tag color="gold">Salary: {job.salary}</Tag> : null}
+                    </Space>
+                    <Typography.Title level={4} style={{ margin: 0 }}>
+                      {job.title || job.name || "Chưa có tiêu đề"}
+                    </Typography.Title>
+                    {job.company ? (
+                      <Typography.Text style={{ color: "#666" }}>{job.company}</Typography.Text>
+                    ) : null}
+                    {job.location ? (
+                      <Typography.Text style={{ color: "#666" }}>
+                        <EnvironmentOutlined /> {job.location}
+                      </Typography.Text>
+                    ) : null}
+                  </Space>
+                </Card>
+              </Col>
+            ))}
+          </Row>
         )}
       </Card>
     </div>
   );
 }
 
-export default SavedJobs;
+export default SavedJobsPage;

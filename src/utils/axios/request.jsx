@@ -1,8 +1,15 @@
 import axios from "axios";
+import { getCookie } from "../../helpers/cookie.jsx";
+
+const API_BASE_URL =
+  (import.meta.env?.VITE_API_BASE_URL || "").trim() || "http://localhost:3000/";
+const NORMALIZED_BASE_URL = API_BASE_URL.endsWith("/")
+  ? API_BASE_URL
+  : `${API_BASE_URL}/`;
 
 // Centralized Axios instance
 const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/",
+  baseURL: NORMALIZED_BASE_URL,
   headers: {
     "Content-Type": "application/json",
   },
@@ -12,7 +19,7 @@ const axiosInstance = axios.create({
 // Add Authorization header if token is present
 axiosInstance.interceptors.request.use((config) => {
   try {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token") || getCookie("token");
     if (token) {
       config.headers = config.headers || {};
       config.headers.Authorization = `Bearer ${token}`;

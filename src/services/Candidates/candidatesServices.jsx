@@ -1,10 +1,51 @@
 import { get, post, edit, del, editForm } from "../../utils/axios/request";
+import { getCookie } from "../../helpers/cookie";
+import { decodeJwt } from "../auth/authServices";
+
+const normalizeId = (value) => {
+  if (!value) return "";
+  if (typeof value === "number") return String(value);
+  return `${value}`.trim();
+};
+
+const fetchCandidateById = async (candidateId) => {
+  const normalized = normalizeId(candidateId);
+  if (!normalized) return null;
+  const tryPaths = [`candidates/${normalized}`, `Candidates/${normalized}`];
+  let lastError;
+  for (const path of tryPaths) {
+    try {
+      return await get(path);
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (lastError) throw lastError;
+  return null;
+};
 
 // Backend uses authenticated user context for candidate profile
 export const getMyCandidateProfile = async () => {
-  const result = await get("candidates/me");
-  return result;
+  try {
+    const result = await get("candidates/me");
+    return result;
+  } catch (error) {
+    const status = error?.response?.status;
+    if (status !== 401 && status !== 403) throw error;
+
+    let candidateId = getCookie("id");
+    if (!candidateId) {
+      const token = getCookie("token") || localStorage.getItem("token");
+      if (token) {
+        const payload = decodeJwt(token);
+        candidateId = payload?.sub || payload?.id || "";
+      }
+    }
+    if (!candidateId) throw error;
+    return await fetchCandidateById(candidateId);
+  }
 };
+
 export const getAllCandidates = async () => {
   const result = await get("candidates");
   return result;
@@ -51,15 +92,16 @@ export const loginCandidates = async (email, password="") => {
 };
 
 export const checkExist = async (key, value) => {
-  const result = await get(`candidates?${key}=${value}`,);
+  const result = await get(`candidates?${key}=${value}`);
   return result;
 };
-export const deleteCandidates = async(id)=>{
-  const result = await del(`candidates/${id}`)
-  return result;
-}
 
-export const editCandidates = async(id, options)=>{
+export const deleteCandidates = async(id) => {
+  const result = await del(`candidates/${id}`);
+  return result;
+};
+
+export const editCandidates = async(id, options) => {
   const result = await edit(`candidates/${id}`, options);
   return result;
-}
+};
