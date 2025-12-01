@@ -21,35 +21,50 @@ export class Company {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column({ unique: true })
+  @Column()
   fullName: string;
 
-  @JoinColumn()
-  email: User;
-
   @Column({ unique: true })
+  email: string;
+
+  @Column()
   companyName: string;
 
   @Column({ type: 'text', nullable: true })
   description: string;
 
+  @Column({ type: 'text', nullable: true })
+  policies: string;
+
   @Column({ nullable: true })
   address: string;
 
   @Column({ nullable: true })
-  logoUrl: string;
+  logo: string;
 
   @Column({ nullable: true })
   website: string;
 
-  @OneToOne(() => User, (user) => user.company)
-  recruiters: User;
+  @Column({ nullable: true })
+  facebook: string;
+
+  @Column({ nullable: true })
+  linkedin: string;
+
+  @Column({ nullable: true })
+  github: string;
+
+  @OneToMany(() => User, (user) => user.company)
+  recruiters: User[];
   
   @OneToMany(() => Job, (job) => job.company)
   jobs: Job[];
 
   @OneToMany(() => CompanyAddress, (address) => address.company)
   addresses: CompanyAddress[];
+
+  @Column({ nullable: true })
+  status: string;
 
   @CreateDateColumn()
   created_at: Date;

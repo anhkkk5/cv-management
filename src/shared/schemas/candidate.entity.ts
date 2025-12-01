@@ -21,8 +21,8 @@ export class Candidate {
   @Column()
   fullName: string;
 
-  @Column({ type: 'boolean', default: true })
-  isOpen: boolean;
+  @Column({ type: 'smallint', default: 1 })
+  isOpen: number;
 
   @Column({ type: 'date', nullable: true })
   dob: Date;
@@ -50,6 +50,9 @@ export class Candidate {
 
   @Column({ nullable: true })
   introduction: string;
+
+  @Column({ nullable: true })
+  status: string;
 
   @CreateDateColumn()
   created_at: Date;

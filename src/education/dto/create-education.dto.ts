@@ -7,7 +7,7 @@ export class CreateEducationDto {
   @ApiProperty({ example: 'Đại học CMC' })
   @IsString()
   @IsNotEmpty()
-  schoolName: string;
+  name_education: string;
 
   @ApiProperty({ example: 'Công nghệ Thông tin' })
   @IsString()
@@ -16,12 +16,12 @@ export class CreateEducationDto {
 
   @ApiProperty({ example: '2018-09-01' })
   @IsDateString()
-  startDate: Date;
+  started_at: Date;
 
   @ApiProperty({ example: '2022-06-30' })
   @IsOptional()
   @IsDateString()
-  endDate?: Date;
+  end_at?: Date;
 
   @ApiProperty({ example: 'GPA: 3.5/4.0' })
   @IsOptional()

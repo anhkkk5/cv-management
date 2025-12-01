@@ -26,5 +26,5 @@ export class CreateProjectDto {
   @ApiProperty({ example: '2022-12-31', description: 'The project end date', required: false })
   @IsOptional()
   @IsDateString()
-  ended_at?: Date;
+  end_at?: Date;
 }

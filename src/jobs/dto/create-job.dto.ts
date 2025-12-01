@@ -1,5 +1,16 @@
+// src/jobs/dto/create-job.dto.ts
+
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNotEmpty, IsOptional, IsDateString, IsArray } from 'class-validator';
+import { 
+  IsString, 
+  IsNotEmpty, 
+  IsOptional, 
+  IsDateString, 
+  IsArray, 
+  IsNumber, 
+  IsEnum 
+} from 'class-validator';
+import { JobCategory } from '../../common/enums/job-category.enum'; // Đảm bảo đường dẫn import đúng
 
 export class CreateJobDto {
   @ApiProperty({ example: 'Kỹ sư Backend Cấp cao' })
@@ -12,20 +23,23 @@ export class CreateJobDto {
   @IsNotEmpty()
   description: string;
 
-  @ApiProperty({ example: 'Công ty Cổ phần Sáng tạo Công nghệ' })
-  @IsString()
-  @IsNotEmpty()
-  company: string;
-
-  @ApiProperty({ example: 'Node.js, TypeScript, PostgreSQL' })
+  // --- THAY ĐỔI: Dùng ID số thay vì chuỗi ---
+  @ApiProperty({ example: 1, description: 'ID của Công ty', required: false })
   @IsOptional()
-  @IsString()
-  requirements?: string;
+  @IsNumber()
+  companyId?: number;
 
-  @ApiProperty({ example: 1 })
+  @ApiProperty({ example: 1, description: 'ID của Địa điểm (Location)', required: false })
   @IsOptional()
-  @IsString()
-  location?: number;
+  @IsNumber()
+  locationId?: number;
+  // -----------------------------------------
+
+  @ApiProperty({ example: ['Node.js', 'TypeScript', 'PostgreSQL'], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  requirements?: string[];
 
   @ApiProperty({ example: '15-25 triệu VND', required: false })
   @IsOptional()
@@ -38,7 +52,7 @@ export class CreateJobDto {
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true }) // Đảm bảo mọi phần tử trong mảng là string
+  @IsString({ each: true })
   desirable?: string[];
 
   @ApiProperty({
@@ -47,13 +61,8 @@ export class CreateJobDto {
   })
   @IsOptional()
   @IsArray()
-  @IsString({ each: true }) // Đảm bảo mọi phần tử trong mảng là string
+  @IsString({ each: true })
   benefits?: string[];
-
-  @ApiProperty({ example: 'LOC001', required: false })
-  @IsOptional()
-  @IsString()
-  location_id?: string;
 
   @ApiProperty({ example: 'FULL-TIME', required: false })
   @IsOptional()
@@ -75,8 +84,23 @@ export class CreateJobDto {
   @IsString()
   education?: string;
 
+  @ApiProperty({ 
+    enum: JobCategory, 
+    example: JobCategory.IT, 
+    description: 'Ngành nghề/Vị trí',
+    required: false 
+  })
+  @IsOptional()
+  @IsEnum(JobCategory)
+  jobCategory?: JobCategory;
+
   @ApiProperty({ example: '2025-11-30', required: false })
   @IsOptional()
   @IsDateString()
   expire_at?: Date;
+
+  @ApiProperty({ example: 'OPEN', required: false })
+  @IsOptional()
+  @IsString()
+  status?: string;
 }

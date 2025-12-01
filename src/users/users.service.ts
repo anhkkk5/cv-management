@@ -24,4 +24,29 @@ export class UsersService {
   async findOneById(id: number): Promise<User | null> {
     return this.usersRepository.findOne({ where: { id } });
   }
+
+  async findAll(): Promise<Partial<User>[]> {
+    return this.usersRepository.find({
+      select: [
+        'id',
+        'name',
+        'email',
+        'role',
+      ],
+      order: { id: 'ASC' },
+    });
+  }
+
+  async findAllByRole(role: string): Promise<Partial<User>[]> {
+    return this.usersRepository.find({
+      where: { role: role as any },
+      select: [
+        'id',
+        'name',
+        'email',
+        'role',
+      ],
+      order: { id: 'ASC' },
+    });
+  }
 }

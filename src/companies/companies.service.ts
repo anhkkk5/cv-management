@@ -44,16 +44,70 @@ export class CompaniesService {
       relations: ['company'],
     });
 
-    if (!user || !user.company) {
-      throw new ForbiddenException('Bạn không thuộc công ty nào để cập nhật.');
+    if (!user) {
+      throw new ForbiddenException('Không tìm thấy người dùng.');
     }
-    
+
+    // If user has no company, create and link a new one
+    if (!user.company) {
+      const created = this.companyRepository.create(updateDto as any) as unknown as Company;
+      // Link the creating user to the company to populate companies.userId
+      (created as any).user = user;
+      const savedCompany = await this.companyRepository.save(created as unknown as Company);
+      // Also link back from user -> company
+      user.company = savedCompany as Company;
+      await this.usersRepository.save(user);
+      // Reload without circular relations
+      return this.findOne(savedCompany.id);
+    }
+
     const companyId = user.company.id;
-    return this.updateByAdmin(companyId, updateDto); 
+    // Update and reload without relations
+    const updated = await this.updateByAdmin(companyId, updateDto);
+    return this.findOne(updated.id);
+  }
+
+  async getMyCompany(userId: number): Promise<Company> {
+    const user = await this.usersRepository.findOne({
+      where: { id: userId },
+      relations: ['company'],
+    });
+    if (!user) {
+      throw new NotFoundException('Không tìm thấy người dùng');
+    }
+    if (user.company) {
+      return this.findOne(user.company.id);
+    }
+    // Fallback: find by companies.user relation, then reload without relations
+    const byUser = await this.companyRepository.findOne({
+      where: { user: { id: userId } },
+      relations: ['user'],
+    });
+    if (byUser) {
+      // link back for next calls
+      user.company = byUser;
+      await this.usersRepository.save(user);
+      return this.findOne(byUser.id);
+    }
+    throw new NotFoundException('Bạn chưa thuộc công ty nào');
   }
 
   async remove(id: number): Promise<void> {
     const company = await this.findOne(id);
+
+    // Clear recruiters' company relation to satisfy FK constraint
+    const recruiters = await this.usersRepository.find({
+      where: { company: { id } },
+      relations: ['company'],
+    });
+
+    if (recruiters.length > 0) {
+      for (const user of recruiters) {
+        user.company = null as any;
+      }
+      await this.usersRepository.save(recruiters);
+    }
+
     await this.companyRepository.remove(company);
   }
 }

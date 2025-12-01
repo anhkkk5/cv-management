@@ -1,10 +1,11 @@
-import { Module } from '@nestjs/common';
+import { Module, OnModuleInit } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
+import { UsersService } from './users/users.service';
 import { ExperiencesModule } from './experiences/experiences.module';
 import { ProjectsModule } from './projects/projects.module';
 import { CvsController } from './cvs/cvs.controller';
@@ -19,6 +20,12 @@ import { SkillsModule } from './skills/skills.module';
 import { CompaniesModule } from './companies/companies.module';
 import { LocationsModule } from './locations/locations.module';
 import { CompanyAddressModule } from './company-address/company-address.module';
+import { Role } from './common/enums/role.enum';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
+import { PostsModule } from './posts/posts.module';
+import { PostCategoriesModule } from './post-categories/post-categories.module';
+import { ToolsModule } from './tools/tools.module';
+import { CvTemplatesModule } from './cv-templates/cv-templates.module';
 
 const dbPortStr = process.env.DB_PORT;
 const dbPort = dbPortStr ? parseInt(dbPortStr, 10) : 3306;
@@ -52,6 +59,11 @@ if (Number.isNaN(dbPort)) {
     CompaniesModule,
     LocationsModule,
     CompanyAddressModule,
+    CloudinaryModule,
+    PostsModule,
+    PostCategoriesModule,
+    ToolsModule,
+    CvTemplatesModule,
   ],
   controllers: [AppController, CvsController],
   providers: [AppService,
@@ -65,4 +77,28 @@ if (Number.isNaN(dbPort)) {
     },
   ],
 })
-export class AppModule {}
+export class AppModule implements OnModuleInit {
+  constructor(private readonly usersService: UsersService) {}
+
+  async onModuleInit() {
+    const email = 'admin@gmail.com';
+    const password = '123456';
+    try {
+      const exists = await this.usersService.findOneByEmail(email);
+      if (!exists) {
+        await this.usersService.create({
+          name: 'Admin',
+          email,
+          password,
+          confirmPassword: password,
+          role: Role.Admin,
+        } as any);
+        // eslint-disable-next-line no-console
+        console.log('Seeded default admin account:', email);
+      }
+    } catch (e) {
+      // eslint-disable-next-line no-console
+      console.error('Failed to seed default admin:', e?.message || e);
+    }
+  }
+}
