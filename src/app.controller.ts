@@ -1,8 +1,8 @@
 import { Controller, Get, Request } from '@nestjs/common';
 import { AppService } from './app.service';
-import { Roles } from './auth/decorators/roles.decorator';
+import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { Role } from './common/enums/role.enum';
-import { Public } from './auth/decorators/public.decorator';
+import { Public } from '@modules/auth/decorators/public.decorator';
 import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 
 @ApiTags('App')
