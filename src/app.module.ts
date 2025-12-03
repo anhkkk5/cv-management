@@ -26,6 +26,8 @@ import { PostsModule } from '@modules/posts/posts.module';
 import { PostCategoriesModule } from '@modules/post-categories/post-categories.module';
 import { ToolsModule } from '@modules/tools/tools.module';
 import { CvTemplatesModule } from '@modules/cv-templates/cv-templates.module';
+import { QuestionsModule } from './modules/questions/questions.module';
+import { QuizzesModule } from './modules/quizzes/quizzes.module';
 
 const dbPortStr = process.env.DB_PORT;
 const dbPort = dbPortStr ? parseInt(dbPortStr, 10) : 3306;
@@ -64,6 +66,8 @@ if (Number.isNaN(dbPort)) {
     PostCategoriesModule,
     ToolsModule,
     CvTemplatesModule,
+    QuestionsModule,
+    QuizzesModule,
   ],
   controllers: [AppController, CvsController],
   providers: [AppService,

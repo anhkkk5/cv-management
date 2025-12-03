@@ -77,6 +77,77 @@ export class PostsService {
     return post;
   }
 
-  // Admin: Xóa, Sửa (Tương tự các module khác)
-  // ...
+  async updateById(id: number, updateDto: UpdatePostDto): Promise<Post> {
+    const post = await this.postRepository.findOne({ where: { id }, relations: ['category', 'author'] });
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    // Handle slug changes or title -> slug generation
+    let slug = post.slug;
+    if (updateDto.slug) {
+      slug = updateDto.slug;
+    } else if (updateDto.title && !post.slug) {
+      slug = this.generateSlug(updateDto.title);
+    } else if (updateDto.title && !updateDto.slug) {
+      // regenerate from title if title changed and no explicit slug provided
+      slug = this.generateSlug(updateDto.title);
+    }
+
+    // Check slug uniqueness
+    if (slug) {
+      const existing = await this.postRepository.findOne({ where: { slug } });
+      if (existing && existing.id !== post.id) {
+        // make unique like create()
+        slug = `${slug}-${Date.now()}`;
+      }
+    }
+
+    // Apply updates
+    Object.assign(post, updateDto);
+    if (slug) post.slug = slug;
+    if (updateDto.categoryId !== undefined) {
+      post.category = { id: updateDto.categoryId } as any;
+    }
+
+    return this.postRepository.save(post);
+  }
+
+  // Admin: Cập nhật theo slug
+  async update(slug: string, updateDto: UpdatePostDto): Promise<Post> {
+    const post = await this.postRepository.findOne({ where: { slug }, relations: ['category', 'author'] });
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    // Determine new slug
+    let newSlug = updateDto.slug ?? (updateDto.title ? this.generateSlug(updateDto.title) : post.slug);
+
+    if (newSlug) {
+      const existing = await this.postRepository.findOne({ where: { slug: newSlug } });
+      if (existing && existing.id !== post.id) {
+        newSlug = `${newSlug}-${Date.now()}`;
+      }
+    }
+
+    Object.assign(post, updateDto);
+    if (newSlug) post.slug = newSlug;
+    if (updateDto.categoryId !== undefined) {
+      post.category = { id: updateDto.categoryId } as any;
+    }
+
+    return this.postRepository.save(post);
+  }
+
+  // Admin: Xóa theo id
+  async deleteById(id: number): Promise<void> {
+    const post = await this.postRepository.findOne({ where: { id } });
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    await this.postRepository.delete(id);
+  }
+
+  // Admin: Xóa theo slug (optional helper)
+  async deleteBySlug(slug: string): Promise<void> {
+    const post = await this.postRepository.findOne({ where: { slug } });
+    if (!post) throw new NotFoundException('Bài viết không tồn tại');
+
+    await this.postRepository.delete(post.id);
+  }
 }

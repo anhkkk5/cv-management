@@ -6,6 +6,7 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { Public } from '@modules/auth/decorators/public.decorator';
 import { Roles } from '@modules/auth/decorators/roles.decorator';
 import { Role } from 'src/common/enums/role.enum';
+import { UpdatePostDto } from './dto/update-post.dto';
 
 @ApiTags('Posts (Blog/News)')
 @ApiBearerAuth()
@@ -38,4 +39,31 @@ export class PostsController {
     return this.postsService.create(createPostDto, req.user);
   }
 
+  @Roles(Role.Admin, Role.Recruiter)
+  @Patch(':slug')
+  @ApiOperation({ summary: 'Cập nhật bài viết theo slug (Admin)' })
+  update(@Param('slug') slug: string, @Body() updatePostDto: UpdatePostDto) {
+    return this.postsService.update(slug, updatePostDto);
+  }
+
+  @Roles(Role.Admin, Role.Recruiter)
+  @Patch('id/:id')
+  @ApiOperation({ summary: 'Cập nhật bài viết theo id (Admin)' })
+  updateById(@Param('id') id: string, @Body() updatePostDto: UpdatePostDto) {
+    return this.postsService.updateById(Number(id), updatePostDto);
+  }
+
+  @Roles(Role.Admin, Role.Recruiter)
+  @Delete('id/:id')
+  @ApiOperation({ summary: 'Xóa bài viết theo id (Admin)' })
+  deleteById(@Param('id') id: string) {
+    return this.postsService.deleteById(Number(id));
+  }
+
+  @Roles(Role.Admin, Role.Recruiter)
+  @Delete(':slug')
+  @ApiOperation({ summary: 'Xóa bài viết theo slug (Admin)' })
+  deleteBySlug(@Param('slug') slug: string) {
+    return this.postsService.deleteBySlug(slug);
+  }
 }
