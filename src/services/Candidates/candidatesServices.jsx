@@ -66,27 +66,94 @@ export const updateIntroduction = async (intro) => {
   return result;
 };
 
+import { uploadImage, deleteImage } from "../Cloudinary/cloudinaryServices";
+
 export const uploadMyAvatar = async (file) => {
-  const formData = new FormData();
-  formData.append("file", file);
-  const result = await editForm("candidates/me/avatar", formData);
-  return result;
+  try {
+    // Upload ảnh lên Cloudinary
+    const uploadResult = await uploadImage(file, "avatars");
+
+    // Lấy URL từ kết quả upload
+    const avatarUrl =
+      uploadResult?.secure_url ||
+      uploadResult?.url ||
+      uploadResult?.data?.secure_url ||
+      uploadResult?.data?.url;
+
+    if (!avatarUrl) {
+      throw new Error("Không nhận được URL ảnh từ Cloudinary");
+    }
+
+    // Cập nhật URL ảnh vào candidate profile
+    const updateResult = await updateMyCandidateProfile({ avatar: avatarUrl });
+
+    return {
+      avatarUrl: avatarUrl,
+      publicId: uploadResult?.public_id || uploadResult?.data?.public_id,
+      ...updateResult,
+    };
+  } catch (error) {
+    console.error("Upload avatar error:", error);
+    throw error;
+  }
 };
 
 export const deleteMyAvatar = async () => {
-  const result = await del("candidates/me/avatar");
-  return result;
+  try {
+    // Lấy thông tin candidate hiện tại để lấy publicId của ảnh cũ
+    const candidate = await getMyCandidateProfile();
+    const avatarUrl = candidate?.avatar;
+
+    // Nếu có avatar URL từ Cloudinary, extract publicId và xóa
+    if (avatarUrl && avatarUrl.includes("cloudinary.com")) {
+      try {
+        // Extract public_id từ URL Cloudinary
+        // Format: https://res.cloudinary.com/{cloud_name}/image/upload/{transformations}/v{version}/{folder}/{filename}.{ext}
+        // Hoặc: https://res.cloudinary.com/{cloud_name}/image/upload/v{version}/{folder}/{filename}.{ext}
+        const urlParts = avatarUrl.split("/");
+        const uploadIndex = urlParts.findIndex((part) => part === "upload");
+
+        if (uploadIndex !== -1 && urlParts.length > uploadIndex + 1) {
+          // Lấy phần sau "upload/"
+          let afterUpload = urlParts.slice(uploadIndex + 1).join("/");
+
+          // Bỏ version nếu có (v1234567890)
+          afterUpload = afterUpload.replace(/^v\d+\//, "");
+
+          // Bỏ extension
+          const publicId = afterUpload.replace(/\.[^/.]+$/, "");
+
+          if (publicId) {
+            await deleteImage(publicId);
+          }
+        }
+      } catch (deleteError) {
+        console.warn("Could not delete image from Cloudinary:", deleteError);
+        // Tiếp tục xóa avatar trong profile dù có lỗi xóa trên Cloudinary
+      }
+    }
+
+    // Xóa avatar URL khỏi candidate profile
+    const result = await updateMyCandidateProfile({ avatar: null });
+    return result;
+  } catch (error) {
+    console.error("Delete avatar error:", error);
+    throw error;
+  }
 };
 
 export const uploadTemplateAvatar = async (templateId, file) => {
   const formData = new FormData();
   formData.append("file", file);
-  const result = await editForm(`candidates/me/template-avatar/${templateId}`, formData);
+  const result = await editForm(
+    `candidates/me/template-avatar/${templateId}`,
+    formData
+  );
   return result;
 };
 
-export const loginCandidates = async (email, password="") => {
-  // Query by email only, password will be checked on client side 
+export const loginCandidates = async (email, password = "") => {
+  // Query by email only, password will be checked on client side
   const result = await get(`Candidates?email=${email}`);
   return result;
 };
@@ -96,12 +163,12 @@ export const checkExist = async (key, value) => {
   return result;
 };
 
-export const deleteCandidates = async(id) => {
+export const deleteCandidates = async (id) => {
   const result = await del(`candidates/${id}`);
   return result;
 };
 
-export const editCandidates = async(id, options) => {
+export const editCandidates = async (id, options) => {
   const result = await edit(`candidates/${id}`, options);
   return result;
 };

@@ -583,12 +583,12 @@ function JobDetail() {
                                 navigate(`/candidates/${candidate.candidateId}`)
                               }
                             >
-                              <div className="candidate-info" style={{ alignItems: "center" }}>
+                              <div className="candidate-info">
                                 <Avatar size={40} className="candidate-avatar">
                                   {candidate.name?.charAt(0) || "?"}
                                 </Avatar>
-                                <div className="candidate-details" style={{ flex: 1 }}>
-                                  <div className="candidate-name" style={{ fontWeight: 600 }}>
+                                <div className="candidate-details">
+                                  <div className="candidate-name">
                                     {candidate.name}
                                   </div>
                                   {candidate.location && (
@@ -599,7 +599,7 @@ function JobDetail() {
                                   )}
                                 </div>
                                 {group.key === "pending" && (
-                                  <Space>
+                                  <div className="candidate-actions">
                                     <Button
                                       size="small"
                                       type="primary"
@@ -620,7 +620,7 @@ function JobDetail() {
                                     >
                                       Không duyệt
                                     </Button>
-                                  </Space>
+                                  </div>
                                 )}
                               </div>
                             </Card>

@@ -1,6 +1,14 @@
 import { get, del, post, edit } from "../../utils/axios/request";
-export const getAlljob = async () => {
-  const result = await get("jobs");
+export const getAlljob = async (params = {}) => {
+  // Xây dựng query string từ params
+  const queryParams = new URLSearchParams();
+  if (params.city) queryParams.append("city", params.city);
+  if (params.keyword) queryParams.append("keyword", params.keyword);
+  if (params.position) queryParams.append("position", params.position);
+
+  const queryString = queryParams.toString();
+  const url = queryString ? `jobs?${queryString}` : "jobs";
+  const result = await get(url);
   return result;
 };
 export const getDetaiJob = async (id) => {
@@ -10,7 +18,9 @@ export const getDetaiJob = async (id) => {
 export const getListJob = async (companyId) => {
   const list = await get(`jobs`);
   if (!companyId) return list;
-  return Array.isArray(list) ? list.filter((j) => j.company_id === companyId) : [];
+  return Array.isArray(list)
+    ? list.filter((j) => j.company_id === companyId)
+    : [];
 };
 
 export const deleteJob = async (id) => {

@@ -25,9 +25,18 @@ import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
 import CompaniesManagement from "../pages/Admin/CompaniesManagement/index.jsx";
 import CandidateProfile from "../pages/CandidateProfile/index.jsx";
 import AppliedJobs from "../pages/AppliedJobs/index.jsx";
-import SavedJobs from "../pages/SavedJobs/index.jsx";
+
 import CVTemplatesList from "../pages/CVTemplates/List.jsx";
 import CVTemplatePreview from "../pages/CVTemplates/Preview.jsx";
+import MyCVsPage from "../pages/MyCVs/index.jsx";
+import ViewCVPage from "../pages/ViewCV/index.jsx";
+import SkillAssessment from "../pages/SkillAssessment/index.jsx";
+import TakeQuiz from "../pages/SkillAssessment/TakeQuiz.jsx";
+import QuizResult from "../pages/SkillAssessment/Result.jsx";
+import CompanyQuizManagement from "../pages/CompanyQuizManagement/index.jsx";
+import QuestionForm from "../pages/CompanyQuizManagement/QuestionForm.jsx";
+import QuestionSetForm from "../pages/CompanyQuizManagement/QuestionSetForm.jsx";
+import QuizForm from "../pages/CompanyQuizManagement/QuizForm.jsx";
 
 export const routes = [
   {
@@ -71,6 +80,14 @@ export const routes = [
         element: <CVPage />,
       },
       {
+        path: "my-cvs",
+        element: <MyCVsPage />,
+      },
+      {
+        path: "cv/view/:id",
+        element: <ViewCVPage />,
+      },
+      {
         path: "cv/templates",
         element: <CVTemplatesList />,
       },
@@ -87,10 +104,6 @@ export const routes = [
         element: <AppliedJobs />,
       },
       {
-        path: "saved-jobs",
-        element: <SavedJobs />,
-      },
-      {
         path: "candidates/:id",
         element: <CandidateDetail />,
       },
@@ -101,6 +114,34 @@ export const routes = [
       {
         path: "create-job",
         element: <CreateJob />,
+      },
+      {
+        path: "skill-assessment",
+        element: <SkillAssessment />,
+      },
+      {
+        path: "skill-assessment/take/:id",
+        element: <TakeQuiz />,
+      },
+      {
+        path: "skill-assessment/result/:id",
+        element: <QuizResult />,
+      },
+      {
+        path: "company/quiz",
+        element: <CompanyQuizManagement />,
+      },
+      {
+        path: "company/quiz/questions/new",
+        element: <QuestionForm />,
+      },
+      {
+        path: "company/quiz/question-sets/:id",
+        element: <QuestionSetForm />,
+      },
+      {
+        path: "company/quiz/quizzes/:id",
+        element: <QuizForm />,
       },
     ],
   },

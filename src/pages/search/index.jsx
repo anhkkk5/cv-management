@@ -31,6 +31,9 @@ function Search() {
   // Nếu không có thì default là chuỗi rỗng
   const keywordSearch = searchParams.get("keyword") || "";
 
+  // Lấy giá trị position từ URL parameter
+  const positionSearch = searchParams.get("position") || "";
+
   // useEffect chạy khi component mount hoặc khi search parameters thay đổi
   useEffect(() => {
     const fetchApi = async () => {
@@ -38,6 +41,7 @@ function Search() {
         const params = new URLSearchParams();
         if (citySearch) params.set("city", citySearch);
         if (keywordSearch) params.set("keyword", keywordSearch);
+        if (positionSearch) params.set("position", positionSearch);
         const result = await get(`jobs?${params.toString()}`);
         setData(Array.isArray(result) ? result : []);
       } catch (error) {
@@ -46,7 +50,7 @@ function Search() {
       }
     };
     fetchApi();
-  }, [citySearch, keywordSearch]);
+  }, [citySearch, keywordSearch, positionSearch]);
 
   return (
     <>
@@ -65,6 +69,13 @@ function Search() {
         {keywordSearch && (
           <Tag color="green" style={{ marginLeft: "8px" }}>
             🔍 {keywordSearch}
+          </Tag>
+        )}
+
+        {/* Hiển thị tag position nếu có search theo position */}
+        {positionSearch && (
+          <Tag color="purple" style={{ marginLeft: "8px" }}>
+            💼 Vị trí: {positionSearch}
           </Tag>
         )}
       </div>

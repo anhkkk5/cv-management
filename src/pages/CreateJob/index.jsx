@@ -22,6 +22,23 @@ const { TextArea } = Input;
 const { RangePicker } = DatePicker;
 const { Option } = Select;
 
+const JOB_POSITIONS = [
+  { key: "sales", label: "Nhân viên kinh doanh" },
+  { key: "accounting", label: "Kế toán" },
+  { key: "marketing", label: "Marketing" },
+  { key: "hr", label: "Hành chính nhân sự" },
+  { key: "customer-care", label: "Chăm sóc khách hàng" },
+  { key: "banking", label: "Ngân hàng" },
+  { key: "it", label: "IT" },
+  { key: "labor", label: "Lao động phổ thông" },
+  { key: "senior", label: "Senior" },
+  { key: "construction", label: "Kỹ sư xây dựng" },
+  { key: "design", label: "Thiết kế đồ họa" },
+  { key: "real-estate", label: "Bất động sản" },
+  { key: "education", label: "Giáo dục" },
+  { key: "telesales", label: "Telesales" },
+];
+
 function CreateJob() {
   const navigate = useNavigate();
   const [form] = Form.useForm();
@@ -60,6 +77,7 @@ function CreateJob() {
         location_id: values.location,
         type: values.type,
         jobLevel: values.level,
+        position: values.position,
         company_id: companyId,
         expire_at: values.dateRange
           ? values.dateRange[1].format("YYYY-MM-DD")
@@ -201,6 +219,24 @@ function CreateJob() {
                   <Option value="Middle">Middle</Option>
                   <Option value="Senior">Senior</Option>
                   <Option value="Leader">Leader</Option>
+                </Select>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={12}>
+              <Form.Item
+                label="Vị trí công việc"
+                name="position"
+                rules={[
+                  { required: true, message: "Vui lòng chọn vị trí công việc" },
+                ]}
+              >
+                <Select placeholder="Chọn vị trí" size="large">
+                  {JOB_POSITIONS.map((pos) => (
+                    <Option key={pos.key} value={pos.key}>
+                      {pos.label}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
             </Col>

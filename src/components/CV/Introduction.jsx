@@ -1,6 +1,6 @@
 import React from "react";
 import { Card, Typography } from "antd";
-import { PlusOutlined, EditOutlined } from "@ant-design/icons";
+import { EditOutlined } from "@ant-design/icons";
 
 const { Title, Text } = Typography;
 
@@ -10,17 +10,10 @@ function Introduction({ intro, onAdd, readOnly = false }) {
       <div className="section-header">
         <Title level={4}>Giới Thiệu Bản Thân</Title>
         {!readOnly && (
-          intro ? (
-            <EditOutlined
-              className="edit-icon"
-              onClick={() => onAdd && onAdd(intro)}
-            />
-          ) : (
-            <PlusOutlined
-              className="add-icon"
-              onClick={() => onAdd && onAdd(null)}
-            />
-          )
+          <EditOutlined
+            className="edit-icon"
+            onClick={() => onAdd && onAdd(intro || null)}
+          />
         )}
       </div>
       {intro ? (

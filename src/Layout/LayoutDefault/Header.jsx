@@ -58,6 +58,7 @@ function Header() {
   ];
 
   const toolShortcuts = [
+    { key: "skill-assessment", icon: <RadarChartOutlined />, label: "Đánh giá năng lực", path: "/skill-assessment" },
     { key: "gross-net", icon: <WalletOutlined />, label: "Tính lương Gross - Net", path: "/gross-net" },
     { key: "tax", icon: <CalculatorOutlined />, label: "Tính thuế thu nhập cá nhân" },
     { key: "compound", icon: <LineChartOutlined />, label: "Tính lãi suất kép" },
@@ -83,7 +84,7 @@ function Header() {
     { key: "labor", label: "Việc làm Lao động phổ thông" },
     { key: "senior", label: "Việc làm Senior" },
     { key: "construction", label: "Việc làm Kỹ sư xây dựng" },
-    { key: "design", label: "Việc làm Thiết kế đồ họa" },
+    { key: "design", label: "Việc làm Thiết kế đồ hoạ" },
     { key: "real-estate", label: "Việc làm Bất động sản" },
     { key: "education", label: "Việc làm Giáo dục" },
     { key: "telesales", label: "Việc làm telesales" },
@@ -215,6 +216,11 @@ function Header() {
             label: "Thông tin doanh nghiệp",
             onClick: handleGoCompany,
           },
+          {
+            key: "manage-quizzes",
+            label: "Quản lý đánh giá năng lực",
+            onClick: () => navigate("/company/quiz"),
+          },
         ]
       : []),
     ...(userType === "candidate"
@@ -311,17 +317,19 @@ function Header() {
                     </div>
 
                     <div className="header__job-dropdown-right">
-                      <div className="header__job-group-title header__job-group-title--muted">
-                        VIỆC LÀM THEO VỊ TRÍ
-                      </div>
-                      <div className="header__job-position-grid">
-                        {jobPositions.map((item) => (
-                          <button key={item.key} className="header__job-position"
-                            onClick={() => handleNavigateAndClose("/jobs")}
-                          >
-                            {item.label}
-                          </button>
-                        ))}
+                      <div className="header__job-group">
+                        <div className="header__job-group-title">VIỆC LÀM THEO VỊ TRÍ</div>
+                        <div className="header__job-position-grid">
+                          {jobPositions.map((item) => (
+                            <button
+                              key={item.key}
+                              className="header__job-position"
+                              onClick={() => handleNavigateAndClose(`/jobs?position=${item.key}`)}
+                            >
+                              {item.label}
+                            </button>
+                          ))}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -352,9 +360,11 @@ function Header() {
                   </div>
                 </div>
 
-                <NavLink to="/cv" className="header__top-link">
-                  CV của bạn
-                </NavLink>
+                {userType !== "company" && (
+                  <NavLink to="/cv" className="header__top-link">
+                    CV của bạn
+                  </NavLink>
+                )}
 
                 {/* TẠO CV MENU */}
                 {isLoggedIn && userType === "candidate" && (
