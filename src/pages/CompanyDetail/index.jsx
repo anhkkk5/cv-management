@@ -54,7 +54,7 @@ function CompanyDetail() {
   const [jobsLoading, setJobsLoading] = React.useState(false);
   const [companiesLoading, setCompaniesLoading] = React.useState(false);
   const [userType, setUserType] = React.useState("");
-  const [currentUserId, setCurrentUserId] = React.useState("");
+  const [currentCompanyId, setCurrentCompanyId] = React.useState("");
   const [isFollowing, setIsFollowing] = React.useState(false);
   const [isFavorite, setIsFavorite] = React.useState(false);
   const [editModalVisible, setEditModalVisible] = React.useState(false);
@@ -64,9 +64,9 @@ function CompanyDetail() {
   React.useEffect(() => {
     // Check user type from cookie
     const type = getCookie("userType");
-    const userId = getCookie("id");
     setUserType(type || "");
-    setCurrentUserId(userId || "");
+    const companyId = getCookie("companyId");
+    setCurrentCompanyId(companyId || "");
   }, []);
 
   React.useEffect(() => {
@@ -135,6 +135,10 @@ function CompanyDetail() {
         address: company.address,
         description: company.description,
         logo: company.logo,
+        facebook: company.facebook,
+        linkedin: company.linkedin,
+        github: company.github,
+        policies: company.policies,
       });
       setEditModalVisible(true);
     }
@@ -151,6 +155,10 @@ function CompanyDetail() {
         address: values.address,
         description: values.description,
         logo: values.logo,
+        facebook: values.facebook,
+        linkedin: values.linkedin,
+        github: values.github,
+        policies: values.policies,
         updated_at: new Date().toISOString().split('T')[0],
       };
 
@@ -244,33 +252,9 @@ function CompanyDetail() {
 
           {/* Policies/Requirements */}
           <Card title="Chính sách" className="policies-card">
-            <ul className="policies-list">
-              <li>Great troubleshooting and analytical skills</li>
-              <li>
-                3+ years of experience in back-end development (multiple smaller
-                projects or large-scale applications)
-              </li>
-              <li>
-                Experience with HTML, JavaScript, CSS, PHP, Symphony, and/or
-                Laravel
-              </li>
-              <li>
-                Regularly working with APIs and Web Services (REST, GraphQL,
-                SOAP, etc.)
-              </li>
-              <li>
-                Experience/awareness in Agile application development,
-                commercial off-the-shelf software, middleware, servers and
-                storage, and database management
-              </li>
-              <li>
-                Familiarity with version control and project management systems
-                (e.g., Github, Jira)
-              </li>
-              <li>
-                Ambitious and hungry to grow a career in a fast-growing agency
-              </li>
-            </ul>
+            <Paragraph>
+              {company.policies || 'Chưa có chính sách, vui lòng cập nhật thông tin.'}
+            </Paragraph>
           </Card>
 
           {/* Open Jobs */}
@@ -278,7 +262,7 @@ function CompanyDetail() {
             title="Việc làm đang mở" 
             className="jobs-card"
             extra={
-              userType === "company" && currentUserId === id ? (
+              userType === "company" && currentCompanyId === id ? (
                 <Button 
                   type="primary" 
                   danger
@@ -446,7 +430,7 @@ function CompanyDetail() {
         {/* Sidebar */}
         <Col xs={24} lg={8}>
           {/* Action Buttons - Show based on user type */}
-          {userType === "company" && currentUserId === id ? (
+          {userType === "company" && currentCompanyId === id ? (
             // Show Edit button if the company is viewing their own page
             <Card className="action-card" style={{ marginBottom: 16 }}>
               <Button 
@@ -607,6 +591,38 @@ function CompanyDetail() {
             <TextArea
               placeholder="Nhập mô tả về công ty..."
               rows={6}
+              size="large"
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Facebook"
+            name="facebook"
+          >
+            <Input placeholder="https://facebook.com/your-company" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Linkedin"
+            name="linkedin"
+          >
+            <Input placeholder="https://linkedin.com/company/your-company" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Github"
+            name="github"
+          >
+            <Input placeholder="https://github.com/your-company" size="large" />
+          </Form.Item>
+
+          <Form.Item
+            label="Chính sách"
+            name="policies"
+          >
+            <TextArea
+              placeholder="Nhập chính sách, phúc lợi, môi trường làm việc..."
+              rows={4}
               size="large"
             />
           </Form.Item>

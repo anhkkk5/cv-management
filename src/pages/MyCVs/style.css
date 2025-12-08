@@ -1,0 +1,48 @@
+.my-cvs-page {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  padding: 20px 0;
+}
+
+.my-cvs-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+.cv-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s;
+}
+
+.cv-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.cv-card-cover {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  height: 150px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px 8px 0 0;
+}
+
+.cv-card .ant-card-actions {
+  border-top: 1px solid #f0f0f0;
+}
+
+.cv-card .ant-card-actions > li {
+  margin: 12px 0;
+}
+
+.cv-card .ant-card-actions > li > span {
+  cursor: pointer;
+  transition: color 0.3s;
+}
+
+.cv-card .ant-card-actions > li > span:hover {
+  color: #c41e3a;
+}

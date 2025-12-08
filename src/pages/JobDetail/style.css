@@ -403,8 +403,9 @@
 }
 
 .candidate-info {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
   gap: 16px;
   position: relative;
 }
@@ -418,6 +419,10 @@
 
 .candidate-details {
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-width: 230px;
 }
 
 .candidate-name {
@@ -482,6 +487,19 @@
   gap: 6px;
   font-size: 13px;
   color: #7f8c8d;
+  word-wrap: break-word;
+  word-break: break-word;
+  white-space: normal;
+}
+
+.candidate-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.candidate-actions .ant-btn {
+  min-width: 90px;
 }
 
 .location-icon {
@@ -675,9 +693,15 @@
   }
 
   .candidate-info {
+    display: flex;
     flex-direction: column;
     text-align: center;
     gap: 12px;
+  }
+
+  .candidate-actions {
+    flex-direction: row;
+    justify-content: center;
   }
 
   .candidate-arrow {

@@ -19,7 +19,10 @@ function FeaturedCompanies() {
       try {
         setLoading(true);
         const companiesData = await getAllCompany();
-        setCompanies(companiesData);
+        const activeCompanies = Array.isArray(companiesData)
+          ? companiesData.filter((c) => c?.status === "active")
+          : [];
+        setCompanies(activeCompanies);
       } catch (error) {
         console.error("FeaturedCompanies fetch error:", error);
         setCompanies([]);

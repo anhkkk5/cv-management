@@ -2,9 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Form, Input, Button, message, Typography } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { generateToken } from "../../helpers/generateToken";
-import { checkExits } from "../../services/Candidates/candidatesServices";
-import { createCandidates } from "../../services/Candidates/candidatesServices";
+import { registerCandidate } from "../../services/auth/authServices";
 import "../../pages/login/style.css";
 
 const { Title, Text } = Typography;
@@ -31,21 +29,13 @@ function Register() {
         messageApi.error("Mật khẩu xác nhận không khớp!");
         return;
       }
-
-      // Generate token and prepare data
-      values.token = generateToken();
-
-      // Check if email already exists
-      const checkExistEmail = await checkExits("email", values.email);
-
-      if (checkExistEmail && checkExistEmail.length > 0) {
-        messageApi.error("Email đã tồn tại!");
-        return;
-      }
-
-
-      // If no duplicates, proceed with registration
-      const result = await createCandidates(values);
+      // Call backend register API
+      const result = await registerCandidate({
+        fullName: values.fullName,
+        email: values.email,
+        password: values.password,
+        confirmPassword: values.confirmPassword,
+      });
 
       if (result) {
         messageApi.success(
@@ -60,7 +50,9 @@ function Register() {
         messageApi.error("Đăng ký thất bại. Vui lòng thử lại!");
       }
     } catch (error) {
-      messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
+      const backendMsg = error?.response?.data?.message;
+      if (backendMsg) messageApi.error(Array.isArray(backendMsg) ? backendMsg.join(", ") : backendMsg);
+      else messageApi.error("Đã có lỗi xảy ra. Vui lòng thử lại!");
       console.error("Registration error:", error);
     }
   };
@@ -175,10 +167,32 @@ function Register() {
                     <Text
                       className="signup-link"
                       onClick={() => navigate("/login")}
+                      style={{ color: "red", cursor: "pointer" }}
                     >
                       Đăng nhập ngay
                     </Text>
                   </Text>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 12,
+                      marginTop: 12,
+                      whiteSpace: "nowrap",
+                      flexWrap: "nowrap",
+                      justifyContent: "center",
+                      width: "100%",
+                    }}
+                  >
+                    <Text>Hoặc đăng kí bằng:</Text>
+                    
+                    <span
+                      onClick={() => navigate("/registerCompany")}
+                      style={{ color: "red", cursor: "pointer" }}
+                    >
+                      Công ty
+                    </span>
+                  </div>
                 </div>
               </Form>
             </div>

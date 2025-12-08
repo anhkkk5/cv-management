@@ -17,6 +17,7 @@ import {
   message,
   Modal,
   DatePicker,
+  Space,
 } from "antd";
 import {
   EnvironmentOutlined,
@@ -34,6 +35,7 @@ import { getDetaiJob, updateJob } from "../../services/jobServices/jobServices";
 import { getDetaiCompany } from "../../services/getAllCompany/companyServices";
 import { getLocationById } from "../../services/getAllLocation/locationServices";
 import { getCookie } from "../../helpers/cookie";
+import { get, post, edit } from "../../utils/axios/request";
 
 import "./style.css";
 
@@ -53,46 +55,15 @@ function JobDetail() {
   const [appliedCandidates, setAppliedCandidates] = React.useState([]);
   const [isModalVisible, setIsModalVisible] = React.useState(false);
   const [isCompany, setIsCompany] = React.useState(false);
+  const [isCandidate, setIsCandidate] = React.useState(false);
   const [updating, setUpdating] = React.useState(false);
-
-  // Mock data for candidates (can be replaced with real API later)
-  const mockCandidates = [
-    {
-      id: "C001",
-      name: "Nguyen Van A",
-      position: "Front-end",
-      experience: "Fresher",
-      skills: ["REACTJS", "NODEJS"],
-      language: "N2",
-      location: "Ha Noi, Viet Nam",
-      avatar: null,
-    },
-    {
-      id: "C002",
-      name: "Tran Thi B",
-      position: "Front-end",
-      experience: "Fresher",
-      skills: ["REACTJS", "NODEJS"],
-      language: "N2",
-      location: "Ha Noi, Viet Nam",
-      avatar: null,
-    },
-    {
-      id: "C003",
-      name: "Le Van C",
-      position: "Front-end",
-      experience: "Fresher",
-      skills: ["REACTJS", "NODEJS"],
-      language: "N2",
-      location: "Ha Noi, Viet Nam",
-      avatar: null,
-    },
-  ];
+  const [loadingApplications, setLoadingApplications] = React.useState(false);
 
   // Check if user is company
   React.useEffect(() => {
     const userType = getCookie("userType");
     setIsCompany(userType === "company");
+    setIsCandidate(userType === "candidate");
   }, []);
 
   React.useEffect(() => {
@@ -123,7 +94,7 @@ function JobDetail() {
           }
         }
 
-        // Fetch location data if location_id exists
+        // Fetch location data if location_id exists, otherwise fall back to job.location text
         if (jobData.location_id) {
           try {
             const locationData = await getLocationById(jobData.location_id);
@@ -136,10 +107,9 @@ function JobDetail() {
             console.error("Error fetching location:", error);
             setLocationName("Unknown Location");
           }
+        } else if (jobData.location) {
+          setLocationName(jobData.location);
         }
-
-        // Set mock candidates
-        setAppliedCandidates(mockCandidates);
 
         // Populate form with current job data
         form.setFieldsValue({
@@ -183,6 +153,35 @@ function JobDetail() {
     loadData();
   }, [id, form]);
 
+  // Load real applications list for company users
+  React.useEffect(() => {
+    const loadApplications = async () => {
+      if (!id || !isCompany) return;
+      try {
+        setLoadingApplications(true);
+        const data = await get(`applications/job/${id}`);
+        const formatted = (data || []).map((app) => ({
+          id: app.id, // application id
+          candidateId: app.candidate?.id,
+          name: app.candidate?.fullName || app.candidate?.user?.name || "N/A",
+          position: app.candidate?.introduction || "",
+          experience: app.candidate?.experience || "",
+          skills: [],
+          language: "",
+          location: app.candidate?.address || "",
+          status: app.status || "pending",
+        }));
+        setAppliedCandidates(formatted);
+      } catch (error) {
+        console.error("Error loading applications:", error);
+      } finally {
+        setLoadingApplications(false);
+      }
+    };
+
+    loadApplications();
+  }, [id, isCompany]);
+
   const copyJobLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -196,6 +195,61 @@ function JobDetail() {
 
   const handleCancel = () => {
     setIsModalVisible(false);
+  };
+
+  const handleApply = async () => {
+    if (!job?.id) return;
+    try {
+      await post("applications", { jobId: Number(job.id) });
+      message.success("Ứng tuyển thành công!");
+    } catch (error) {
+      const backendMsg = error?.response?.data?.message;
+      message.error(
+        backendMsg
+          ? Array.isArray(backendMsg)
+            ? backendMsg.join(", ")
+            : backendMsg
+          : "Ứng tuyển thất bại, vui lòng thử lại."
+      );
+    }
+  };
+
+  const handleUpdateApplicationStatus = async (applicationId, status) => {
+    try {
+      await edit(`applications/${applicationId}/status`, { status });
+      message.success("Cập nhật trạng thái ứng tuyển thành công");
+      // Cập nhật tại chỗ để chuyển card sang nhóm tương ứng
+      setAppliedCandidates((prev) =>
+        prev.map((c) => (c.id === applicationId ? { ...c, status } : c))
+      );
+      // Đồng bộ lại từ server (không bắt buộc) để đảm bảo dữ liệu mới nhất
+      if (isCompany && id) {
+        try {
+          const data = await get(`applications/job/${id}`);
+          const formatted = (data || []).map((app) => ({
+            id: app.id,
+            candidateId: app.candidate?.id,
+            name: app.candidate?.fullName || app.candidate?.user?.name || "N/A",
+            position: app.candidate?.introduction || "",
+            experience: app.candidate?.experience || "",
+            skills: [],
+            language: "",
+            location: app.candidate?.address || "",
+            status: app.status || "pending",
+          }));
+          setAppliedCandidates(formatted);
+        } catch (_) {}
+      }
+    } catch (error) {
+      const backendMsg = error?.response?.data?.message;
+      message.error(
+        backendMsg
+          ? Array.isArray(backendMsg)
+            ? backendMsg.join(", ")
+            : backendMsg
+          : "Cập nhật trạng thái thất bại"
+      );
+    }
   };
 
   const handleUpdate = async (values) => {
@@ -213,22 +267,24 @@ function JobDetail() {
       };
 
       const updateData = {
-        ...job, // Giữ nguyên tất cả các trường hiện có
+        // các field theo UpdateJobDto / CreateJobDto
         title: values.title,
-        type: values.jobType,
-        salary: values.salary,
-        jobLevel: values.level,
-        level: values.level,
         description: values.description,
+        company: job.company,
+        salary: values.salary,
+        type: values.jobType,
+        jobLevel: values.level,
         requirements: convertToArray(values.requirements),
-        experience: values.experience || "",
-        education: values.education || "",
         desirable: convertToArray(values.desirable),
         benefits: convertToArray(values.benefits),
-        location: values.location || "",
-        status: values.status || "active",
-        expire_at: values.endDate ? values.endDate.toISOString() : job.expire_at,
-        updated_at: new Date().toISOString(), // Cập nhật thời gian chỉnh sửa
+        experience: values.experience || "",
+        education: values.education || "",
+        location_id: job.location_id || undefined,
+        company_id: job.company_id || undefined,
+        status: values.status || job.status || "active",
+        expire_at: values.endDate
+          ? values.endDate.format("YYYY-MM-DD")
+          : job.expire_at,
       };
 
       await updateJob(id, updateData);
@@ -411,6 +467,22 @@ function JobDetail() {
                 Cập Nhật Thông Tin
               </Button>
             )}
+
+            {/* Apply button - only for candidate */}
+            {isCandidate && (
+              <Button
+                type="primary"
+                onClick={handleApply}
+                style={{
+                  width: "100%",
+                  marginBottom: "20px",
+                  backgroundColor: "#52c41a",
+                  borderColor: "#52c41a",
+                }}
+              >
+                Ứng tuyển ngay
+              </Button>
+            )}
             {/* Salary */}
             <div className="salary-section">
               <Text className="salary-label">Salary (USD)</Text>
@@ -423,7 +495,7 @@ function JobDetail() {
             <div className="location-section">
               <Text className="location-label">Job Location</Text>
               <Text className="location-value">
-                {locationName || "Unknown"}
+                {job.location || locationName || "Unknown"}
               </Text>
             </div>
             {/* Job Overview */}
@@ -480,55 +552,89 @@ function JobDetail() {
         </Col>
       </Row>
 
-      {/* Applied Candidates */}
-      <div className="applied-candidates-section">
-        <Title level={3}>Applied Candidates</Title>
-        <Row gutter={[16, 16]}>
-          {appliedCandidates.map((candidate) => (
-            <Col xs={24} sm={12} md={8} key={candidate.id}>
-              <Card
-                hoverable
-                className="candidate-card"
-                onClick={() => navigate(`/candidates/${candidate.id}`)}
-              >
-                <div className="candidate-info">
-                  <Avatar size={50} className="candidate-avatar">
-                    {candidate.name.charAt(0)}
-                  </Avatar>
-                  <div className="candidate-details">
-                    <Title level={5} className="candidate-name">
-                      {candidate.name}
-                    </Title>
-                    <div className="candidate-tags">
-                      <Tag color="green">{candidate.position}</Tag>
-                      <Tag color="blue">{candidate.experience}</Tag>
-                    </div>
-                    <div className="candidate-skills">
-                      <Text className="skills-label">Technical in use:</Text>
-                      <div className="skills-tags">
-                        {candidate.skills.map((skill, index) => (
-                          <Tag key={index} color="green" className="skill-tag">
-                            {skill}
-                          </Tag>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="candidate-language">
-                      <Text className="language-label">Foreign Language:</Text>
-                      <Tag color="orange">{candidate.language}</Tag>
-                    </div>
-                    <div className="candidate-location">
-                      <EnvironmentOutlined className="location-icon" />
-                      <Text>{candidate.location}</Text>
-                    </div>
-                  </div>
-                  <ArrowRightOutlined className="candidate-arrow" />
-                </div>
-              </Card>
-            </Col>
-          ))}
-        </Row>
-      </div>
+      {/* Applied Candidates - Grouped by status for company */}
+      {isCompany && (
+        <div className="applied-candidates-section">
+          <Title level={3}>Ứng viên đã nộp</Title>
+          {loadingApplications ? (
+            <Spin />
+          ) : (
+            <Row gutter={[16, 16]}>
+              {[
+                { key: "pending", title: "CV chưa xét", color: "gold" },
+                { key: "approved", title: "CV đã duyệt", color: "green" },
+                { key: "rejected", title: "CV không duyệt", color: "red" },
+              ].map((group) => {
+                const list = appliedCandidates.filter((c) => c.status === group.key);
+                return (
+                  <Col xs={24} md={8} key={group.key}>
+                    <Card title={<span>{group.title} <Tag color={group.color}>{list.length}</Tag></span>}>
+                      {list.length === 0 ? (
+                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Trống" />
+                      ) : (
+                        <Space direction="vertical" style={{ width: "100%" }}>
+                          {list.map((candidate) => (
+                            <Card
+                              key={candidate.id}
+                              size="small"
+                              hoverable
+                              onClick={() =>
+                                candidate.candidateId &&
+                                navigate(`/candidates/${candidate.candidateId}`)
+                              }
+                            >
+                              <div className="candidate-info">
+                                <Avatar size={40} className="candidate-avatar">
+                                  {candidate.name?.charAt(0) || "?"}
+                                </Avatar>
+                                <div className="candidate-details">
+                                  <div className="candidate-name">
+                                    {candidate.name}
+                                  </div>
+                                  {candidate.location && (
+                                    <div className="candidate-location">
+                                      <EnvironmentOutlined className="location-icon" />
+                                      <Text>{candidate.location}</Text>
+                                    </div>
+                                  )}
+                                </div>
+                                {group.key === "pending" && (
+                                  <div className="candidate-actions">
+                                    <Button
+                                      size="small"
+                                      type="primary"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateApplicationStatus(candidate.id, "approved");
+                                      }}
+                                    >
+                                      Duyệt
+                                    </Button>
+                                    <Button
+                                      size="small"
+                                      danger
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleUpdateApplicationStatus(candidate.id, "rejected");
+                                      }}
+                                    >
+                                      Không duyệt
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+                            </Card>
+                          ))}
+                        </Space>
+                      )}
+                    </Card>
+                  </Col>
+                );
+              })}
+            </Row>
+          )}
+        </div>
+      )}
 
       {/* Update Job Modal */}
       <Modal
