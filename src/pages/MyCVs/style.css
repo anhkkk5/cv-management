@@ -5,44 +5,59 @@
 }
 
 .my-cvs-container {
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-.cv-card {
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.cv-preview-card {
   transition: all 0.3s;
 }
 
-.cv-card:hover {
+.cv-preview-card:hover {
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
   transform: translateY(-2px);
 }
 
-.cv-card-cover {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  height: 150px;
+.cv-preview-container {
+  font-family: Arial, sans-serif;
+  font-size: 12px;
+  color: #333;
+}
+
+.cv-preview-header {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 8px 8px 0 0;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #e0e0e0;
 }
 
-.cv-card .ant-card-actions {
-  border-top: 1px solid #f0f0f0;
+.cv-preview-avatar {
+  width: 60px;
+  height: 60px;
+  flex-shrink: 0;
+  border-radius: 4px;
+  overflow: hidden;
+  background: #f0f0f0;
 }
 
-.cv-card .ant-card-actions > li {
-  margin: 12px 0;
+.cv-preview-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.cv-card .ant-card-actions > li > span {
-  cursor: pointer;
-  transition: color 0.3s;
+.cv-preview-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
 }
 
-.cv-card .ant-card-actions > li > span:hover {
-  color: #c41e3a;
+.cv-preview-section {
+  padding: 4px 0;
+}
+
+.cv-preview-section:not(:last-child) {
+  border-bottom: 1px solid #f0f0f0;
+  padding-bottom: 8px;
 }

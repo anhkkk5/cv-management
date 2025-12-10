@@ -22,20 +22,21 @@ import {
 import {
   EnvironmentOutlined,
   CalendarOutlined,
-
   ArrowRightOutlined,
   FacebookOutlined,
   TwitterOutlined,
   LinkedinOutlined,
   MailOutlined,
   LinkOutlined,
+  FileTextOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import dayjs from "dayjs";
 import { getDetaiJob, updateJob } from "../../services/jobServices/jobServices";
 import { getDetaiCompany } from "../../services/getAllCompany/companyServices";
 import { getLocationById } from "../../services/getAllLocation/locationServices";
 import { getCookie } from "../../helpers/cookie";
-import { get, post, edit } from "../../utils/axios/request";
+import { get, post, edit, postForm } from "../../utils/axios/request";
 
 import "./style.css";
 
@@ -170,6 +171,7 @@ function JobDetail() {
           language: "",
           location: app.candidate?.address || "",
           status: app.status || "pending",
+          cvPdfUrl: app.cvPdfUrl || null, // URL của PDF CV
         }));
         setAppliedCandidates(formatted);
       } catch (error) {
@@ -199,19 +201,59 @@ function JobDetail() {
 
   const handleApply = async () => {
     if (!job?.id) return;
-    try {
-      await post("applications", { jobId: Number(job.id) });
-      message.success("Ứng tuyển thành công!");
-    } catch (error) {
-      const backendMsg = error?.response?.data?.message;
-      message.error(
-        backendMsg
-          ? Array.isArray(backendMsg)
-            ? backendMsg.join(", ")
-            : backendMsg
-          : "Ứng tuyển thất bại, vui lòng thử lại."
-      );
-    }
+    
+    // Hiển thị modal để upload PDF CV
+    Modal.confirm({
+      title: "Ứng tuyển công việc",
+      content: (
+        <div>
+          <p style={{ marginBottom: 16 }}>
+            Vui lòng tải lên file PDF CV của bạn để ứng tuyển.
+          </p>
+          <input
+            type="file"
+            id="cv-pdf-input"
+            accept=".pdf"
+            style={{ width: "100%" }}
+          />
+        </div>
+      ),
+      okText: "Ứng tuyển",
+      cancelText: "Hủy",
+      onOk: async () => {
+        const fileInput = document.getElementById("cv-pdf-input");
+        const file = fileInput?.files?.[0];
+        
+        if (!file) {
+          message.error("Vui lòng chọn file PDF CV");
+          return Promise.reject();
+        }
+
+        if (file.type !== "application/pdf") {
+          message.error("Vui lòng chọn file PDF");
+          return Promise.reject();
+        }
+
+        try {
+          const formData = new FormData();
+          formData.append("jobId", String(job.id));
+          formData.append("cvPdf", file);
+
+          await postForm("applications", formData);
+          message.success("Ứng tuyển thành công!");
+        } catch (error) {
+          const backendMsg = error?.response?.data?.message;
+          message.error(
+            backendMsg
+              ? Array.isArray(backendMsg)
+                ? backendMsg.join(", ")
+                : backendMsg
+              : "Ứng tuyển thất bại, vui lòng thử lại."
+          );
+          return Promise.reject();
+        }
+      },
+    });
   };
 
   const handleUpdateApplicationStatus = async (applicationId, status) => {
@@ -598,30 +640,46 @@ function JobDetail() {
                                     </div>
                                   )}
                                 </div>
-                                {group.key === "pending" && (
-                                  <div className="candidate-actions">
+                                <div className="candidate-actions">
+                                  {candidate.cvPdfUrl && (
                                     <Button
                                       size="small"
-                                      type="primary"
+                                      type="link"
+                                      icon={<FileTextOutlined />}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        handleUpdateApplicationStatus(candidate.id, "approved");
+                                        window.open(candidate.cvPdfUrl, "_blank");
                                       }}
+                                      title="Xem CV PDF"
                                     >
-                                      Duyệt
+                                      Xem CV
                                     </Button>
-                                    <Button
-                                      size="small"
-                                      danger
-                                      onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleUpdateApplicationStatus(candidate.id, "rejected");
-                                      }}
-                                    >
-                                      Không duyệt
-                                    </Button>
-                                  </div>
-                                )}
+                                  )}
+                                  {group.key === "pending" && (
+                                    <>
+                                      <Button
+                                        size="small"
+                                        type="primary"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleUpdateApplicationStatus(candidate.id, "approved");
+                                        }}
+                                      >
+                                        Duyệt
+                                      </Button>
+                                      <Button
+                                        size="small"
+                                        danger
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          handleUpdateApplicationStatus(candidate.id, "rejected");
+                                        }}
+                                      >
+                                        Không duyệt
+                                      </Button>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </Card>
                           ))}

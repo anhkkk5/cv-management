@@ -7,12 +7,15 @@ import {
   Button,
   message,
   Spin,
+  Upload,
+  Image,
 } from "antd";
 import { getCookie } from "../../helpers/cookie";
 import {
   getDetaiCompany,
   editCompany,
 } from "../../services/getAllCompany/companyServices";
+import { uploadImage, deleteImage } from "../../services/Cloudinary/cloudinaryServices";
 import "./style.css";
 
 const { TextArea } = Input;
@@ -24,6 +27,8 @@ function CompanyEdit() {
   const [loading, setLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [modalVisible, setModalVisible] = useState(true);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [logoUrl, setLogoUrl] = useState("");
 
   useEffect(() => {
     // Check if user is authorized
@@ -47,8 +52,8 @@ function CompanyEdit() {
             website: data.website,
             address: data.address,
             description: data.description,
-            logo: data.logo,
           });
+          setLogoUrl(data.logo || "");
         }
       } catch (error) {
         console.error("Error fetching company:", error);
@@ -71,7 +76,7 @@ function CompanyEdit() {
         website: values.website,
         address: values.address,
         description: values.description,
-        logo: values.logo,
+        logo: logoUrl || undefined,
         updated_at: new Date().toISOString().split('T')[0], // Update timestamp
       };
 
@@ -94,6 +99,43 @@ function CompanyEdit() {
     setTimeout(() => {
       navigate(`/companies/${id}`);
     }, 300);
+  };
+
+  const handleUploadLogo = async (file) => {
+    try {
+      setUploadingLogo(true);
+      const result = await uploadImage(file, "company-logos");
+      if (result?.url) {
+        setLogoUrl(result.url);
+        message.success("Upload logo thành công");
+      } else {
+        message.error("Upload logo thất bại");
+      }
+    } catch (error) {
+      console.error("Upload logo error:", error);
+      message.error("Không thể upload logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+    return false;
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!logoUrl) return;
+    try {
+      const parts = logoUrl.split("/");
+      const uploadIdx = parts.findIndex((p) => p === "upload");
+      if (uploadIdx !== -1) {
+        const versionIdx = parts[uploadIdx + 1]?.startsWith("v") ? uploadIdx + 1 : uploadIdx;
+        const publicIdWithExt = parts.slice(versionIdx + 1).join("/");
+        const publicId = publicIdWithExt.split(".")[0];
+        await deleteImage(publicId);
+      }
+    } catch (e) {
+      // ignore
+    } finally {
+      setLogoUrl("");
+    }
   };
 
   return (
@@ -137,11 +179,36 @@ function CompanyEdit() {
             <Input placeholder="https://abccorp.com" size="large" />
           </Form.Item>
 
-          <Form.Item
-            label="Logo (URL)"
-            name="logo"
-          >
-            <Input placeholder="https://example.com/logo.png" size="large" />
+          <Form.Item label="Logo công ty">
+            <Upload
+              accept="image/*"
+              showUploadList={false}
+              beforeUpload={handleUploadLogo}
+              maxCount={1}
+            >
+              <Button loading={uploadingLogo}>Upload logo</Button>
+            </Upload>
+            {logoUrl && (
+              <div style={{ marginTop: 12 }}>
+                <Image
+                  src={logoUrl}
+                  alt="Company logo"
+                  width={120}
+                  height={120}
+                  style={{ objectFit: "cover", borderRadius: 8 }}
+                  placeholder
+                />
+                <Button
+                  danger
+                  size="small"
+                  style={{ marginTop: 8 }}
+                  onClick={handleRemoveLogo}
+                  disabled={uploadingLogo}
+                >
+                  Xóa logo
+                </Button>
+              </div>
+            )}
           </Form.Item>
 
           <Form.Item

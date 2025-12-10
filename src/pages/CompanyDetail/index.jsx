@@ -17,6 +17,8 @@ import {
   Modal,
   Form,
   message,
+  Upload,
+  Image,
 } from "antd";
 import {
   EnvironmentOutlined,
@@ -38,6 +40,7 @@ import {
   getAllCompany,
   editCompany,
 } from "../../services/getAllCompany/companyServices";
+import { uploadImage, deleteImage } from "../../services/Cloudinary/cloudinaryServices";
 import { getListJob } from "../../services/jobServices/jobServices";
 import "./style.css";
 
@@ -59,6 +62,8 @@ function CompanyDetail() {
   const [isFavorite, setIsFavorite] = React.useState(false);
   const [editModalVisible, setEditModalVisible] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+  const [uploadingLogo, setUploadingLogo] = React.useState(false);
+  const [logoUrl, setLogoUrl] = React.useState("");
   const [form] = Form.useForm();
 
   React.useEffect(() => {
@@ -134,12 +139,12 @@ function CompanyDetail() {
         website: company.website,
         address: company.address,
         description: company.description,
-        logo: company.logo,
         facebook: company.facebook,
         linkedin: company.linkedin,
         github: company.github,
         policies: company.policies,
       });
+      setLogoUrl(company.logo || "");
       setEditModalVisible(true);
     }
   };
@@ -154,7 +159,7 @@ function CompanyDetail() {
         website: values.website,
         address: values.address,
         description: values.description,
-        logo: values.logo,
+        logo: logoUrl || company.logo,
         facebook: values.facebook,
         linkedin: values.linkedin,
         github: values.github,
@@ -180,6 +185,45 @@ function CompanyDetail() {
   const handleEditCancel = () => {
     setEditModalVisible(false);
     form.resetFields();
+    setLogoUrl(company?.logo || "");
+  };
+
+  const handleUploadLogo = async (file) => {
+    try {
+      setUploadingLogo(true);
+      const result = await uploadImage(file, "company-logos");
+      if (result?.url) {
+        setLogoUrl(result.url);
+        message.success("Upload logo thành công");
+      } else {
+        message.error("Upload logo thất bại");
+      }
+    } catch (error) {
+      console.error("Upload logo error:", error);
+      message.error("Không thể upload logo");
+    } finally {
+      setUploadingLogo(false);
+    }
+    return false; // prevent auto upload
+  };
+
+  const handleRemoveLogo = async () => {
+    if (!logoUrl) return;
+    try {
+      // best effort delete; backend endpoint accepts publicId
+      const parts = logoUrl.split("/");
+      const uploadIdx = parts.findIndex((p) => p === "upload");
+      if (uploadIdx !== -1) {
+        const versionIdx = parts[uploadIdx + 1]?.startsWith("v") ? uploadIdx + 1 : uploadIdx;
+        const publicIdWithExt = parts.slice(versionIdx + 1).join("/");
+        const publicId = publicIdWithExt.split(".")[0];
+        await deleteImage(publicId);
+      }
+    } catch (e) {
+      // ignore delete errors
+    } finally {
+      setLogoUrl("");
+    }
   };
 
   if (loading) {
@@ -564,11 +608,36 @@ function CompanyDetail() {
             <Input placeholder="https://abccorp.com" size="large" />
           </Form.Item>
 
-          <Form.Item
-            label="Logo (URL)"
-            name="logo"
-          >
-            <Input placeholder="https://example.com/logo.png" size="large" />
+          <Form.Item label="Logo công ty">
+            <Upload
+              accept="image/*"
+              showUploadList={false}
+              beforeUpload={handleUploadLogo}
+              maxCount={1}
+            >
+              <Button loading={uploadingLogo}>Upload logo</Button>
+            </Upload>
+            {logoUrl && (
+              <div style={{ marginTop: 12 }}>
+                <Image
+                  src={logoUrl}
+                  alt="Company logo"
+                  width={120}
+                  height={120}
+                  style={{ objectFit: "cover", borderRadius: 8 }}
+                  placeholder
+                />
+                <Button
+                  danger
+                  size="small"
+                  style={{ marginTop: 8 }}
+                  onClick={handleRemoveLogo}
+                  disabled={uploadingLogo}
+                >
+                  Xóa logo
+                </Button>
+              </div>
+            )}
           </Form.Item>
 
           <Form.Item

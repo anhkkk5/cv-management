@@ -19,6 +19,9 @@ import CreateJob from "../pages/CreateJob/index.jsx";
 import LoginAdmin from "../pages/login/loginAdmin.jsx";
 import SavedJobs from "../pages/SavedJobs/index.jsx";
 import GrossNet from "../pages/GrossNet/index.jsx";
+import UnemploymentInsurance from "../pages/UnemploymentInsurance/index.jsx";
+import PersonalIncomeTax from "../pages/PersonalIncomeTax/index.jsx";
+import SavingsPlan from "../pages/SavingsPlan/index.jsx";
 import AdminLayout from "../Layout/AdminLayout/index.jsx";
 import JobsManagement from "../pages/Admin/JobsManagement/index.jsx";
 import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
@@ -58,6 +61,18 @@ export const routes = [
       {
         path: "gross-net",
         element: <GrossNet />,
+      },
+      {
+        path: "unemployment-insurance",
+        element: <UnemploymentInsurance />,
+      },
+      {
+        path: "personal-income-tax",
+        element: <PersonalIncomeTax />,
+      },
+      {
+        path: "savings-plan",
+        element: <SavingsPlan />,
       },
       {
         path: "jobs/:id",

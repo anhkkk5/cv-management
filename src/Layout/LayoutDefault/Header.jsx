@@ -60,11 +60,11 @@ function Header() {
   const toolShortcuts = [
     { key: "skill-assessment", icon: <RadarChartOutlined />, label: "Đánh giá năng lực", path: "/skill-assessment" },
     { key: "gross-net", icon: <WalletOutlined />, label: "Tính lương Gross - Net", path: "/gross-net" },
-    { key: "tax", icon: <CalculatorOutlined />, label: "Tính thuế thu nhập cá nhân" },
+    { key: "tax", icon: <CalculatorOutlined />, label: "Tính thuế thu nhập cá nhân", path: "/personal-income-tax" },
     { key: "compound", icon: <LineChartOutlined />, label: "Tính lãi suất kép" },
-    { key: "unemployment", icon: <SafetyCertificateOutlined />, label: "Tính bảo hiểm thất nghiệp" },
+    { key: "unemployment", icon: <SafetyCertificateOutlined />, label: "Tính bảo hiểm thất nghiệp", path: "/unemployment-insurance" },
     { key: "social", icon: <SolutionOutlined />, label: "Tính bảo hiểm xã hội một lần" },
-    { key: "saving-plan", icon: <CalculatorOutlined />, label: "Lập kế hoạch tiết kiệm" },
+    { key: "saving-plan", icon: <CalculatorOutlined />, label: "Lập kế hoạch tiết kiệm", path: "/savings-plan" },
     { key: "mobile", icon: <MobileOutlined />, label: "Mobile App TopCV" },
   ];
 

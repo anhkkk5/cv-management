@@ -29,23 +29,42 @@ function CandidateDetail() {
       if (!id) return;
       setLoading(true);
       try {
-        // Dùng endpoint CVs mới: /cvs/:candidateId (Role Recruiter/Admin)
-        const fullCv = await get(`cvs/${id}`);
-        if (!fullCv || !fullCv.candidate) {
+        // Lấy thông tin candidate từ API
+        const candidateData = await get(`candidates/${id}`);
+        if (!candidateData) {
           setCandidate(null);
           return;
         }
-        setCandidate(fullCv.candidate);
+        setCandidate(candidateData);
 
-        setCvData({
-          intro: fullCv.candidate.introduction || "",
-          education: fullCv.education || [],
-          experience: fullCv.experiences || [],
-          projects: fullCv.projects || [],
-          certificates: fullCv.certificates || [],
-        });
+        // Lấy thông tin education, experience, projects, certificates
+        try {
+          const [education, experience, projects, certificates] = await Promise.all([
+            get(`education/candidate/${id}`).catch(() => []),
+            get(`experiences/candidate/${id}`).catch(() => []),
+            get(`projects/candidate/${id}`).catch(() => []),
+            get(`certificates/candidate/${id}`).catch(() => []),
+          ]);
+
+          setCvData({
+            intro: candidateData.introduction || "",
+            education: Array.isArray(education) ? education : [],
+            experience: Array.isArray(experience) ? experience : [],
+            projects: Array.isArray(projects) ? projects : [],
+            certificates: Array.isArray(certificates) ? certificates : [],
+          });
+        } catch (e) {
+          console.error("Error loading CV sections:", e);
+          setCvData({
+            intro: candidateData.introduction || "",
+            education: [],
+            experience: [],
+            projects: [],
+            certificates: [],
+          });
+        }
       } catch (e) {
-        console.error("Error loading full CV for candidate:", e);
+        console.error("Error loading candidate:", e);
         setCandidate(null);
       } finally {
         setLoading(false);
