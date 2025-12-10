@@ -38,7 +38,7 @@ export class JobsService {
     return this.jobRepository.save(newJob);
   }
 
-  findAll(city?: string, keyword?: string): Promise<Job[]> {
+  findAll(city?: string, keyword?: string, position?: string): Promise<Job[]> {
     const qb = this.jobRepository
       .createQueryBuilder('job')
       .leftJoinAndSelect('job.postedBy', 'postedBy')
@@ -47,6 +47,12 @@ export class JobsService {
     if (keyword && keyword.trim()) {
       qb.andWhere('LOWER(job.title) LIKE :kw OR LOWER(job.description) LIKE :kw', {
         kw: `%${keyword.toLowerCase()}%`,
+      });
+    }
+
+    if (position && position.trim()) {
+      qb.andWhere('LOWER(job.title) LIKE :pos', {
+        pos: `%${position.toLowerCase()}%`,
       });
     }
 

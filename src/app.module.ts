@@ -8,7 +8,6 @@ import { UsersModule } from './users/users.module';
 import { UsersService } from './users/users.service';
 import { ExperiencesModule } from './experiences/experiences.module';
 import { ProjectsModule } from './projects/projects.module';
-import { CvsController } from './cvs/cvs.controller';
 import { APP_GUARD } from '@nestjs/core';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
@@ -21,6 +20,11 @@ import { CompaniesModule } from './companies/companies.module';
 import { LocationsModule } from './locations/locations.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { CompanyAddressModule } from './company-address/company-address.module';
+import { QuizzesModule } from './quizzes/quizzes.module';
+import { QuestionsModule } from './questions/questions.module';
+import { QuestionSetsModule } from './question-sets/question-sets.module';
+import { ApplicationsModule } from './applications/applications.module';
+import { CvsModule } from './cvs/cvs.module';
 import { Role } from './common/enums/role.enum';
 
 const dbPortStr = process.env.DB_PORT;
@@ -56,8 +60,13 @@ if (Number.isNaN(dbPort)) {
     LocationsModule,
     CloudinaryModule,
     CompanyAddressModule,
+    QuizzesModule,
+    QuestionsModule,
+    QuestionSetsModule,
+    ApplicationsModule,
+    CvsModule,
   ],
-  controllers: [AppController, CvsController],
+  controllers: [AppController],
   providers: [AppService,
     {
       provide: APP_GUARD,

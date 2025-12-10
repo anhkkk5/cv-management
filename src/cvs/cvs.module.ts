@@ -1,0 +1,14 @@
+import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { CvsService } from './cvs.service';
+import { CvsController } from './cvs.controller';
+import { CV } from '../shared/schemas/cv.entity';
+
+@Module({
+  imports: [TypeOrmModule.forFeature([CV])],
+  controllers: [CvsController],
+  providers: [CvsService],
+  exports: [CvsService],
+})
+export class CvsModule {}
+

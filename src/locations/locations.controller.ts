@@ -13,7 +13,7 @@ export class LocationsController {
   constructor(private readonly locationsService: LocationsService) {}
 
   @ApiBearerAuth()
-  @Roles(Role.Admin)
+  @Roles(Role.Admin, Role.Recruiter)
   @Post()
   create(@Body() createLocationDto: CreateLocationDto) {
     return this.locationsService.create(createLocationDto);

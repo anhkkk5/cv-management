@@ -52,8 +52,9 @@ export class JobsController {
   findAll(
     @Query('city') city?: string,
     @Query('keyword') keyword?: string,
+    @Query('position') position?: string,
   ) {
-    return this.jobsService.findAll(city, keyword);
+    return this.jobsService.findAll(city, keyword, position);
   }
 
   @Public()
