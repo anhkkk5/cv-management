@@ -291,6 +291,65 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
+/* Ad banner card (thuê quảng cáo) */
+.ad-banner-card {
+  margin-bottom: 24px;
+  border-radius: 12px;
+  border: 2px dashed #c41e3a;
+  background-color: #fff7f8;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.ad-banner-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.ad-banner-card .ant-card-head {
+  border-bottom: 1px solid #fde2e6;
+}
+
+.ad-banner-card .ant-card-head-title {
+  font-size: 16px;
+  font-weight: 600;
+  color: #b91c1c;
+}
+
+.ad-banner-content {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.ad-banner-image-wrapper {
+  width: 100%;
+  max-height: 260px;
+  overflow: hidden;
+  border-radius: 8px;
+}
+
+.ad-banner-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.ad-banner-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.ad-banner-title {
+  margin-bottom: 4px !important;
+}
+
+.ad-banner-description {
+  margin-bottom: 0;
+  color: #4b5563;
+}
+
 .address-card .ant-card-head,
 .map-card .ant-card-head,
 .share-card .ant-card-head {

@@ -59,6 +59,7 @@ function JobDetail() {
   const [isCandidate, setIsCandidate] = React.useState(false);
   const [updating, setUpdating] = React.useState(false);
   const [loadingApplications, setLoadingApplications] = React.useState(false);
+  const [hasApplied, setHasApplied] = React.useState(false);
 
   // Check if user is company
   React.useEffect(() => {
@@ -184,6 +185,27 @@ function JobDetail() {
     loadApplications();
   }, [id, isCompany]);
 
+  // Check if current candidate already applied this job
+  React.useEffect(() => {
+    const loadMyApplications = async () => {
+      if (!id || !isCandidate) return;
+      try {
+        const data = await get("applications/me");
+        const list = Array.isArray(data) ? data : [];
+        const numericId = Number(id);
+        const applied = list.some((app) => {
+          const appJobId = app.job?.id ?? app.jobId;
+          return appJobId && Number(appJobId) === numericId;
+        });
+        setHasApplied(applied);
+      } catch (error) {
+        console.error("Error loading my applications", error);
+      }
+    };
+
+    loadMyApplications();
+  }, [id, isCandidate]);
+
   const copyJobLink = () => {
     const url = window.location.href;
     navigator.clipboard.writeText(url).then(() => {
@@ -199,8 +221,24 @@ function JobDetail() {
     setIsModalVisible(false);
   };
 
+  const handleFollowCompany = () => {
+    if (!company && !job?.company_id) {
+      message.info("Không tìm thấy thông tin công ty để theo dõi.");
+      return;
+    }
+    const companyId = company?.id || job?.company_id;
+    if (companyId) {
+      navigate(`/companies/${companyId}`);
+    }
+  };
+
   const handleApply = async () => {
     if (!job?.id) return;
+
+    if (hasApplied) {
+      message.info("Bạn đã ứng tuyển công việc này. Hãy theo dõi cập nhật từ nhà tuyển dụng.");
+      return;
+    }
     
     // Hiển thị modal để upload PDF CV
     Modal.confirm({
@@ -241,6 +279,7 @@ function JobDetail() {
 
           await postForm("applications", formData);
           message.success("Ứng tuyển thành công!");
+          setHasApplied(true);
         } catch (error) {
           const backendMsg = error?.response?.data?.message;
           message.error(
@@ -510,11 +549,11 @@ function JobDetail() {
               </Button>
             )}
 
-            {/* Apply button - only for candidate */}
+            {/* Apply / Follow Company button - only for candidate */}
             {isCandidate && (
               <Button
                 type="primary"
-                onClick={handleApply}
+                onClick={hasApplied ? handleFollowCompany : handleApply}
                 style={{
                   width: "100%",
                   marginBottom: "20px",
@@ -522,7 +561,7 @@ function JobDetail() {
                   borderColor: "#52c41a",
                 }}
               >
-                Ứng tuyển ngay
+                {hasApplied ? "Theo dõi công ty" : "Ứng tuyển ngay"}
               </Button>
             )}
             {/* Salary */}
@@ -648,9 +687,20 @@ function JobDetail() {
                                       icon={<FileTextOutlined />}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        window.open(candidate.cvPdfUrl, "_blank");
+                                        if (!candidate.cvPdfUrl) {
+                                          message.error("Ứng viên chưa upload CV PDF");
+                                          return;
+                                        }
+                                        // Tải file PDF về với tên dễ đọc
+                                        const link = document.createElement("a");
+                                        link.href = candidate.cvPdfUrl;
+                                        const safeName = (candidate.name || "ungvien").replace(/[^a-zA-Z0-9-_]/g, "_");
+                                        link.download = `CV_${safeName}.pdf`;
+                                        document.body.appendChild(link);
+                                        link.click();
+                                        document.body.removeChild(link);
                                       }}
-                                      title="Xem CV PDF"
+                                      title="Xem CV ứng viên"
                                     >
                                       Xem CV
                                     </Button>
@@ -875,6 +925,8 @@ function JobDetail() {
           </Form.Item>
         </Form>
       </Modal>
+
+      {/* Không dùng modal xem CV nữa; khi bấm Xem CV sẽ mở/tải PDF trong tab mới */}
     </div>
   );
 }

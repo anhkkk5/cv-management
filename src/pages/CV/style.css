@@ -1,3 +1,155 @@
+/* ========== Layout mới kiểu CV cũ (không sidebar) ========== */
+
+.cv-wrapper {
+  max-width: 900px;
+  margin: 24px auto 40px;
+  padding: 0 16px 32px;
+}
+
+.cv-toolbar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.cv-sheet {
+  background: #ffffff;
+  border: 1px solid #e5e5e5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 24px 32px 32px;
+}
+
+.cv-header {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 20px;
+}
+
+.cv-avatar {
+  flex-shrink: 0;
+}
+
+.cv-avatar img {
+  width: 140px;
+  height: 140px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.cv-summary {
+  flex: 1;
+}
+
+.cv-name {
+  margin-bottom: 4px;
+}
+
+.cv-position {
+  display: block;
+  margin-bottom: 10px;
+}
+
+.cv-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px 24px;
+}
+
+.cv-info-row {
+  font-size: 13px;
+}
+
+.cv-info-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.cv-info-value {
+  color: #333;
+}
+
+.cv-section {
+  margin-top: 20px;
+}
+
+.cv-section-title {
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  border-top: 1px solid #bbb;
+  padding-top: 8px;
+  margin-bottom: 8px;
+}
+
+.cv-entry {
+  display: flex;
+  gap: 12px;
+  font-size: 13px;
+  align-items: flex-start;
+}
+
+.cv-entry-time {
+  width: 130px;
+  flex-shrink: 0;
+  color: #555;
+}
+
+.cv-entry-body {
+  flex: 1;
+  line-height: 1.5;
+}
+
+.cv-entry-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.cv-entry-actions .ant-btn-link {
+  padding: 0;
+  height: auto;
+  font-size: 13px;
+}
+
+/* Chế độ xuất PDF: ẩn toàn bộ nút thao tác trong CV */
+.cv-sheet.pdf-export .cv-entry-actions {
+  display: none !important;
+}
+
+.cv-entry-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: #111;
+}
+
+.cv-field-label {
+  font-weight: 600;
+  margin-right: 4px;
+}
+
+.cv-entry-subtitle {
+  font-size: 13px;
+  color: #444;
+  margin: 2px 0 6px 0;
+}
+
+.cv-entry-link {
+  font-size: 13px;
+  color: #1677ff;
+  margin-bottom: 4px;
+}
+
+.cv-paragraph {
+  margin-bottom: 0;
+}
+
+.cv-bullets {
+  padding-left: 18px;
+  margin: 4px 0 0;
+}
+
+/* ========== Các style cũ (sidebar) vẫn giữ để không ảnh hưởng trang khác ========== */
+
 .cv-page {
   background-color: #f5f5f5;
   min-height: 100vh;
@@ -256,7 +408,6 @@
     margin: 12mm;
   }
 }
-
 .section-header {
   display: flex;
   justify-content: space-between;
@@ -375,3 +526,4 @@
     text-align: left;
   }
 }
+

@@ -40,6 +40,7 @@ import {
   getAllCompany,
   editCompany,
 } from "../../services/getAllCompany/companyServices";
+import { get } from "../../utils/axios/request";
 import { uploadImage, deleteImage } from "../../services/Cloudinary/cloudinaryServices";
 import { getListJob } from "../../services/jobServices/jobServices";
 import "./style.css";
@@ -64,6 +65,7 @@ function CompanyDetail() {
   const [submitting, setSubmitting] = React.useState(false);
   const [uploadingLogo, setUploadingLogo] = React.useState(false);
   const [logoUrl, setLogoUrl] = React.useState("");
+  const [activeAd, setActiveAd] = React.useState(null);
   const [form] = Form.useForm();
 
   React.useEffect(() => {
@@ -120,10 +122,21 @@ function CompanyDetail() {
       }
     };
 
+    const fetchActiveAd = async () => {
+      try {
+        const data = await get(`ad-bookings/company/${id}/active`);
+        setActiveAd(data || null);
+      } catch (error) {
+        console.error("Error fetching active ad:", error);
+        setActiveAd(null);
+      }
+    };
+
     if (id) {
       fetchCompany();
       fetchJobs();
       fetchRelatedCompanies();
+      fetchActiveAd();
     }
   }, [id]);
 
@@ -514,6 +527,57 @@ function CompanyDetail() {
               </div>
             </Card>
           ) : null}
+
+          {/* Ad banner (thuê quảng cáo) */}
+          {activeAd && (
+            <Card
+              title="Quảng cáo nổi bật"
+              className="ad-banner-card"
+            >
+              <div
+                className="ad-banner-content"
+                onClick={() => {
+                  if (activeAd.targetUrl) {
+                    window.open(activeAd.targetUrl, "_blank");
+                  }
+                }}
+              >
+                {activeAd.imageUrl && (
+                  <div className="ad-banner-image-wrapper">
+                    <img
+                      src={activeAd.imageUrl}
+                      alt={activeAd.title}
+                      className="ad-banner-image"
+                    />
+                  </div>
+                )}
+                <div className="ad-banner-text">
+                  <Title level={5} className="ad-banner-title">
+                    {activeAd.title}
+                  </Title>
+                  {activeAd.content && (
+                    <Paragraph className="ad-banner-description">
+                      {activeAd.content}
+                    </Paragraph>
+                  )}
+                  {activeAd.targetUrl && (
+                    <Button
+                      type="primary"
+                      danger
+                      block
+                      style={{ marginTop: 12 }}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        window.open(activeAd.targetUrl, "_blank");
+                      }}
+                    >
+                      Xem chi tiết quảng cáo
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </Card>
+          )}
 
           {/* Company Address */}
           <Card title="Địa chỉ công ty" className="address-card">

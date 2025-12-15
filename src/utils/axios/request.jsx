@@ -41,10 +41,15 @@ export const get = async (path) => {
 
 export const post = async (path, data) => {
   try {
+    console.log("POST request to:", path, "with data:", data);
     const response = await axiosInstance.post(path, data);
     return response.data;
   } catch (error) {
     console.error("POST request error:", error);
+    if (error.response) {
+      console.error("Response data:", error.response.data);
+      console.error("Response status:", error.response.status);
+    }
     throw error;
   }
 };

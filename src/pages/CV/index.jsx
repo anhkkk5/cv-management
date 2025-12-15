@@ -1,40 +1,27 @@
-import React, { useEffect, useState, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Card,
   Row,
   Col,
   Typography,
   Button,
+  Spin,
   message,
   Modal,
-  Input,
   Form,
+  Input,
   DatePicker,
   Select,
-  Tooltip,
 } from "antd";
-import {
-  EditOutlined,
-  CameraOutlined,
-  UpOutlined,
-  DownOutlined,
-  DeleteOutlined,
-} from "@ant-design/icons";
 import dayjs from "dayjs";
+import { useNavigate } from "react-router-dom";
+import html2pdf from "html2pdf.js";
 import { getCookie } from "../../helpers/cookie";
 import {
   getMyCandidateProfile,
-  updateMyCandidateProfile,
-  createMyCandidateProfile,
   uploadMyAvatar,
-  deleteMyAvatar,
+  updateMyCandidateProfile,
 } from "../../services/Candidates/candidatesServices";
-import {
-  getCertificatesByCandidate,
-  createCertificate,
-  updateCertificate,
-  deleteCertificate,
-} from "../../services/Certificates/CertificatesServices";
 import {
   getEducationByCandidate,
   createEducation,
@@ -48,1566 +35,2077 @@ import {
   deleteExperience,
 } from "../../services/Experience/ExperienceServices";
 import {
+  getProjectsByCandidate,
+  createProject,
+  updateProject,
+  deleteProject,
+} from "../../services/project/ProjectServices";
+import {
+  getCertificatesByCandidate,
+  createCertificate,
+  updateCertificate,
+  deleteCertificate,
+} from "../../services/Certificates/CertificatesServices";
+import {
   getActivities,
   createActivity,
   updateActivity,
   deleteActivity,
 } from "../../services/Activities/ActivitiesServices";
 import {
-  getProjectsByCandidate,
-  createProject,
-  updateProject,
-  deleteProject,
-} from "../../services/project/ProjectServices";
-import { createCV } from "../../services/CVs/cvsServices";
-import { useNavigate } from "react-router-dom";
-import { decodeJwt } from "../../services/auth/authServices";
-import html2pdf from "html2pdf.js";
-import ProfileInfo from "../../components/CV/ProfileInfo";
-import Introduction from "../../components/CV/Introduction";
-import Education from "../../components/CV/Education";
-import Experience from "../../components/CV/Experience";
-import Activities from "../../components/CV/Activities";
-import Projects from "../../components/CV/Projects";
-import Certificates from "../../components/CV/Certificates";
+  getAwards,
+  createAward,
+  updateAward,
+  deleteAward,
+} from "../../services/Awards/AwardsServices";
+import {
+  getSkills,
+  createSkill,
+  updateSkill,
+  deleteSkill,
+} from "../../services/Skills/SkillsServices";
+import {
+  getReferences,
+  createReference,
+  updateReference,
+  deleteReference,
+} from "../../services/References/ReferencesServices";
+import {
+  getHobbies,
+  createHobby,
+  updateHobby,
+  deleteHobby,
+} from "../../services/Hobbies/HobbiesServices";
 import "./style.css";
 
-const { Title, Text } = Typography;
+const { Title, Text, Paragraph } = Typography;
 const { TextArea } = Input;
+
+const formatDateRange = (start, end) => {
+  const s = start ? dayjs(start).format("MM/YYYY") : "";
+  const e = end ? dayjs(end).format("MM/YYYY") : "Hiện tại";
+  return [s, e].filter(Boolean).join(" - ");
+};
+
+const bulletize = (text) => {
+  if (!text) return [];
+  return text
+    .split("\n")
+    .map((t) => t.trim())
+    .filter(Boolean);
+};
 
 function CVPage() {
   const navigate = useNavigate();
-  const [candidate, setCandidate] = useState(null);
+  const printAreaRef = useRef(null);
   const [loading, setLoading] = useState(true);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalType, setModalType] = useState("");
-  const [editingItem, setEditingItem] = useState(null);
-  const [form] = Form.useForm();
-  const avatarInputRef = useRef(null);
-  // Refs tới các section để scroll
-  const sectionRefs = {
-    profile: useRef(null),
-    intro: useRef(null),
-    education: useRef(null),
-    experience: useRef(null),
-    projects: useRef(null),
-    certificates: useRef(null),
-    activities: useRef(null),
-  };
+  const [candidate, setCandidate] = useState(null);
+  const [education, setEducation] = useState([]);
+  const [experience, setExperience] = useState([]);
+  const [projects, setProjects] = useState([]);
+  const [certificates, setCertificates] = useState([]);
+  const [activities, setActivities] = useState([]);
+  const [awards, setAwards] = useState([]);
+  const [skills, setSkills] = useState([]);
+  const [references, setReferences] = useState([]);
+  const [hobbies, setHobbies] = useState([]);
+  const [profileModal, setProfileModal] = useState(false);
+  const [introModal, setIntroModal] = useState(false);
+  const [formProfile] = Form.useForm();
+  const [formIntro] = Form.useForm();
+  const [eduModal, setEduModal] = useState(false);
+  const [expModal, setExpModal] = useState(false);
+  const [projModal, setProjModal] = useState(false);
+  const [certModal, setCertModal] = useState(false);
+  const [actModal, setActModal] = useState(false);
+  const [awardModal, setAwardModal] = useState(false);
+  const [skillModal, setSkillModal] = useState(false);
+  const [refModal, setRefModal] = useState(false);
+  const [hobbyModal, setHobbyModal] = useState(false);
+  const [editingEdu, setEditingEdu] = useState(null);
+  const [editingExp, setEditingExp] = useState(null);
+  const [editingProj, setEditingProj] = useState(null);
+  const [editingCert, setEditingCert] = useState(null);
+  const [editingAct, setEditingAct] = useState(null);
+  const [editingAward, setEditingAward] = useState(null);
+  const [editingSkill, setEditingSkill] = useState(null);
+  const [editingRef, setEditingRef] = useState(null);
+  const [editingHobby, setEditingHobby] = useState(null);
+  const [formEdu] = Form.useForm();
+  const [formExp] = Form.useForm();
+  const [formProj] = Form.useForm();
+  const [formCert] = Form.useForm();
+  const [formAct] = Form.useForm();
+  const [formAward] = Form.useForm();
+  const [formSkill] = Form.useForm();
+  const [formRef] = Form.useForm();
+  const [formHobby] = Form.useForm();
 
-  // Lưu CV mới vào database
-  const handleSaveCV = async () => {
-    if (!candidate) {
-      message.warning("Vui lòng đợi tải thông tin");
-      return;
-    }
+  const handleDownload = async () => {
+    if (!printAreaRef.current) return;
+
+    const sheetEl = printAreaRef.current;
+    sheetEl.classList.add("pdf-export");
 
     try {
-      // Lấy tên CV từ modal hoặc dùng tên mặc định
-      Modal.confirm({
-        title: "Lưu CV",
-        content: (
-          <Input
-            placeholder="Nhập tên CV (ví dụ: CV Frontend Developer)"
-            id="cv-title-input"
-            style={{ marginTop: 10 }}
-            defaultValue={`CV ${
-              candidate.fullName || candidate.name || "Của tôi"
-            } - ${new Date().toLocaleDateString("vi-VN")}`}
-          />
-        ),
-        onOk: async () => {
-          const titleInput = document.getElementById("cv-title-input");
-          const cvTitle =
-            titleInput?.value?.trim() ||
-            `CV ${
-              candidate.fullName || candidate.name || "Của tôi"
-            } - ${new Date().toLocaleDateString("vi-VN")}`;
+      const opt = {
+        margin: [10, 10, 10, 10],
+        filename: `CV_${candidate?.fullName || "MyCV"}.pdf`,
+        image: { type: "jpeg", quality: 0.98 },
+        html2canvas: { scale: 2, useCORS: true },
+        jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
+      };
 
-          try {
-            // Reload lại dữ liệu từ database để đảm bảo có snapshot đầy đủ
-            const candidateId = candidate.id || getCookie("id");
-            let finalEducation = cvData.education || [];
-            let finalExperience = cvData.experience || [];
-            let finalProjects = cvData.projects || [];
-            let finalCertificates = cvData.certificates || [];
-            let finalActivities = cvData.activities || [];
+      await html2pdf().set(opt).from(sheetEl).save();
+    } finally {
+      sheetEl.classList.remove("pdf-export");
+    }
+  };
 
-            // Nếu có candidateId, reload từ database để đảm bảo có dữ liệu đầy đủ
-            if (candidateId) {
-              try {
-                const [
-                  freshEducation,
-                  freshExperience,
-                  freshProjects,
-                  freshCertificates,
-                ] = await Promise.all([
-                  getEducationByCandidate(candidateId),
-                  getExperienceByCandidate(candidateId),
-                  getProjectsByCandidate(candidateId),
-                  getCertificatesByCandidate(candidateId),
-                ]);
-
-                // LUÔN dùng dữ liệu từ database để đảm bảo đầy đủ và chính xác
-                finalEducation = Array.isArray(freshEducation)
-                  ? freshEducation
-                  : [];
-                finalExperience = Array.isArray(freshExperience)
-                  ? freshExperience
-                  : [];
-                finalProjects = Array.isArray(freshProjects)
-                  ? freshProjects
-                  : [];
-                finalCertificates = Array.isArray(freshCertificates)
-                  ? freshCertificates
-                  : [];
-
-                console.log("Loaded data for CV:", {
-                  education: finalEducation.length,
-                  experience: finalExperience.length,
-                  projects: finalProjects.length,
-                  certificates: finalCertificates.length,
-                });
-              } catch (reloadError) {
-                console.error(
-                  "Could not reload data from database:",
-                  reloadError
-                );
-                // Nếu không load được từ DB, dùng state data
-                finalEducation = cvData.education || [];
-                finalExperience = cvData.experience || [];
-                finalProjects = cvData.projects || [];
-                finalCertificates = cvData.certificates || [];
-              }
-            }
-
-            // Lấy candidate data mới nhất
-            let latestCandidate = candidate;
-            try {
-              const freshCandidate = await getMyCandidateProfile();
-              if (freshCandidate) {
-                latestCandidate = freshCandidate;
-              }
-            } catch (e) {
-              console.warn(
-                "Could not reload candidate profile, using current state"
-              );
-            }
-
-            // Lưu toàn bộ dữ liệu CV vào JSON để có thể khôi phục sau
-            const fullCVData = {
-              intro: cvData.intro || latestCandidate.introduction || "",
-              education: finalEducation,
-              experience: finalExperience,
-              projects: finalProjects,
-              certificates: finalCertificates,
-              activities: finalActivities,
-              sectionOrder: sectionOrder,
-              candidate: {
-                fullName:
-                  latestCandidate.fullName || latestCandidate.name || "",
-                position: latestCandidate.position || "",
-                address: latestCandidate.address || "",
-                avatar: latestCandidate.avatar || "",
-                phone: latestCandidate.phone || "",
-                email: latestCandidate.email || "",
-                dob: latestCandidate.dob || "",
-                gender: latestCandidate.gender || "",
-                isOpen:
-                  latestCandidate.isOpen !== undefined
-                    ? latestCandidate.isOpen
-                    : 1,
-              },
-            };
-
-            // Tạo CV mới với dữ liệu hiện tại
-            const cvDataToSave = {
-              title: cvTitle,
-              summary: JSON.stringify(fullCVData), // Lưu toàn bộ dữ liệu vào summary dưới dạng JSON
-              position: latestCandidate.position || "",
-              location: latestCandidate.address || "",
-              avatarUrl: latestCandidate.avatar || "",
-              phone: latestCandidate.phone || "",
-              email: latestCandidate.email || "",
-              isDefault: false,
-            };
-
-            console.log("Saving CV with data:", {
-              title: cvTitle,
-              educationCount: finalEducation.length,
-              experienceCount: finalExperience.length,
-              projectsCount: finalProjects.length,
-              certificatesCount: finalCertificates.length,
-              activitiesCount: finalActivities.length,
-              intro: fullCVData.intro,
-              candidate: fullCVData.candidate,
-              summaryLength: JSON.stringify(fullCVData).length,
-            });
-            console.log("Full CV Data to save:", fullCVData);
-
-            const savedCV = await createCV(cvDataToSave);
-            console.log("CV saved successfully:", savedCV);
-            message.success("Đã lưu CV thành công!");
-
-            // Reset form về trống
-            setCvData({
-              intro: "",
-              education: [],
-              experience: [],
-              projects: [],
-              certificates: [],
-              activities: [],
-            });
-
-            // Reset section order về mặc định
-            setSectionOrder([
-              "intro",
-              "education",
-              "experience",
-              "projects",
-              "certificates",
-              "activities",
-            ]);
-
-            // Reset candidate profile về trống (giữ lại thông tin cơ bản)
-            setCandidate((prev) => ({
-              ...prev,
-              introduction: "",
-            }));
-
-            message.info("Các trường đã được reset. Bạn có thể tạo CV mới.");
-          } catch (error) {
-            console.error("Error saving CV:", error);
-            message.error("Lưu CV thất bại, vui lòng thử lại");
-          }
-        },
+  const handleSaveProfile = async () => {
+    try {
+      const values = await formProfile.validateFields();
+      await updateMyCandidateProfile({
+        fullName: values.fullName,
+        name: values.fullName,
+        position: values.position,
+        address: values.address,
+        email: values.email,
+        phone: values.phone,
+        dob: values.dob ? values.dob.format("YYYY-MM-DD") : undefined,
+        gender: values.gender,
       });
-    } catch (error) {
-      console.error("Error in handleSaveCV:", error);
-      message.error("Lưu CV thất bại, vui lòng thử lại");
+      setCandidate((prev) => ({
+        ...prev,
+        fullName: values.fullName,
+        name: values.fullName,
+        position: values.position,
+        address: values.address,
+        email: values.email,
+        phone: values.phone,
+        dob: values.dob ? values.dob.format("YYYY-MM-DD") : prev?.dob,
+        gender: values.gender,
+      }));
+      message.success("Đã lưu thông tin");
+      setProfileModal(false);
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu thất bại");
     }
   };
 
-  // In/Tải CV dạng PDF
-  const printAreaRef = useRef(null);
-  const handleDownloadCV = () => {
-    if (!printAreaRef.current) {
-      message.warning("Không tìm thấy nội dung CV để tải");
-      return;
+  const handleSaveIntro = async () => {
+    try {
+      const values = await formIntro.validateFields();
+      await updateMyCandidateProfile({ introduction: values.introduction });
+      setCandidate((prev) => ({ ...prev, introduction: values.introduction }));
+      message.success("Đã lưu mục tiêu");
+      setIntroModal(false);
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu thất bại");
     }
-
-    const element = printAreaRef.current;
-    const opt = {
-      margin: [10, 10, 10, 10],
-      filename: `CV_${
-        candidate?.fullName || candidate?.name || "MyCV"
-      }_${new Date().getTime()}.pdf`,
-      image: { type: "jpeg", quality: 0.98 },
-      html2canvas: { scale: 2, useCORS: true },
-      jsPDF: { unit: "mm", format: "a4", orientation: "portrait" },
-    };
-
-    html2pdf().set(opt).from(element).save();
   };
 
-  // State để lưu dữ liệu các section
-  const [cvData, setCvData] = useState({
-    intro: "",
-    education: [],
-    experience: [],
-    projects: [],
-    certificates: [],
-    activities: [],
-  });
-
-  // Thứ tự hiển thị các section có thể kéo thả
-  const [sectionOrder, setSectionOrder] = useState([
-    "intro",
-    "education",
-    "experience",
-    "projects",
-    "certificates",
-    "activities",
-  ]);
-  const [dragging, setDragging] = useState(null);
+  // đồng bộ form mỗi khi mở modal
+  useEffect(() => {
+    if (profileModal && candidate) {
+      formProfile.setFieldsValue({
+        fullName: candidate.fullName || candidate.name,
+        position: candidate.position,
+        address: candidate.address,
+        email: candidate.email,
+        phone: candidate.phone,
+        dob: candidate.dob ? dayjs(candidate.dob) : null,
+        gender: candidate.gender,
+      });
+    }
+  }, [profileModal, candidate, formProfile]);
 
   useEffect(() => {
-    const fetchCandidateData = async () => {
-      const token = getCookie("token") || localStorage.getItem("token");
+    if (introModal && candidate) {
+      formIntro.setFieldsValue({
+        introduction: candidate.introduction || "",
+      });
+    }
+  }, [introModal, candidate, formIntro]);
 
+  const handleSaveEducation = async () => {
+    try {
+      const values = await formEdu.validateFields();
+      const payload = {
+        name_education: values.school,
+        major: values.major,
+        started_at: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : null,
+        end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+        info: values.description || "",
+      };
+      if (editingEdu && editingEdu.id) {
+        await updateEducation(editingEdu.id, payload);
+      } else {
+        payload.candidate_id = candidate?.id;
+        await createEducation(payload);
+      }
+      message.success("Đã lưu học vấn");
+      setEduModal(false);
+      setEditingEdu(null);
+      formEdu.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu học vấn thất bại");
+    }
+  };
+
+  const handleSaveExperience = async () => {
+    try {
+      const values = await formExp.validateFields();
+      const payload = {
+        position: values.position,
+        company: values.company,
+        started_at: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : null,
+        end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+        info: values.description || "",
+      };
+      if (editingExp && editingExp.id) {
+        await updateExperience(editingExp.id, payload);
+      } else {
+        payload.candidate_id = candidate?.id;
+        await createExperience(payload);
+      }
+      message.success("Đã lưu kinh nghiệm");
+      setExpModal(false);
+      setEditingExp(null);
+      formExp.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu kinh nghiệm thất bại");
+    }
+  };
+
+  const handleSaveProject = async () => {
+    try {
+      const values = await formProj.validateFields();
+      const payload = {
+        project_name: values.projectName,
+        demo_link: values.demoLink || undefined,
+        started_at: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : null,
+        end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+        description: values.description || "",
+      };
+      if (editingProj && editingProj.id) {
+        await updateProject(editingProj.id, payload);
+      } else {
+        payload.candidate_id = candidate?.id;
+        await createProject(payload);
+      }
+      message.success("Đã lưu dự án");
+      setProjModal(false);
+      setEditingProj(null);
+      formProj.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu dự án thất bại");
+    }
+  };
+
+  const handleSaveCertificate = async () => {
+    try {
+      const values = await formCert.validateFields();
+      const payload = {
+        certificate_name: values.certificateName,
+        organization: values.organization,
+        started_at: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : null,
+        end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+        description: values.description || "",
+      };
+      if (editingCert && editingCert.id) {
+        await updateCertificate(editingCert.id, payload);
+      } else {
+        payload.candidate_id = candidate?.id;
+        await createCertificate(payload);
+      }
+      message.success("Đã lưu chứng chỉ");
+      setCertModal(false);
+      setEditingCert(null);
+      formCert.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu chứng chỉ thất bại");
+    }
+  };
+
+  const handleSaveActivity = async () => {
+    try {
+      const values = await formAct.validateFields();
+      const payload = {
+        organization: values.organization,
+        role: values.role,
+        started_at: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : null,
+        end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
+        description: values.description || "",
+      };
+      if (editingAct && editingAct.id) {
+        await updateActivity(editingAct.id, payload);
+      } else {
+        payload.candidate_id = candidate?.id;
+        await createActivity(payload);
+      }
+      message.success("Đã lưu hoạt động");
+      setActModal(false);
+      setEditingAct(null);
+      formAct.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      message.error("Lưu hoạt động thất bại");
+    }
+  };
+
+  const handleSaveAward = async () => {
+    try {
+      const values = await formAward.validateFields();
+      const payload = {
+        title: values.awardName, // Backend expect 'title' not 'award_name'
+        organization: values.organization || undefined,
+        started_at: values.startDate
+          ? values.startDate.format("YYYY-MM-DD")
+          : undefined,
+        end_at: values.endDate
+          ? values.endDate.format("YYYY-MM-DD")
+          : undefined,
+        description: values.description || undefined,
+      };
+      console.log("Saving award with payload:", payload);
+      console.log("Candidate ID:", candidate?.id);
+      if (editingAward && editingAward.id) {
+        await updateAward(editingAward.id, payload);
+      } else {
+        // Backend tự động lấy userId từ token, không cần candidate_id
+        console.log("Creating award with full payload:", payload);
+        await createAward(payload);
+      }
+      message.success("Đã lưu danh hiệu/giải thưởng");
+      setAwardModal(false);
+      setEditingAward(null);
+      formAward.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error("Error saving award:", err);
+      if (err?.response?.data) {
+        console.error("Backend error response:", err.response.data);
+        message.error(
+          err.response.data?.error ||
+            err.response.data?.message ||
+            "Lưu danh hiệu/giải thưởng thất bại"
+        );
+      } else {
+        message.error("Lưu danh hiệu/giải thưởng thất bại");
+      }
+    }
+  };
+
+  const handleSaveSkill = async () => {
+    try {
+      const values = await formSkill.validateFields();
+      const payload = {
+        name: values.skillName, // Backend expect 'name' not 'skill_name'
+        level: values.level || "",
+        description: values.description || "",
+      };
+      if (editingSkill && editingSkill.id) {
+        await updateSkill(editingSkill.id, payload);
+      } else {
+        // Backend tự động lấy userId từ token, không cần candidate_id
+        await createSkill(payload);
+      }
+      message.success("Đã lưu kỹ năng");
+      setSkillModal(false);
+      setEditingSkill(null);
+      formSkill.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      if (err?.response?.data) {
+        console.error("Backend error response:", err.response.data);
+        message.error(
+          err.response.data?.error ||
+            err.response.data?.message ||
+            "Lưu kỹ năng thất bại"
+        );
+      } else {
+        message.error("Lưu kỹ năng thất bại");
+      }
+    }
+  };
+
+  const handleSaveReference = async () => {
+    try {
+      const values = await formRef.validateFields();
+      const payload = {
+        full_name: values.fullName,
+        position: values.position || undefined,
+        company: values.company || undefined,
+        email: values.email || undefined,
+        phone: values.phone || undefined,
+        description: values.description || undefined,
+      };
+      if (editingRef && editingRef.id) {
+        await updateReference(editingRef.id, payload);
+      } else {
+        payload.candidate_id = candidate?.id;
+        await createReference(payload);
+      }
+      message.success("Đã lưu người giới thiệu");
+      setRefModal(false);
+      setEditingRef(null);
+      formRef.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      if (err?.response?.data) {
+        console.error("Backend error response:", err.response.data);
+        message.error(
+          err.response.data?.error ||
+            err.response.data?.message ||
+            "Lưu người giới thiệu thất bại"
+        );
+      } else {
+        message.error("Lưu người giới thiệu thất bại");
+      }
+    }
+  };
+
+  const handleSaveHobby = async () => {
+    try {
+      const values = await formHobby.validateFields();
+      const payload = {
+        name: values.hobbyName, // Backend expect 'name' not 'hobby_name'
+        description: values.description || undefined,
+      };
+      if (editingHobby && editingHobby.id) {
+        await updateHobby(editingHobby.id, payload);
+      } else {
+        // Backend tự động lấy userId từ token, không cần candidate_id
+        await createHobby(payload);
+      }
+      message.success("Đã lưu sở thích");
+      setHobbyModal(false);
+      setEditingHobby(null);
+      formHobby.resetFields();
+      await reloadSections();
+    } catch (err) {
+      if (err?.errorFields) return;
+      console.error(err);
+      if (err?.response?.data) {
+        console.error("Backend error response:", err.response.data);
+        message.error(
+          err.response.data?.error ||
+            err.response.data?.message ||
+            "Lưu sở thích thất bại"
+        );
+      } else {
+        message.error("Lưu sở thích thất bại");
+      }
+    }
+  };
+
+  const handleAvatarChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const res = await uploadMyAvatar(file);
+      const avatarUrl =
+        res?.avatarUrl || res?.url || res?.data?.avatarUrl || res?.data?.url;
+      if (avatarUrl) {
+        setCandidate((prev) => ({ ...prev, avatar: avatarUrl }));
+        message.success("Cập nhật ảnh đại diện thành công");
+      } else {
+        message.warning("Không nhận được URL ảnh");
+      }
+    } catch (err) {
+      console.error(err);
+      message.error("Tải ảnh thất bại");
+    } finally {
+      e.target.value = "";
+    }
+  };
+
+  const reloadSections = async () => {
+    try {
+      const profile = await getMyCandidateProfile();
+      const candidateId = profile?.id;
+      const [
+        eduData,
+        expData,
+        projData,
+        certData,
+        actData,
+        awardData,
+        skillData,
+        refData,
+        hobbyData,
+      ] = await Promise.all([
+        getEducationByCandidate(candidateId).catch(() => []),
+        getExperienceByCandidate(candidateId).catch(() => []),
+        getProjectsByCandidate(candidateId).catch(() => []),
+        getCertificatesByCandidate(candidateId).catch(() => []),
+        getActivities(candidateId).catch(() => []),
+        getAwards().catch(() => []),
+        getSkills().catch(() => []),
+        getReferences().catch(() => []),
+        getHobbies().catch(() => []),
+      ]);
+      setCandidate(profile);
+      // Các bảng CV đã được backend filter theo user hiện tại, dùng trực tiếp
+      setEducation(Array.isArray(eduData) ? eduData : []);
+      setExperience(Array.isArray(expData) ? expData : []);
+      setProjects(Array.isArray(projData) ? projData : []);
+      setCertificates(Array.isArray(certData) ? certData : []);
+      // Hoạt động đã được backend filter theo user hiện tại, không cần lọc thêm
+      setActivities(Array.isArray(actData) ? actData : []);
+      setAwards(Array.isArray(awardData) ? awardData : []);
+      setSkills(Array.isArray(skillData) ? skillData : []);
+      setReferences(Array.isArray(refData) ? refData : []);
+      setHobbies(Array.isArray(hobbyData) ? hobbyData : []);
+    } catch (err) {
+      console.error(err);
+      message.error("Không thể tải lại dữ liệu");
+    }
+  };
+
+  useEffect(() => {
+    const loadData = async () => {
+      const token = getCookie("token") || localStorage.getItem("token");
       if (!token) {
-        message.error("Vui lòng đăng nhập để xem CV");
+        message.error("Vui lòng đăng nhập");
         navigate("/login");
         return;
       }
 
       try {
-        // Load thông tin candidate
-        let data;
-        try {
-          data = await getMyCandidateProfile();
-        } catch (err) {
-          const status = err?.response?.status;
-          if (status === 404) {
-            // Hồ sơ chưa tồn tại -> tạo hồ sơ tối thiểu rồi lấy lại
-            const tokenStr =
-              getCookie("token") || localStorage.getItem("token");
-            let fullNameFromCookie = getCookie("fullName");
-            let emailFromJwt = "";
-            try {
-              if (tokenStr) {
-                const payload = decodeJwt(tokenStr);
-                if (!fullNameFromCookie)
-                  fullNameFromCookie = payload?.name || payload?.fullName;
-                emailFromJwt = payload?.email || "";
-              }
-            } catch (_) {}
-            const minimal = {
-              fullName: fullNameFromCookie || "User",
-              email: emailFromJwt || undefined,
-              isOpen: 1,
-            };
-            await createMyCandidateProfile(minimal);
-            data = await getMyCandidateProfile();
-          } else {
-            throw err;
-          }
-        }
-        setCandidate(data);
+        setLoading(true);
+        const profile = await getMyCandidateProfile();
+        const candidateId = profile?.id;
 
-        // Load dữ liệu CV từ database
-        const idForSections = data?.id;
-        const [educationData, experienceData, projectsData, certificatesData] =
-          idForSections
-            ? await Promise.all([
-                getEducationByCandidate(idForSections),
-                getExperienceByCandidate(idForSections),
-                getProjectsByCandidate(idForSections),
-                getCertificatesByCandidate(idForSections),
-              ])
-            : [[], [], [], []];
+        const [
+          eduData,
+          expData,
+          projData,
+          certData,
+          actData,
+          awardData,
+          skillData,
+          refData,
+          hobbyData,
+        ] = await Promise.all([
+          getEducationByCandidate(candidateId).catch(() => []),
+          getExperienceByCandidate(candidateId).catch(() => []),
+          getProjectsByCandidate(candidateId).catch(() => []),
+          getCertificatesByCandidate(candidateId).catch(() => []),
+          getActivities(candidateId).catch(() => []),
+          getAwards().catch(() => []),
+          getSkills().catch(() => []),
+          getReferences().catch(() => []),
+          getHobbies().catch(() => []),
+        ]);
 
-        setCvData({
-          intro: data.introduction || "",
-          education: educationData || [],
-          experience: experienceData || [],
-          projects: projectsData || [],
-          certificates: certificatesData || [],
-          activities: [],
-        });
-
-        // Khởi tạo thứ tự section: ưu tiên localStorage, sau đó backend (cvOrder)
-        try {
-          const ls = localStorage.getItem("cv_section_order");
-          const fromLs = ls ? JSON.parse(ls) : null;
-          const fromBe = Array.isArray(data?.cvOrder) ? data.cvOrder : null;
-          const base = [
-            "intro",
-            "education",
-            "experience",
-            "projects",
-            "certificates",
-            "activities",
-          ];
-          // Hợp lệ nếu là tập con có phần tử thuộc base và không trùng lặp
-          const valid = (arr) =>
-            Array.isArray(arr) &&
-            arr.length >= 1 &&
-            arr.every((x) => base.includes(x)) &&
-            new Set(arr).size === arr.length;
-          if (valid(fromLs)) setSectionOrder(fromLs);
-          else if (valid(fromBe)) setSectionOrder(fromBe);
-        } catch (_) {}
-      } catch (error) {
-        message.error("Không thể tải thông tin CV");
-        console.error(error);
+        setCandidate(profile);
+        // Các bảng CV đã được backend filter theo user hiện tại, dùng trực tiếp
+        setEducation(Array.isArray(eduData) ? eduData : []);
+        setExperience(Array.isArray(expData) ? expData : []);
+        setProjects(Array.isArray(projData) ? projData : []);
+        setCertificates(Array.isArray(certData) ? certData : []);
+        // Hoạt động đã được backend filter theo user hiện tại, không cần lọc thêm
+        setActivities(Array.isArray(actData) ? actData : []);
+        setAwards(Array.isArray(awardData) ? awardData : []);
+        setSkills(Array.isArray(skillData) ? skillData : []);
+        setReferences(Array.isArray(refData) ? refData : []);
+        setHobbies(Array.isArray(hobbyData) ? hobbyData : []);
+      } catch (err) {
+        console.error(err);
+        message.error("Không thể tải CV");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchCandidateData();
+    loadData();
   }, [navigate]);
-
-  const showModal = (type, item = null) => {
-    setModalType(type);
-    setEditingItem(item);
-    setIsModalOpen(true);
-
-    // Nếu đang edit, set giá trị vào form
-    if (item) {
-      setTimeout(() => {
-        if (type === "profile") {
-          form.setFieldsValue({
-            fullName: item.fullName || item.name,
-            position: item.position,
-            address: item.address,
-            email: item.email,
-            phone: item.phone,
-            dob: item.dob ? dayjs(item.dob) : null,
-            gender: item.gender,
-            isOpen: item.isOpen,
-          });
-        } else if (type === "intro") {
-          form.setFieldsValue({ content: item });
-        } else if (type === "education") {
-          form.setFieldsValue({
-            school: item.name_education || item.school,
-            major: item.major,
-            startDate: item.started_at
-              ? dayjs(item.started_at)
-              : item.startDate
-              ? dayjs(item.startDate)
-              : null,
-            endDate: item.end_at
-              ? dayjs(item.end_at)
-              : item.endDate
-              ? dayjs(item.endDate)
-              : null,
-            description: item.info || item.description,
-          });
-        } else if (type === "experience") {
-          form.setFieldsValue({
-            position: item.position,
-            company: item.company,
-            startDate: item.started_at
-              ? dayjs(item.started_at)
-              : item.startDate
-              ? dayjs(item.startDate)
-              : null,
-            endDate: item.end_at
-              ? dayjs(item.end_at)
-              : item.endDate
-              ? dayjs(item.endDate)
-              : null,
-            description: item.info || item.description,
-          });
-        } else if (type === "project") {
-          form.setFieldsValue({
-            projectName: item.project_name || item.projectName,
-            demoLink: item.demo_link || item.demoLink,
-            startDate: item.started_at
-              ? dayjs(item.started_at)
-              : item.startDate
-              ? dayjs(item.startDate)
-              : null,
-            endDate: item.end_at
-              ? dayjs(item.end_at)
-              : item.endDate
-              ? dayjs(item.endDate)
-              : null,
-            description: item.description,
-          });
-        } else if (type === "certificate") {
-          form.setFieldsValue({
-            certificateName: item.certificate_name || item.certificateName,
-            organization: item.organization,
-            startDate: item.started_at
-              ? dayjs(item.started_at)
-              : item.startDate
-              ? dayjs(item.startDate)
-              : null,
-            endDate: item.end_at
-              ? dayjs(item.end_at)
-              : item.endDate
-              ? dayjs(item.endDate)
-              : null,
-            description: item.description,
-          });
-        }
-      }, 0);
-    }
-  };
-
-  // Click nhanh ở sidebar: scroll tới section và mở modal, focus vào input đầu tiên
-  const handleQuickEdit = (type) => {
-    const el = sectionRefs[type]?.current;
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-    // đợi scroll rồi mở modal và focus
-    setTimeout(() => {
-      const modalT =
-        type === "projects"
-          ? "project"
-          : type === "certificates"
-          ? "certificate"
-          : type === "activities"
-          ? "activity"
-          : type;
-      showModal(modalT);
-      setTimeout(() => {
-        try {
-          if (modalT === "intro") form.getFieldInstance("content")?.focus();
-          else if (modalT === "education")
-            form.getFieldInstance("school")?.focus();
-          else if (modalT === "experience")
-            form.getFieldInstance("position")?.focus();
-          else if (modalT === "project")
-            form.getFieldInstance("projectName")?.focus();
-          else if (modalT === "certificate")
-            form.getFieldInstance("certificateName")?.focus();
-          else if (modalT === "activity")
-            form.getFieldInstance("organization")?.focus();
-          else if (modalT === "profile")
-            form.getFieldInstance("fullName")?.focus();
-        } catch (_) {}
-      }, 50);
-    }, 300);
-  };
-
-  const handleCancel = () => {
-    setIsModalOpen(false);
-    setEditingItem(null);
-    form.resetFields();
-  };
-
-  const handleChooseAvatar = () => {
-    if (avatarInputRef.current) {
-      avatarInputRef.current.click();
-    }
-  };
-
-  const handleAvatarFileChange = async (event) => {
-    const file = event.target.files && event.target.files[0];
-    if (!file) return;
-    try {
-      const result = await uploadMyAvatar(file);
-      const avatarUrl =
-        result?.avatarUrl || result?.data?.avatarUrl || result?.url;
-      if (avatarUrl) {
-        setCandidate((prev) => ({ ...prev, avatar: avatarUrl }));
-        message.success("Cập nhật ảnh đại diện thành công");
-      } else {
-        message.warning("Không nhận được đường dẫn ảnh từ server");
-      }
-    } catch (error) {
-      console.error("Upload avatar error", error);
-      message.error("Tải ảnh đại diện thất bại, vui lòng thử lại");
-    } finally {
-      // reset input để có thể chọn lại cùng 1 file nếu cần
-      event.target.value = "";
-    }
-  };
-
-  const handleAvatarDelete = async () => {
-    try {
-      await deleteMyAvatar();
-      setCandidate((prev) => ({ ...prev, avatar: null }));
-      message.success("Đã xóa ảnh đại diện");
-    } catch (error) {
-      console.error("Delete avatar error", error);
-      message.error("Xóa ảnh đại diện thất bại, vui lòng thử lại");
-    }
-  };
-
-  // DnD handlers
-  const onDragStart = (e, key) => {
-    setDragging(key);
-    try {
-      e.dataTransfer.setData("text/plain", key);
-    } catch (_) {}
-  };
-  const onDragOver = (e) => {
-    e.preventDefault();
-  };
-  const onDrop = async (e, targetKey) => {
-    e.preventDefault();
-    const sourceKey =
-      dragging ||
-      (e.dataTransfer ? e.dataTransfer.getData("text/plain") : null);
-    if (!sourceKey || sourceKey === targetKey) return;
-    const newOrder = [...sectionOrder];
-    const from = newOrder.indexOf(sourceKey);
-    const to = newOrder.indexOf(targetKey);
-    if (from === -1 || to === -1) return;
-    newOrder.splice(to, 0, newOrder.splice(from, 1)[0]);
-    setSectionOrder(newOrder);
-    setDragging(null);
-
-    // Lưu localStorage và cố gắng sync backend
-    try {
-      localStorage.setItem("cv_section_order", JSON.stringify(newOrder));
-      await updateMyCandidateProfile({ cvOrder: newOrder });
-    } catch (_) {
-      // bỏ qua lỗi, vẫn giữ local
-    }
-  };
-
-  const draggableWrap = (key, nodeRef, children) => (
-    <div
-      key={key}
-      ref={nodeRef}
-      className={`draggable-section${dragging === key ? " dragging" : ""}`}
-      draggable
-      onDragStart={(e) => onDragStart(e, key)}
-      onDragOver={onDragOver}
-      onDrop={(e) => onDrop(e, key)}
-    >
-      <div className="section-toolbar">
-        <div className="toolbar-left">
-          <span className="drag-hint">Kéo để sắp xếp</span>
-        </div>
-        <div className="toolbar-actions">
-          <Tooltip title="Di chuyển lên trên">
-            <Button
-              size="small"
-              onClick={() => moveUp(key)}
-              icon={<UpOutlined />}
-            />
-          </Tooltip>
-          <Tooltip title="Di chuyển xuống dưới">
-            <Button
-              size="small"
-              onClick={() => moveDown(key)}
-              icon={<DownOutlined />}
-            />
-          </Tooltip>
-          <Tooltip title="Xóa mục này">
-            <Button
-              size="small"
-              danger
-              onClick={() => removeSection(key)}
-              icon={<DeleteOutlined />}
-            />
-          </Tooltip>
-        </div>
-      </div>
-      {children}
-    </div>
-  );
-
-  const persistOrder = async (order) => {
-    try {
-      localStorage.setItem("cv_section_order", JSON.stringify(order));
-      await updateMyCandidateProfile({ cvOrder: order });
-    } catch (_) {}
-  };
-
-  const addSection = async (key) => {
-    if (sectionOrder.includes(key)) return;
-    const order = [...sectionOrder, key];
-    setSectionOrder(order);
-    await persistOrder(order);
-  };
-
-  const removeSection = async (key) => {
-    const order = sectionOrder.filter((k) => k !== key);
-    setSectionOrder(order);
-    await persistOrder(order);
-  };
-
-  const moveUp = async (key) => {
-    const idx = sectionOrder.indexOf(key);
-    if (idx <= 0) return;
-    const order = [...sectionOrder];
-    [order[idx - 1], order[idx]] = [order[idx], order[idx - 1]];
-    setSectionOrder(order);
-    await persistOrder(order);
-    sectionRefs[key]?.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  };
-
-  const moveDown = async (key) => {
-    const idx = sectionOrder.indexOf(key);
-    if (idx === -1 || idx >= sectionOrder.length - 1) return;
-    const order = [...sectionOrder];
-    [order[idx + 1], order[idx]] = [order[idx], order[idx + 1]];
-    setSectionOrder(order);
-    await persistOrder(order);
-    sectionRefs[key]?.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "center",
-    });
-  };
-
-  const handleDelete = async (type, id) => {
-    console.log("handleDelete called with type:", type, "id:", id);
-
-    // Sử dụng window.confirm thay vì Modal.confirm
-    const confirmed = window.confirm(
-      "Bạn có chắc chắn muốn xóa mục này không?"
-    );
-
-    if (!confirmed) {
-      console.log("User cancelled delete");
-      return;
-    }
-
-    console.log("User confirmed, deleting...");
-    try {
-      if (type === "education") {
-        console.log("Deleting education with id:", id);
-        await deleteEducation(id);
-        setCvData((prev) => ({
-          ...prev,
-          education: prev.education.filter((edu) => edu.id !== id),
-        }));
-      } else if (type === "experience") {
-        console.log("Deleting experience with id:", id);
-        await deleteExperience(id);
-        setCvData((prev) => ({
-          ...prev,
-          experience: prev.experience.filter((exp) => exp.id !== id),
-        }));
-      } else if (type === "project") {
-        await deleteProject(id);
-        setCvData((prev) => ({
-          ...prev,
-          projects: prev.projects.filter((proj) => proj.id !== id),
-        }));
-      } else if (type === "certificate") {
-        await deleteCertificate(id);
-        setCvData((prev) => ({
-          ...prev,
-          certificates: prev.certificates.filter((cert) => cert.id !== id),
-        }));
-      } else if (type === "activity") {
-        await deleteActivity(id);
-        setCvData((prev) => ({
-          ...prev,
-          activities: prev.activities.filter((act) => act.id !== id),
-        }));
-      }
-      message.success("Đã xóa thành công!");
-    } catch (error) {
-      console.error("Error deleting:", error);
-      message.error("Không thể xóa. Vui lòng thử lại!");
-    }
-  };
-
-  const handleSubmit = async (values) => {
-    console.log("Form values:", values);
-    const candidateId = getCookie("id");
-
-    try {
-      // Cập nhật dữ liệu theo loại modal
-      if (modalType === "profile") {
-        // Cập nhật thông tin cá nhân vào database
-        const updatedData = {
-          fullName: values.fullName || candidate.fullName,
-          name: values.fullName || candidate.name,
-          address: values.address,
-          phone: values.phone,
-          dob: values.dob ? values.dob.format("YYYY-MM-DD") : candidate.dob,
-          gender: values.gender,
-          isOpen: values.isOpen,
-        };
-        await updateMyCandidateProfile(updatedData);
-        setCandidate((prev) => ({ ...prev, ...updatedData }));
-      } else if (modalType === "intro") {
-        // Lưu giới thiệu vào Candidates
-        await updateMyCandidateProfile({ introduction: values.content });
-        setCvData((prev) => ({ ...prev, intro: values.content }));
-      } else if (modalType === "education") {
-        const educationData = {
-          candidate_id: candidateId,
-          name_education: values.school,
-          major: values.major,
-          started_at: values.startDate
-            ? values.startDate.format("YYYY-MM-DD")
-            : null,
-          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
-          info: values.description || "",
-          updated_at: new Date().toISOString().split("T")[0],
-        };
-
-        if (editingItem && editingItem.id) {
-          // Cập nhật học vấn cũ
-          await updateEducation(editingItem.id, educationData);
-          setCvData((prev) => ({
-            ...prev,
-            education: prev.education.map((edu) =>
-              edu.id === editingItem.id ? { ...edu, ...educationData } : edu
-            ),
-          }));
-        } else {
-          // Tạo mới học vấn
-          educationData.created_at = new Date().toISOString().split("T")[0];
-          const newEducation = await createEducation(educationData);
-          setCvData((prev) => ({
-            ...prev,
-            education: [...prev.education, newEducation],
-          }));
-        }
-      } else if (modalType === "experience") {
-        const experienceData = {
-          candidate_id: candidateId,
-          position: values.position,
-          company: values.company,
-          started_at: values.startDate
-            ? values.startDate.format("YYYY-MM-DD")
-            : null,
-          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
-          info: values.description || "",
-          updated_at: new Date().toISOString().split("T")[0],
-        };
-
-        if (editingItem && editingItem.id) {
-          // Cập nhật kinh nghiệm cũ
-          await updateExperience(editingItem.id, experienceData);
-          setCvData((prev) => ({
-            ...prev,
-            experience: prev.experience.map((exp) =>
-              exp.id === editingItem.id ? { ...exp, ...experienceData } : exp
-            ),
-          }));
-        } else {
-          // Tạo mới kinh nghiệm
-          experienceData.created_at = new Date().toISOString().split("T")[0];
-          const newExperience = await createExperience(experienceData);
-          setCvData((prev) => ({
-            ...prev,
-            experience: [...prev.experience, newExperience],
-          }));
-        }
-      } else if (modalType === "project") {
-        const projectData = {
-          candidate_id: candidateId,
-          project_name: values.projectName,
-          started_at: values.startDate
-            ? values.startDate.format("YYYY-MM-DD")
-            : null,
-          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
-          description: values.description || "",
-          updated_at: new Date().toISOString().split("T")[0],
-        };
-
-        // Only send demo_link if user actually entered a value to satisfy backend @IsUrl validator
-        if (values.demoLink && values.demoLink.trim()) {
-          projectData.demo_link = values.demoLink.trim();
-        }
-
-        if (editingItem && editingItem.id) {
-          // Cập nhật dự án cũ
-          await updateProject(editingItem.id, projectData);
-          setCvData((prev) => ({
-            ...prev,
-            projects: prev.projects.map((proj) =>
-              proj.id === editingItem.id ? { ...proj, ...projectData } : proj
-            ),
-          }));
-        } else {
-          // Tạo mới dự án
-          projectData.created_at = new Date().toISOString().split("T")[0];
-          const newProject = await createProject(projectData);
-          setCvData((prev) => ({
-            ...prev,
-            projects: [...prev.projects, newProject],
-          }));
-        }
-      } else if (modalType === "certificate") {
-        const certificateData = {
-          candidate_id: candidateId,
-          certificate_name: values.certificateName,
-          organization: values.organization,
-          started_at: values.startDate
-            ? values.startDate.format("YYYY-MM-DD")
-            : null,
-          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
-          description: values.description || "",
-          updated_at: new Date().toISOString().split("T")[0],
-        };
-
-        if (editingItem && editingItem.id) {
-          // Cập nhật chứng chỉ cũ
-          await updateCertificate(editingItem.id, certificateData);
-          setCvData((prev) => ({
-            ...prev,
-            certificates: prev.certificates.map((cert) =>
-              cert.id === editingItem.id
-                ? { ...cert, ...certificateData }
-                : cert
-            ),
-          }));
-        } else {
-          // Tạo mới chứng chỉ
-          certificateData.created_at = new Date().toISOString().split("T")[0];
-          const newCertificate = await createCertificate(certificateData);
-          setCvData((prev) => ({
-            ...prev,
-            certificates: [...prev.certificates, newCertificate],
-          }));
-        }
-      } else if (modalType === "activity") {
-        const activityData = {
-          started_at: values.startDate
-            ? values.startDate.format("YYYY-MM-DD")
-            : null,
-          end_at: values.endDate ? values.endDate.format("YYYY-MM-DD") : null,
-          organization: values.organization,
-          role: values.role,
-          description: values.description || "",
-        };
-
-        if (editingItem && editingItem.id) {
-          await updateActivity(editingItem.id, activityData);
-          setCvData((prev) => ({
-            ...prev,
-            activities: prev.activities.map((act) =>
-              act.id === editingItem.id ? { ...act, ...activityData } : act
-            ),
-          }));
-        } else {
-          const newActivity = await createActivity(activityData);
-          setCvData((prev) => ({
-            ...prev,
-            activities: [...prev.activities, newActivity],
-          }));
-        }
-      }
-
-      message.success("Đã lưu thông tin thành công!");
-      setIsModalOpen(false);
-      setEditingItem(null);
-      form.resetFields();
-    } catch (error) {
-      console.error("Error saving data:", error);
-      message.error("Không thể lưu thông tin. Vui lòng thử lại!");
-    }
-  };
 
   if (loading) {
     return (
-      <div style={{ padding: "50px", textAlign: "center" }}>Đang tải...</div>
+      <div style={{ padding: 50, textAlign: "center" }}>
+        <Spin />
+      </div>
     );
   }
 
   if (!candidate) {
     return (
-      <div style={{ padding: "50px", textAlign: "center" }}>
-        Không tìm thấy thông tin
-      </div>
+      <div style={{ padding: 50, textAlign: "center" }}>Không tìm thấy CV</div>
     );
   }
 
+  const pickLatestByStartDate = (items) => {
+    if (!Array.isArray(items) || items.length === 0) return null;
+    return [...items].sort((a, b) => {
+      const aStart = a.started_at || a.startDate;
+      const bStart = b.started_at || b.startDate;
+      const aDate = aStart ? new Date(aStart) : 0;
+      const bDate = bStart ? new Date(bStart) : 0;
+      return bDate - aDate;
+    })[0];
+  };
+
+  const latestEducation = pickLatestByStartDate(education);
+  const latestExperience = pickLatestByStartDate(experience);
+  const latestProject = pickLatestByStartDate(projects);
+  const latestActivity = pickLatestByStartDate(activities);
+  const latestCertificate = pickLatestByStartDate(certificates);
+  const latestAward = pickLatestByStartDate(awards);
+
   return (
-    <div className="cv-page">
-      <div className="cv-container">
-        {/* Breadcrumb */}
-        <div className="breadcrumb">
-          <Text>Trang chủ / CV của bạn</Text>
-        </div>
-
-        <Row gutter={24}>
-          {/* Left Sidebar */}
-          <Col xs={24} md={8}>
-            <Card className="sidebar-card">
-              <Title level={4}>Nâng cấp hồ sơ của bạn</Title>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("profile")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Chỉnh sửa thông tin cá nhân</Text>
-              </div>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("intro")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Giới thiệu bản thân</Text>
-              </div>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("education")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Học vấn</Text>
-              </div>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("experience")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Kinh nghiệm làm việc</Text>
-              </div>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("projects")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Dự án</Text>
-              </div>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("certificates")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Chứng chỉ</Text>
-              </div>
-
-              <div
-                className="action-item"
-                onClick={() => handleQuickEdit("activities")}
-              >
-                <EditOutlined style={{ color: "#c41e3a" }} />
-                <Text>Hoạt động</Text>
-              </div>
-
-              {/* Thêm mục đã ẩn giống TopCV */}
-              <div style={{ marginTop: 12, fontWeight: 500 }}>Thêm mục</div>
-              {[
-                "intro",
-                "education",
-                "experience",
-                "projects",
-                "certificates",
-                "activities",
-              ]
-                .filter((k) => !sectionOrder.includes(k))
-                .map((k) => (
-                  <div
-                    key={`add-${k}`}
-                    className="action-item"
-                    onClick={() => addSection(k)}
-                  >
-                    <EditOutlined style={{ color: "#52c41a" }} />
-                    <Text>
-                      {k === "intro"
-                        ? "Giới thiệu bản thân"
-                        : k === "education"
-                        ? "Học vấn"
-                        : k === "experience"
-                        ? "Kinh nghiệm làm việc"
-                        : k === "projects"
-                        ? "Dự án"
-                        : k === "certificates"
-                        ? "Chứng chỉ"
-                        : "Hoạt động"}
-                    </Text>
-                  </div>
-                ))}
-
-              <div
-                style={{
-                  display: "flex",
-                  gap: 8,
-                  marginTop: 20,
-                  flexDirection: "column",
-                }}
-              >
-                <Button
-                  type="primary"
-                  danger
-                  block
-                  onClick={() => navigate("/skill-assessment")}
-                  style={{ backgroundColor: "#c41e3a", borderColor: "#c41e3a" }}
-                >
-                  Làm bài kiểm tra
-                </Button>
-                <Button type="primary" block onClick={handleSaveCV}>
-                  Lưu CV
-                </Button>
-                <Button type="primary" danger block onClick={handleDownloadCV}>
-                  Tải CV PDF
-                </Button>
-                <Button block onClick={() => navigate("/my-cvs")}>
-                  Xem Tất Cả CV
-                </Button>
-              </div>
-            </Card>
-          </Col>
-
-          {/* Main Content */}
-          <Col xs={24} md={16}>
-            <div ref={printAreaRef} className="cv-print-area">
-              <div ref={sectionRefs.profile} id="section-profile">
-                <ProfileInfo
-                  candidate={candidate}
-                  onEdit={() => showModal("profile", candidate)}
-                />
-              </div>
-
-              {sectionOrder.map((key) => {
-                if (key === "intro") {
-                  return draggableWrap(
-                    key,
-                    sectionRefs.intro,
-                    <Introduction
-                      intro={cvData.intro}
-                      onAdd={(item) => showModal("intro", item)}
-                    />
-                  );
-                }
-                if (key === "education") {
-                  return draggableWrap(
-                    key,
-                    sectionRefs.education,
-                    <Education
-                      educationList={cvData.education}
-                      onAdd={(item) => showModal("education", item)}
-                      onDelete={(id) => handleDelete("education", id)}
-                    />
-                  );
-                }
-                if (key === "experience") {
-                  return draggableWrap(
-                    key,
-                    sectionRefs.experience,
-                    <Experience
-                      experienceList={cvData.experience}
-                      onAdd={(item) => showModal("experience", item)}
-                      onDelete={(id) => handleDelete("experience", id)}
-                    />
-                  );
-                }
-                if (key === "projects") {
-                  return draggableWrap(
-                    key,
-                    sectionRefs.projects,
-                    <Projects
-                      projectsList={cvData.projects}
-                      onAdd={(item) => showModal("project", item)}
-                      onDelete={(id) => handleDelete("project", id)}
-                    />
-                  );
-                }
-                if (key === "certificates") {
-                  return draggableWrap(
-                    key,
-                    sectionRefs.certificates,
-                    <Certificates
-                      certificatesList={cvData.certificates}
-                      onAdd={(item) => showModal("certificate", item)}
-                      onDelete={(id) => handleDelete("certificate", id)}
-                    />
-                  );
-                }
-                if (key === "activities") {
-                  return draggableWrap(
-                    key,
-                    sectionRefs.activities,
-                    <Activities
-                      activityList={cvData.activities}
-                      onAdd={(item) => showModal("activity", item)}
-                      onDelete={(id) => handleDelete("activity", id)}
-                    />
-                  );
-                }
-                return null;
-              })}
-            </div>
-          </Col>
-        </Row>
+    <div className="cv-wrapper">
+      <div className="cv-toolbar">
+        <Button onClick={() => setProfileModal(true)}>
+          Chỉnh sửa thông tin
+        </Button>
+        <Button onClick={() => setIntroModal(true)}>Chỉnh sửa mục tiêu</Button>
+        <Button
+          onClick={() => document.getElementById("avatar-input")?.click()}
+        >
+          Đổi ảnh
+        </Button>
+        <input
+          type="file"
+          id="avatar-input"
+          accept="image/*"
+          style={{ display: "none" }}
+          onChange={handleAvatarChange}
+        />
+        <Button type="primary" onClick={handleDownload}>
+          Tải PDF
+        </Button>
       </div>
 
-      {/* Modal */}
-      <Modal
-        title={
-          modalType === "intro"
-            ? "Giới thiệu về bản thân"
-            : modalType === "education"
-            ? "Học vấn"
-            : modalType === "experience"
-            ? "Thêm kinh nghiệm làm việc"
-            : modalType === "certificate"
-            ? "Thêm chứng chỉ"
-            : modalType === "activity"
-            ? "Thêm hoạt động"
-            : modalType === "profile"
-            ? "Cập nhật thông tin cá nhân"
-            : modalType === "project"
-            ? "Dự án cá nhân"
-            : "Thêm thông tin"
-        }
-        open={isModalOpen}
-        onCancel={handleCancel}
-        footer={null}
-        width={
-          modalType === "education" ||
-          modalType === "experience" ||
-          modalType === "profile" ||
-          modalType === "project" ||
-          modalType === "certificate" ||
-          modalType === "activity"
-            ? 600
-            : 520
-        }
-      >
-        <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          {modalType === "profile" && (
-            <>
-              <div style={{ textAlign: "center", marginBottom: 20 }}>
-                <div style={{ position: "relative", display: "inline-block" }}>
-                  <img
-                    src={candidate?.avatar || "/src/assets/logologin.png"}
-                    alt="Avatar"
-                    style={{
-                      width: 80,
-                      height: 80,
-                      borderRadius: "50%",
-                      objectFit: "cover",
-                    }}
-                  />
-                  <Button
-                    icon={<CameraOutlined />}
-                    shape="circle"
-                    size="small"
-                    style={{
-                      position: "absolute",
-                      bottom: 0,
-                      right: 0,
-                      backgroundColor: "#fff",
-                    }}
-                    onClick={handleChooseAvatar}
-                  />
-                  <input
-                    type="file"
-                    accept="image/*"
-                    ref={avatarInputRef}
-                    style={{ display: "none" }}
-                    onChange={handleAvatarFileChange}
-                  />
+      <div className="cv-sheet" ref={printAreaRef}>
+        {/* Header */}
+        <div className="cv-header">
+          <div className="cv-avatar">
+            <img
+              src={
+                candidate.avatar ||
+                "https://res.cloudinary.com/demo/image/upload/v1691500000/sample.jpg"
+              }
+              alt="avatar"
+            />
+          </div>
+          <div className="cv-summary">
+            <Title level={2} className="cv-name">
+              {candidate.fullName || candidate.name || "Họ và tên"}
+            </Title>
+            <Text className="cv-position">
+              {candidate.position || "Business Development Executive"}
+            </Text>
+            <div className="cv-info-grid">
+              <div className="cv-info-row">
+                <span className="cv-info-label">Ngày sinh:</span>
+                <span className="cv-info-value">
+                  {candidate.dob
+                    ? dayjs(candidate.dob).format("DD/MM/YYYY")
+                    : ""}
+                </span>
+              </div>
+              <div className="cv-info-row">
+                <span className="cv-info-label">Giới tính:</span>
+                <span className="cv-info-value">
+                  {candidate.gender === 1
+                    ? "Nam"
+                    : candidate.gender === 0
+                    ? "Nữ"
+                    : ""}
+                </span>
+              </div>
+              <div className="cv-info-row">
+                <span className="cv-info-label">Số điện thoại:</span>
+                <span className="cv-info-value">{candidate.phone || ""}</span>
+              </div>
+              <div className="cv-info-row">
+                <span className="cv-info-label">Email:</span>
+                <span className="cv-info-value">{candidate.email || ""}</span>
+              </div>
+              <div className="cv-info-row">
+                <span className="cv-info-label">Website:</span>
+                <span className="cv-info-value">
+                  {candidate.linkedin || candidate.facebook || ""}
+                </span>
+              </div>
+              <div className="cv-info-row">
+                <span className="cv-info-label">Địa chỉ:</span>
+                <span className="cv-info-value">
+                  {candidate.address || "Chưa cập nhật"}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mục tiêu nghề nghiệp */}
+        <div className="cv-section">
+          <div className="cv-section-title">MỤC TIÊU NGHỀ NGHIỆP</div>
+          <Paragraph className="cv-paragraph">
+            {candidate.introduction ||
+              "Thêm mục tiêu nghề nghiệp của bạn để gây ấn tượng với nhà tuyển dụng."}
+          </Paragraph>
+        </div>
+
+        {/* Học vấn */}
+        <div className="cv-section">
+          <div className="cv-section-title">HỌC VẤN</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingEdu(null);
+                formEdu.resetFields();
+                setEduModal(true);
+              }}
+            >
+              Thêm học vấn
+            </Button>
+          </div>
+          {!latestEducation ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div
+              className="cv-entry"
+              key={`edu-${
+                latestEducation.id || latestEducation.name_education
+              }`}
+            >
+              <div className="cv-entry-time">
+                {formatDateRange(
+                  latestEducation.started_at || latestEducation.startDate,
+                  latestEducation.end_at || latestEducation.endDate
+                )}
+              </div>
+              <div className="cv-entry-body">
+                <div className="cv-entry-title">
+                  <span className="cv-field-label">Trường:</span>{" "}
+                  {latestEducation.name_education || latestEducation.school}
                 </div>
-                <div style={{ marginTop: 10 }}>
+                <div className="cv-entry-subtitle">
+                  Chuyên ngành: {latestEducation.major || ""}
+                </div>
+                {latestEducation.info || latestEducation.description ? (
+                  <Paragraph className="cv-paragraph">
+                    {latestEducation.info || latestEducation.description}
+                  </Paragraph>
+                ) : null}
+                <div className="cv-entry-actions">
                   <Button
                     size="small"
-                    style={{ marginRight: 8 }}
-                    onClick={handleChooseAvatar}
+                    type="link"
+                    onClick={() => {
+                      setEditingEdu(latestEducation);
+                      formEdu.setFieldsValue({
+                        school:
+                          latestEducation.name_education ||
+                          latestEducation.school,
+                        major: latestEducation.major,
+                        startDate: latestEducation.started_at
+                          ? dayjs(latestEducation.started_at)
+                          : latestEducation.startDate
+                          ? dayjs(latestEducation.startDate)
+                          : null,
+                        endDate: latestEducation.end_at
+                          ? dayjs(latestEducation.end_at)
+                          : latestEducation.endDate
+                          ? dayjs(latestEducation.endDate)
+                          : null,
+                        description:
+                          latestEducation.info || latestEducation.description,
+                      });
+                      setEduModal(true);
+                    }}
                   >
                     Sửa
                   </Button>
-                  <Button size="small" danger onClick={handleAvatarDelete}>
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        await deleteEducation(latestEducation.id);
+                        message.success("Đã xóa");
+                        await reloadSections();
+                      } catch (err) {
+                        message.error("Xóa thất bại");
+                      }
+                    }}
+                  >
                     Xóa
                   </Button>
                 </div>
               </div>
-
-              <Form.Item
-                label="Họ và tên"
-                name="fullName"
-                initialValue={candidate?.fullName || candidate?.name}
-              >
-                <Input placeholder="ABC" />
-              </Form.Item>
-
-              <Form.Item
-                label="Chức danh"
-                name="position"
-                initialValue="Full-Stack Developer"
-              >
-                <Input placeholder="@yourfblink" />
-              </Form.Item>
-
-              <Form.Item
-                label="Địa chỉ"
-                name="address"
-                initialValue={candidate?.address}
-              >
-                <Input placeholder="+12 NhạṭHoa" />
-              </Form.Item>
-
-              <Form.Item
-                label="Email"
-                name="email"
-                initialValue={candidate?.email}
-              >
-                <Input placeholder="ABCCorp@gmail.com" />
-              </Form.Item>
-
-              <Form.Item
-                label="SĐT"
-                name="phone"
-                initialValue={candidate?.phone}
-              >
-                <Input placeholder="0123456789" />
-              </Form.Item>
-
-              <Form.Item
-                label="DOB"
-                name="dob"
-                initialValue={candidate?.dob ? dayjs(candidate.dob) : null}
-              >
-                <DatePicker
-                  placeholder="1/1/2023"
-                  format="DD/MM/YYYY"
-                  style={{ width: "100%" }}
-                />
-              </Form.Item>
-
-              <Form.Item
-                label="Giới tính"
-                name="gender"
-                initialValue={candidate?.gender}
-              >
-                <Select placeholder="Nam">
-                  <Select.Option value={1}>Nam</Select.Option>
-                  <Select.Option value={0}>Nữ</Select.Option>
-                </Select>
-              </Form.Item>
-
-              <Form.Item
-                label="Trạng cá nhân"
-                name="isOpen"
-                initialValue={candidate?.isOpen}
-              >
-                <Select placeholder="Nam">
-                  <Select.Option value={1}>Đang tìm việc</Select.Option>
-                  <Select.Option value={0}>Không tìm việc</Select.Option>
-                </Select>
-              </Form.Item>
-            </>
+            </div>
           )}
+        </div>
 
-          {modalType === "intro" && (
-            <>
-              <Text type="secondary">
-                Mô tả về bản thân, các kĩ năng của mình...
-              </Text>
-              <Form.Item name="content" style={{ marginTop: 10 }}>
-                <TextArea rows={6} placeholder="Nhập nội dung..." />
-              </Form.Item>
-            </>
-          )}
-
-          {modalType === "education" && (
-            <>
-              <Form.Item
-                label="Trường"
-                name="school"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên trường" },
-                ]}
-              >
-                <Input placeholder="ABC Corp" />
-              </Form.Item>
-
-              <Form.Item
-                label="Ngành Học"
-                name="major"
-                rules={[{ required: true, message: "Vui lòng nhập ngành học" }]}
-              >
-                <Input placeholder="ABCCorp.com" />
-              </Form.Item>
-
-              <Form.Item label="Thời gian học tập">
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name="startDate"
-                      noStyle
-                      rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
-                    >
-                      <DatePicker
-                        placeholder="Start Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name="endDate"
-                      noStyle
-                      rules={[
-                        { required: true, message: "Chọn ngày kết thúc" },
-                      ]}
-                    >
-                      <DatePicker
-                        placeholder="End Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Form.Item>
-
-              <Form.Item label="Thông tin thêm" name="description">
-                <TextArea rows={4} placeholder="Hint text" />
-              </Form.Item>
-            </>
-          )}
-
-          {modalType === "experience" && (
-            <>
-              <Form.Item
-                label="Vị trí"
-                name="position"
-                rules={[{ required: true, message: "Vui lòng nhập vị trí" }]}
-              >
-                <Input placeholder="ABC Corp" />
-              </Form.Item>
-
-              <Form.Item
-                label="Tên đơn vị công tác"
-                name="company"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên công ty" },
-                ]}
-              >
-                <Input placeholder="ABCCorp.com" />
-              </Form.Item>
-
-              <Form.Item label="Thời gian làm việc">
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name="startDate"
-                      noStyle
-                      rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
-                    >
-                      <DatePicker
-                        placeholder="Start Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name="endDate"
-                      noStyle
-                      rules={[
-                        { required: true, message: "Chọn ngày kết thúc" },
-                      ]}
-                    >
-                      <DatePicker
-                        placeholder="End Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Form.Item>
-
-              <Form.Item label="Mô tả chi tiết công việc" name="description">
-                <TextArea rows={4} placeholder="Hint text" />
-              </Form.Item>
-            </>
-          )}
-
-          {modalType === "project" && (
-            <>
-              <Form.Item
-                label="Tên dự án"
-                name="projectName"
-                rules={[{ required: true, message: "Vui lòng nhập tên dự án" }]}
-              >
-                <Input placeholder="ABC Corp" />
-              </Form.Item>
-
-              <Form.Item label="Link demo" name="demoLink">
-                <Input placeholder="ABCCorp.com" />
-              </Form.Item>
-
-              <Form.Item label="Thời gian thực hiện">
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name="startDate"
-                      noStyle
-                      rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
-                    >
-                      <DatePicker
-                        placeholder="Start Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name="endDate"
-                      noStyle
-                      rules={[
-                        { required: true, message: "Chọn ngày kết thúc" },
-                      ]}
-                    >
-                      <DatePicker
-                        placeholder="End Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Form.Item>
-
-              <Form.Item label="Mô tả chi tiết công việc" name="description">
-                <TextArea rows={4} placeholder="Hint text" />
-              </Form.Item>
-            </>
-          )}
-
-          {modalType === "certificate" && (
-            <>
-              <Form.Item
-                label="Tên chứng chỉ"
-                name="certificateName"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên chứng chỉ" },
-                ]}
-              >
-                <Input placeholder="ABC Corp" />
-              </Form.Item>
-
-              <Form.Item
-                label="Tổ chức"
-                name="organization"
-                rules={[
-                  { required: true, message: "Vui lòng nhập tên tổ chức" },
-                ]}
-              >
-                <Input placeholder="ABCCorp.com" />
-              </Form.Item>
-
-              <Form.Item label="Thời gian">
-                <Row gutter={16}>
-                  <Col span={12}>
-                    <Form.Item
-                      name="startDate"
-                      noStyle
-                      rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
-                    >
-                      <DatePicker
-                        placeholder="Start Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                  <Col span={12}>
-                    <Form.Item
-                      name="endDate"
-                      noStyle
-                      rules={[
-                        { required: true, message: "Chọn ngày kết thúc" },
-                      ]}
-                    >
-                      <DatePicker
-                        placeholder="End Date"
-                        format="MMM DD, YYYY"
-                        style={{ width: "100%" }}
-                      />
-                    </Form.Item>
-                  </Col>
-                </Row>
-              </Form.Item>
-
-              <Form.Item label="Mô tả thêm" name="description">
-                <TextArea rows={4} placeholder="Hint text" />
-              </Form.Item>
-            </>
-          )}
-
-          <Form.Item style={{ marginBottom: 0, textAlign: "right" }}>
-            <Button onClick={handleCancel} style={{ marginRight: 10 }}>
-              Hủy Bỏ
+        {/* Kinh nghiệm làm việc */}
+        <div className="cv-section">
+          <div className="cv-section-title">KINH NGHIỆM LÀM VIỆC</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingExp(null);
+                formExp.resetFields();
+                setExpModal(true);
+              }}
+            >
+              Thêm kinh nghiệm
             </Button>
-            <Button type="primary" danger htmlType="submit">
-              Cập Nhật
+          </div>
+          {!latestExperience ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div
+              className="cv-entry"
+              key={`exp-${latestExperience.id || latestExperience.company}`}
+            >
+              <div className="cv-entry-time">
+                {formatDateRange(
+                  latestExperience.started_at || latestExperience.startDate,
+                  latestExperience.end_at || latestExperience.endDate
+                )}
+              </div>
+              <div className="cv-entry-body">
+                <div className="cv-entry-title">
+                  <span className="cv-field-label">Công ty:</span>{" "}
+                  {latestExperience.company}
+                </div>
+                <div className="cv-entry-subtitle">
+                  {latestExperience.position || "Vị trí"}
+                </div>
+                {bulletize(
+                  latestExperience.info || latestExperience.description
+                ).length > 0 ? (
+                  <ul className="cv-bullets">
+                    {bulletize(
+                      latestExperience.info || latestExperience.description
+                    ).map((b, idx) => (
+                      <li key={idx}>{b}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                <div className="cv-entry-actions">
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => {
+                      setEditingExp(latestExperience);
+                      formExp.setFieldsValue({
+                        position: latestExperience.position,
+                        company: latestExperience.company,
+                        startDate: latestExperience.started_at
+                          ? dayjs(latestExperience.started_at)
+                          : latestExperience.startDate
+                          ? dayjs(latestExperience.startDate)
+                          : null,
+                        endDate: latestExperience.end_at
+                          ? dayjs(latestExperience.end_at)
+                          : latestExperience.endDate
+                          ? dayjs(latestExperience.endDate)
+                          : null,
+                        description:
+                          latestExperience.info || latestExperience.description,
+                      });
+                      setExpModal(true);
+                    }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        await deleteExperience(latestExperience.id);
+                        message.success("Đã xóa");
+                        await reloadSections();
+                      } catch (err) {
+                        message.error("Xóa thất bại");
+                      }
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Dự án */}
+        <div className="cv-section">
+          <div className="cv-section-title">DỰ ÁN</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingProj(null);
+                formProj.resetFields();
+                setProjModal(true);
+              }}
+            >
+              Thêm dự án
             </Button>
+          </div>
+          {!latestProject ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div
+              className="cv-entry"
+              key={`proj-${latestProject.id || latestProject.project_name}`}
+            >
+              <div className="cv-entry-time">
+                {formatDateRange(
+                  latestProject.started_at || latestProject.startDate,
+                  latestProject.end_at || latestProject.endDate
+                )}
+              </div>
+              <div className="cv-entry-body">
+                <div className="cv-entry-title">
+                  <span className="cv-field-label">Dự án:</span>{" "}
+                  {latestProject.project_name || latestProject.projectName}
+                </div>
+                {latestProject.demo_link || latestProject.demoLink ? (
+                  <div className="cv-entry-link">
+                    Link: {latestProject.demo_link || latestProject.demoLink}
+                  </div>
+                ) : null}
+                {latestProject.description ? (
+                  <Paragraph className="cv-paragraph">
+                    {latestProject.description}
+                  </Paragraph>
+                ) : null}
+                <div className="cv-entry-actions">
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => {
+                      setEditingProj(latestProject);
+                      formProj.setFieldsValue({
+                        projectName:
+                          latestProject.project_name ||
+                          latestProject.projectName,
+                        demoLink:
+                          latestProject.demo_link || latestProject.demoLink,
+                        startDate: latestProject.started_at
+                          ? dayjs(latestProject.started_at)
+                          : latestProject.startDate
+                          ? dayjs(latestProject.startDate)
+                          : null,
+                        endDate: latestProject.end_at
+                          ? dayjs(latestProject.end_at)
+                          : latestProject.endDate
+                          ? dayjs(latestProject.endDate)
+                          : null,
+                        description: latestProject.description,
+                      });
+                      setProjModal(true);
+                    }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        await deleteProject(latestProject.id);
+                        message.success("Đã xóa");
+                        await reloadSections();
+                      } catch (err) {
+                        message.error("Xóa thất bại");
+                      }
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Hoạt động */}
+        <div className="cv-section">
+          <div className="cv-section-title">HOẠT ĐỘNG</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingAct(null);
+                formAct.resetFields();
+                setActModal(true);
+              }}
+            >
+              Thêm hoạt động
+            </Button>
+          </div>
+          {!latestActivity ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div
+              className="cv-entry"
+              key={`act-${latestActivity.id || latestActivity.organization}`}
+            >
+              <div className="cv-entry-time">
+                {formatDateRange(
+                  latestActivity.started_at || latestActivity.startDate,
+                  latestActivity.end_at || latestActivity.endDate
+                )}
+              </div>
+              <div className="cv-entry-body">
+                <div className="cv-entry-title">
+                  <span className="cv-field-label">Tổ chức:</span>{" "}
+                  {latestActivity.organization || "Tổ chức"}
+                </div>
+                {latestActivity.role ? (
+                  <div className="cv-entry-subtitle">{latestActivity.role}</div>
+                ) : null}
+                {latestActivity.description ? (
+                  <Paragraph className="cv-paragraph">
+                    {latestActivity.description}
+                  </Paragraph>
+                ) : null}
+                <div className="cv-entry-actions">
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => {
+                      setEditingAct(latestActivity);
+                      formAct.setFieldsValue({
+                        organization: latestActivity.organization,
+                        role: latestActivity.role,
+                        startDate: latestActivity.started_at
+                          ? dayjs(latestActivity.started_at)
+                          : latestActivity.startDate
+                          ? dayjs(latestActivity.startDate)
+                          : null,
+                        endDate: latestActivity.end_at
+                          ? dayjs(latestActivity.end_at)
+                          : latestActivity.endDate
+                          ? dayjs(latestActivity.endDate)
+                          : null,
+                        description: latestActivity.description,
+                      });
+                      setActModal(true);
+                    }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        await deleteActivity(latestActivity.id);
+                        message.success("Đã xóa");
+                        await reloadSections();
+                      } catch (err) {
+                        message.error("Xóa thất bại");
+                      }
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="cv-section">
+          <div className="cv-section-title">CHỨNG CHỈ</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingCert(null);
+                formCert.resetFields();
+                setCertModal(true);
+              }}
+            >
+              Thêm chứng chỉ
+            </Button>
+          </div>
+          {!latestCertificate ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div
+              className="cv-entry"
+              key={`cert-${
+                latestCertificate.id || latestCertificate.certificate_name
+              }`}
+            >
+              <div className="cv-entry-time">
+                {formatDateRange(
+                  latestCertificate.started_at || latestCertificate.startDate,
+                  latestCertificate.end_at || latestCertificate.endDate
+                )}
+              </div>
+              <div className="cv-entry-body">
+                <div className="cv-entry-title">
+                  <span className="cv-field-label">Chứng chỉ:</span>{" "}
+                  {latestCertificate.certificate_name ||
+                    latestCertificate.certificateName}
+                </div>
+                {latestCertificate.organization ? (
+                  <div className="cv-entry-subtitle">
+                    {latestCertificate.organization}
+                  </div>
+                ) : null}
+                {latestCertificate.description ? (
+                  <Paragraph className="cv-paragraph">
+                    {latestCertificate.description}
+                  </Paragraph>
+                ) : null}
+                <div className="cv-entry-actions">
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => {
+                      setEditingCert(latestCertificate);
+                      formCert.setFieldsValue({
+                        certificateName:
+                          latestCertificate.certificate_name ||
+                          latestCertificate.certificateName,
+                        organization: latestCertificate.organization,
+                        startDate: latestCertificate.started_at
+                          ? dayjs(latestCertificate.started_at)
+                          : latestCertificate.startDate
+                          ? dayjs(latestCertificate.startDate)
+                          : null,
+                        endDate: latestCertificate.end_at
+                          ? dayjs(latestCertificate.end_at)
+                          : latestCertificate.endDate
+                          ? dayjs(latestCertificate.endDate)
+                          : null,
+                        description: latestCertificate.description,
+                      });
+                      setCertModal(true);
+                    }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        await deleteCertificate(latestCertificate.id);
+                        message.success("Đã xóa");
+                        await reloadSections();
+                      } catch (err) {
+                        message.error("Xóa thất bại");
+                      }
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Danh hiệu & Giải thưởng */}
+        <div className="cv-section">
+          <div className="cv-section-title">DANH HIỆU VÀ GIẢI THƯỞNG</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingAward(null);
+                formAward.resetFields();
+                setAwardModal(true);
+              }}
+            >
+              Thêm danh hiệu/giải thưởng
+            </Button>
+          </div>
+          {!latestAward ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div
+              className="cv-entry"
+              key={`award-${latestAward.id || latestAward.award_name}`}
+            >
+              <div className="cv-entry-time">
+                {formatDateRange(
+                  latestAward.started_at || latestAward.startDate,
+                  latestAward.end_at || latestAward.endDate
+                )}
+              </div>
+              <div className="cv-entry-body">
+                <div className="cv-entry-title">
+                  <span className="cv-field-label">Danh hiệu/Giải thưởng:</span>{" "}
+                  {latestAward.title ||
+                    latestAward.award_name ||
+                    latestAward.awardName}
+                </div>
+                {latestAward.organization ? (
+                  <div className="cv-entry-subtitle">
+                    {latestAward.organization}
+                  </div>
+                ) : null}
+                {latestAward.description ? (
+                  <Paragraph className="cv-paragraph">
+                    {latestAward.description}
+                  </Paragraph>
+                ) : null}
+                <div className="cv-entry-actions">
+                  <Button
+                    size="small"
+                    type="link"
+                    onClick={() => {
+                      setEditingAward(latestAward);
+                      formAward.setFieldsValue({
+                        awardName:
+                          latestAward.title ||
+                          latestAward.award_name ||
+                          latestAward.awardName,
+                        organization: latestAward.organization,
+                        startDate: latestAward.started_at
+                          ? dayjs(latestAward.started_at)
+                          : latestAward.startDate
+                          ? dayjs(latestAward.startDate)
+                          : null,
+                        endDate: latestAward.end_at
+                          ? dayjs(latestAward.end_at)
+                          : latestAward.endDate
+                          ? dayjs(latestAward.endDate)
+                          : null,
+                        description: latestAward.description,
+                      });
+                      setAwardModal(true);
+                    }}
+                  >
+                    Sửa
+                  </Button>
+                  <Button
+                    size="small"
+                    type="link"
+                    danger
+                    onClick={async () => {
+                      try {
+                        await deleteAward(latestAward.id);
+                        message.success("Đã xóa");
+                        await reloadSections();
+                      } catch (err) {
+                        message.error("Xóa thất bại");
+                      }
+                    }}
+                  >
+                    Xóa
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Kỹ năng */}
+        <div className="cv-section">
+          <div className="cv-section-title">KỸ NĂNG</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingSkill(null);
+                formSkill.resetFields();
+                setSkillModal(true);
+              }}
+            >
+              Thêm kỹ năng
+            </Button>
+          </div>
+          {skills.length === 0 ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div>
+              {skills.map((skill) => (
+                <div
+                  className="cv-entry"
+                  key={`skill-${skill.id || skill.skill_name}`}
+                >
+                  <div className="cv-entry-body">
+                    <div className="cv-entry-title">
+                      <span className="cv-field-label">Kỹ năng:</span>{" "}
+                      {skill.name || skill.skill_name || skill.skillName}
+                    </div>
+                    {skill.level ? (
+                      <div className="cv-entry-subtitle">
+                        Mức độ: {skill.level}
+                      </div>
+                    ) : null}
+                    {skill.description ? (
+                      <Paragraph className="cv-paragraph">
+                        {skill.description}
+                      </Paragraph>
+                    ) : null}
+                    <div className="cv-entry-actions">
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={() => {
+                          setEditingSkill(skill);
+                          formSkill.setFieldsValue({
+                            skillName:
+                              skill.name || skill.skill_name || skill.skillName,
+                            level: skill.level,
+                            description: skill.description,
+                          });
+                          setSkillModal(true);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        size="small"
+                        type="link"
+                        danger
+                        onClick={async () => {
+                          try {
+                            await deleteSkill(skill.id);
+                            message.success("Đã xóa");
+                            await reloadSections();
+                          } catch (err) {
+                            message.error("Xóa thất bại");
+                          }
+                        }}
+                      >
+                        Xóa
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Người giới thiệu */}
+        <div className="cv-section">
+          <div className="cv-section-title">NGƯỜI GIỚI THIỆU</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingRef(null);
+                formRef.resetFields();
+                setRefModal(true);
+              }}
+            >
+              Thêm người giới thiệu
+            </Button>
+          </div>
+          {references.length === 0 ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div>
+              {references.map((ref) => (
+                <div
+                  className="cv-entry"
+                  key={`ref-${ref.id || ref.full_name}`}
+                >
+                  <div className="cv-entry-body">
+                    <div className="cv-entry-title">
+                      <span className="cv-field-label">Tên:</span>{" "}
+                      {ref.full_name || ref.fullName || ref.name}
+                    </div>
+                    {ref.position ? (
+                      <div className="cv-entry-subtitle">
+                        Vị trí: {ref.position}
+                      </div>
+                    ) : null}
+                    {ref.company ? (
+                      <div className="cv-entry-subtitle">
+                        Công ty: {ref.company}
+                      </div>
+                    ) : null}
+                    {ref.email ? (
+                      <div className="cv-entry-subtitle">
+                        Email: {ref.email}
+                      </div>
+                    ) : null}
+                    {ref.phone ? (
+                      <div className="cv-entry-subtitle">
+                        Điện thoại: {ref.phone}
+                      </div>
+                    ) : null}
+                    {ref.description ? (
+                      <Paragraph className="cv-paragraph">
+                        {ref.description}
+                      </Paragraph>
+                    ) : null}
+                    <div className="cv-entry-actions">
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={() => {
+                          setEditingRef(ref);
+                          formRef.setFieldsValue({
+                            fullName: ref.full_name || ref.fullName || ref.name,
+                            position: ref.position || "",
+                            company: ref.company || "",
+                            email: ref.email || "",
+                            phone: ref.phone || "",
+                            description: ref.description || "",
+                          });
+                          setRefModal(true);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        size="small"
+                        type="link"
+                        danger
+                        onClick={async () => {
+                          try {
+                            await deleteReference(ref.id);
+                            message.success("Đã xóa");
+                            await reloadSections();
+                          } catch (err) {
+                            message.error("Xóa thất bại");
+                          }
+                        }}
+                      >
+                        Xóa
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Sở thích */}
+        <div className="cv-section">
+          <div className="cv-section-title">SỞ THÍCH</div>
+          <div className="cv-entry-actions">
+            <Button
+              size="small"
+              onClick={() => {
+                setEditingHobby(null);
+                formHobby.resetFields();
+                setHobbyModal(true);
+              }}
+            >
+              Thêm sở thích
+            </Button>
+          </div>
+          {hobbies.length === 0 ? (
+            <Text type="secondary">Chưa cập nhật</Text>
+          ) : (
+            <div>
+              {hobbies.map((hobby) => (
+                <div
+                  className="cv-entry"
+                  key={`hobby-${hobby.id || hobby.hobby_name}`}
+                >
+                  <div className="cv-entry-body">
+                    <div className="cv-entry-title">
+                      <span className="cv-field-label">Sở thích:</span>{" "}
+                      {hobby.name || hobby.hobby_name || hobby.hobbyName}
+                    </div>
+                    {hobby.description ? (
+                      <Paragraph className="cv-paragraph">
+                        {hobby.description}
+                      </Paragraph>
+                    ) : null}
+                    <div className="cv-entry-actions">
+                      <Button
+                        size="small"
+                        type="link"
+                        onClick={() => {
+                          setEditingHobby(hobby);
+                          formHobby.setFieldsValue({
+                            hobbyName:
+                              hobby.name || hobby.hobby_name || hobby.hobbyName,
+                            description: hobby.description,
+                          });
+                          setHobbyModal(true);
+                        }}
+                      >
+                        Sửa
+                      </Button>
+                      <Button
+                        size="small"
+                        type="link"
+                        danger
+                        onClick={async () => {
+                          try {
+                            await deleteHobby(hobby.id);
+                            message.success("Đã xóa");
+                            await reloadSections();
+                          } catch (err) {
+                            message.error("Xóa thất bại");
+                          }
+                        }}
+                      >
+                        Xóa
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals for sections */}
+      <Modal
+        title={editingEdu ? "Sửa học vấn" : "Thêm học vấn"}
+        open={eduModal}
+        onCancel={() => {
+          setEduModal(false);
+          setEditingEdu(null);
+          formEdu.resetFields();
+        }}
+        onOk={handleSaveEducation}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formEdu}>
+          <Form.Item
+            label="Trường"
+            name="school"
+            rules={[{ required: true, message: "Nhập tên trường" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Chuyên ngành"
+            name="major"
+            rules={[{ required: true, message: "Nhập chuyên ngành" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Thời gian">
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="endDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày kết thúc" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingExp ? "Sửa kinh nghiệm" : "Thêm kinh nghiệm"}
+        open={expModal}
+        onCancel={() => {
+          setExpModal(false);
+          setEditingExp(null);
+          formExp.resetFields();
+        }}
+        onOk={handleSaveExperience}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formExp}>
+          <Form.Item
+            label="Vị trí"
+            name="position"
+            rules={[{ required: true, message: "Nhập vị trí" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Công ty"
+            name="company"
+            rules={[{ required: true, message: "Nhập công ty" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Thời gian">
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="endDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày kết thúc" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+          <Form.Item label="Mô tả chi tiết" name="description">
+            <TextArea rows={4} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingProj ? "Sửa dự án" : "Thêm dự án"}
+        open={projModal}
+        onCancel={() => {
+          setProjModal(false);
+          setEditingProj(null);
+          formProj.resetFields();
+        }}
+        onOk={handleSaveProject}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formProj}>
+          <Form.Item
+            label="Tên dự án"
+            name="projectName"
+            rules={[{ required: true, message: "Nhập tên dự án" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Link demo" name="demoLink">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Thời gian">
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="endDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày kết thúc" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingCert ? "Sửa chứng chỉ" : "Thêm chứng chỉ"}
+        open={certModal}
+        onCancel={() => {
+          setCertModal(false);
+          setEditingCert(null);
+          formCert.resetFields();
+        }}
+        onOk={handleSaveCertificate}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formCert}>
+          <Form.Item
+            label="Tên chứng chỉ"
+            name="certificateName"
+            rules={[{ required: true, message: "Nhập tên chứng chỉ" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Tổ chức"
+            name="organization"
+            rules={[{ required: true, message: "Nhập tổ chức" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Thời gian">
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="endDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày kết thúc" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingAct ? "Sửa hoạt động" : "Thêm hoạt động"}
+        open={actModal}
+        onCancel={() => {
+          setActModal(false);
+          setEditingAct(null);
+          formAct.resetFields();
+        }}
+        onOk={handleSaveActivity}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formAct}>
+          <Form.Item
+            label="Tổ chức"
+            name="organization"
+            rules={[{ required: true, message: "Nhập tổ chức" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Vai trò" name="role">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Thời gian">
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item
+                  name="endDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày kết thúc" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={
+          editingAward
+            ? "Sửa danh hiệu/giải thưởng"
+            : "Thêm danh hiệu/giải thưởng"
+        }
+        open={awardModal}
+        onCancel={() => {
+          setAwardModal(false);
+          setEditingAward(null);
+          formAward.resetFields();
+        }}
+        onOk={handleSaveAward}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formAward}>
+          <Form.Item
+            label="Tên danh hiệu/giải thưởng"
+            name="awardName"
+            rules={[
+              { required: true, message: "Nhập tên danh hiệu/giải thưởng" },
+            ]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Tổ chức"
+            name="organization"
+            rules={[{ required: true, message: "Nhập tổ chức" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Thời gian">
+            <Row gutter={8}>
+              <Col span={12}>
+                <Form.Item
+                  name="startDate"
+                  noStyle
+                  rules={[{ required: true, message: "Chọn ngày bắt đầu" }]}
+                >
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name="endDate" noStyle>
+                  <DatePicker style={{ width: "100%" }} format="DD/MM/YYYY" />
+                </Form.Item>
+              </Col>
+            </Row>
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingSkill ? "Sửa kỹ năng" : "Thêm kỹ năng"}
+        open={skillModal}
+        onCancel={() => {
+          setSkillModal(false);
+          setEditingSkill(null);
+          formSkill.resetFields();
+        }}
+        onOk={handleSaveSkill}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formSkill}>
+          <Form.Item
+            label="Tên kỹ năng"
+            name="skillName"
+            rules={[{ required: true, message: "Nhập tên kỹ năng" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Mức độ" name="level">
+            <Select placeholder="Chọn mức độ">
+              <Select.Option value="Cơ bản">Cơ bản</Select.Option>
+              <Select.Option value="Trung bình">Trung bình</Select.Option>
+              <Select.Option value="Khá">Khá</Select.Option>
+              <Select.Option value="Tốt">Tốt</Select.Option>
+              <Select.Option value="Xuất sắc">Xuất sắc</Select.Option>
+            </Select>
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingRef ? "Sửa người giới thiệu" : "Thêm người giới thiệu"}
+        open={refModal}
+        onCancel={() => {
+          setRefModal(false);
+          setEditingRef(null);
+          formRef.resetFields();
+        }}
+        onOk={handleSaveReference}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formRef}>
+          <Form.Item
+            label="Họ và tên"
+            name="fullName"
+            rules={[{ required: true, message: "Nhập họ và tên" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Vị trí" name="position">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Công ty" name="company">
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[{ type: "email", message: "Email không hợp lệ" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Điện thoại" name="phone">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      <Modal
+        title={editingHobby ? "Sửa sở thích" : "Thêm sở thích"}
+        open={hobbyModal}
+        onCancel={() => {
+          setHobbyModal(false);
+          setEditingHobby(null);
+          formHobby.resetFields();
+        }}
+        onOk={handleSaveHobby}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form layout="vertical" form={formHobby}>
+          <Form.Item
+            label="Tên sở thích"
+            name="hobbyName"
+            rules={[{ required: true, message: "Nhập tên sở thích" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Mô tả" name="description">
+            <TextArea rows={3} />
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal chỉnh thông tin */}
+      <Modal
+        title="Chỉnh sửa thông tin cá nhân"
+        open={profileModal}
+        onCancel={() => setProfileModal(false)}
+        onOk={handleSaveProfile}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form
+          layout="vertical"
+          form={formProfile}
+          initialValues={{
+            fullName: candidate.fullName || candidate.name,
+            position: candidate.position,
+            address: candidate.address,
+            email: candidate.email,
+            phone: candidate.phone,
+            dob: candidate.dob ? dayjs(candidate.dob) : null,
+            gender: candidate.gender,
+          }}
+        >
+          <Form.Item
+            label="Họ tên"
+            name="fullName"
+            rules={[{ required: true, message: "Nhập họ tên" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Chức danh" name="position">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Địa chỉ" name="address">
+            <Input />
+          </Form.Item>
+          <Form.Item
+            label="Email"
+            name="email"
+            rules={[{ type: "email", message: "Email không hợp lệ" }]}
+          >
+            <Input />
+          </Form.Item>
+          <Form.Item label="Số điện thoại" name="phone">
+            <Input />
+          </Form.Item>
+          <Form.Item label="Ngày sinh" name="dob">
+            <DatePicker format="DD/MM/YYYY" style={{ width: "100%" }} />
+          </Form.Item>
+          <Form.Item label="Giới tính" name="gender">
+            <Select allowClear>
+              <Select.Option value={1}>Nam</Select.Option>
+              <Select.Option value={0}>Nữ</Select.Option>
+            </Select>
+          </Form.Item>
+        </Form>
+      </Modal>
+
+      {/* Modal chỉnh mục tiêu */}
+      <Modal
+        title="Chỉnh sửa mục tiêu"
+        open={introModal}
+        onCancel={() => setIntroModal(false)}
+        onOk={handleSaveIntro}
+        okText="Lưu"
+        cancelText="Hủy"
+      >
+        <Form
+          layout="vertical"
+          form={formIntro}
+          initialValues={{
+            introduction: candidate.introduction,
+          }}
+        >
+          <Form.Item
+            label="Mục tiêu nghề nghiệp"
+            name="introduction"
+            rules={[{ required: true, message: "Nhập mục tiêu" }]}
+          >
+            <TextArea rows={6} placeholder="Mục tiêu nghề nghiệp của bạn..." />
           </Form.Item>
         </Form>
       </Modal>
