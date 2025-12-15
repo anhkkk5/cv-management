@@ -25,6 +25,7 @@ import { QuestionsModule } from './questions/questions.module';
 import { QuestionSetsModule } from './question-sets/question-sets.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { CvsModule } from './cvs/cvs.module';
+import { PostsModule } from './posts/posts.module';
 import { Role } from './common/enums/role.enum';
 
 const dbPortStr = process.env.DB_PORT;
@@ -65,6 +66,7 @@ if (Number.isNaN(dbPort)) {
     QuestionSetsModule,
     ApplicationsModule,
     CvsModule,
+    PostsModule,
   ],
   controllers: [AppController],
   providers: [AppService,
