@@ -32,8 +32,9 @@ export class ApplicationsService {
     userId: number,
     cvPdfFile?: Express.Multer.File,
   ): Promise<Application> {
-    // Tìm job
-    const job = await this.jobRepository.findOne({ where: { id: createApplicationDto.jobId } });
+    // Tìm job (ép kiểu jobId từ string sang number)
+    const jobId = Number(createApplicationDto.jobId);
+    const job = await this.jobRepository.findOne({ where: { id: jobId } });
     if (!job) {
       throw new NotFoundException('Không tìm thấy công việc');
     }
@@ -64,7 +65,7 @@ export class ApplicationsService {
     let cvPdfUrl: string | null = null;
     if (cvPdfFile) {
       try {
-        const uploadResult = await this.cloudinaryService.uploadImage(
+        const uploadResult = await this.cloudinaryService.uploadPdf(
           cvPdfFile,
           'cv_pdfs',
         );
@@ -80,6 +81,7 @@ export class ApplicationsService {
       candidate,
       status: 'pending',
       cvPdfUrl: cvPdfUrl || null,
+      cvPreviewImageUrl: createApplicationDto.cvPreviewImageUrl || null,
     });
 
     return this.applicationRepository.save(application);

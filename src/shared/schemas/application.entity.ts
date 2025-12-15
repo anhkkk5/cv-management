@@ -27,6 +27,9 @@ export class Application {
   @Column({ type: 'varchar', length: 500, nullable: true })
   cvPdfUrl: string | null; // URL của file PDF CV đã upload
 
+  @Column({ type: 'varchar', length: 500, nullable: true })
+  cvPreviewImageUrl: string | null; // URL ảnh preview CV (để xem trong modal)
+
   @CreateDateColumn()
   created_at: Date;
 

@@ -8,28 +8,18 @@ import {
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity('skills')
-export class Skill {
+@Entity('hobbies')
+export class Hobby {
   @PrimaryGeneratedColumn()
   id: number;
 
   @Column()
   name: string;
 
-  // mức độ: Beginner / Intermediate / Advanced (hoặc để string tự do)
-  @Column({ nullable: true })
-  level: string;
-
   @Column({ type: 'text', nullable: true })
   description: string;
 
-  @Column({ type: 'date', nullable: true })
-  started_at: Date;
-
-  @Column({ type: 'date', nullable: true })
-  end_at: Date;
-
-  @ManyToOne(() => User, (user) => user.skills, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.hobbies, { onDelete: 'CASCADE' })
   user: User;
 
   @CreateDateColumn()

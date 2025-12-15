@@ -27,6 +27,32 @@ export class CloudinaryService {
     });
   }
 
+  // Upload file PDF (hoặc file khác) với resource_type = 'raw'
+  async uploadPdf(
+    file: Express.Multer.File,
+    folder: string = 'cv_pdfs',
+  ): Promise<UploadApiResponse | UploadApiErrorResponse> {
+    return new Promise((resolve, reject) => {
+      const uploadStream = cloudinary.uploader.upload_stream(
+        {
+          folder: folder,
+          resource_type: 'raw',
+        },
+        (error, result) => {
+          if (error) return reject(error);
+          if (!result)
+            return reject(
+              new BadRequestException(
+                'Upload failed: no result returned from Cloudinary',
+              ),
+            );
+          resolve(result);
+        },
+      );
+      streamifier.createReadStream(file.buffer).pipe(uploadStream);
+    });
+  }
+
   // 2. Upload nhiều ảnh (Dùng Promise.all để chạy song song)
   async uploadMultipleImages(
     files: Express.Multer.File[],
