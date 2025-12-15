@@ -65,6 +65,7 @@ function Header() {
     { key: "unemployment", icon: <SafetyCertificateOutlined />, label: "Tính bảo hiểm thất nghiệp", path: "/unemployment-insurance" },
     { key: "social", icon: <SolutionOutlined />, label: "Tính bảo hiểm xã hội một lần" },
     { key: "saving-plan", icon: <CalculatorOutlined />, label: "Lập kế hoạch tiết kiệm", path: "/savings-plan" },
+    { key: "ads-rent", icon: <MobileOutlined />, label: "Thuê quảng cáo", path: "/ads/rent" },
     { key: "mobile", icon: <MobileOutlined />, label: "Mobile App TopCV" },
   ];
 
@@ -285,6 +286,15 @@ function Header() {
                     Việc làm
                   </NavLink>
 
+                  <NavLink
+                    to="/company-reviews"
+                    className={`header__top-link ${
+                      location.pathname.startsWith("/company-reviews") ? "header__top-link--active" : ""
+                    }`}
+                  >
+                    Review công ty
+                  </NavLink>
+
                   <div className="header__job-dropdown">
                     <div className="header__job-dropdown-left">
                       <div className="header__job-group">
@@ -363,6 +373,12 @@ function Header() {
                 {userType !== "company" && (
                   <NavLink to="/cv" className="header__top-link">
                     CV của bạn
+                  </NavLink>
+                )}
+
+                {isLoggedIn && userType === "company" && (
+                  <NavLink to="/company-ads" className="header__top-link">
+                    Quản lý quảng cáo
                   </NavLink>
                 )}
 

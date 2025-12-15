@@ -34,12 +34,16 @@ import CVTemplatePreview from "../pages/CVTemplates/Preview.jsx";
 import MyCVsPage from "../pages/MyCVs/index.jsx";
 import ViewCVPage from "../pages/ViewCV/index.jsx";
 import SkillAssessment from "../pages/SkillAssessment/index.jsx";
+import AdsRent from "../pages/AdsRent/index.jsx";
+import CompanyReviewsPage from "../pages/CompanyReviews/index.jsx";
+import CompanyReviewDetail from "../pages/CompanyReviewDetail/index.jsx";
 import TakeQuiz from "../pages/SkillAssessment/TakeQuiz.jsx";
 import QuizResult from "../pages/SkillAssessment/Result.jsx";
 import CompanyQuizManagement from "../pages/CompanyQuizManagement/index.jsx";
 import QuestionForm from "../pages/CompanyQuizManagement/QuestionForm.jsx";
 import QuestionSetForm from "../pages/CompanyQuizManagement/QuestionSetForm.jsx";
 import QuizForm from "../pages/CompanyQuizManagement/QuizForm.jsx";
+import CompanyAdsManagement from "../pages/CompanyAdsManagement/index.jsx";
 
 export const routes = [
   {
@@ -91,6 +95,18 @@ export const routes = [
         element: <CompanyDetail />,
       },
       {
+        path: "company-reviews",
+        element: <CompanyReviewsPage />,
+      },
+      {
+        path: "company-reviews/:id",
+        element: <CompanyReviewDetail />,
+      },
+      {
+        path: "company-ads",
+        element: <CompanyAdsManagement />,
+      },
+      {
         path: "cv",
         element: <CVPage />,
       },
@@ -133,6 +149,10 @@ export const routes = [
       {
         path: "skill-assessment",
         element: <SkillAssessment />,
+      },
+      {
+        path: "ads/rent",
+        element: <AdsRent />,
       },
       {
         path: "skill-assessment/take/:id",
