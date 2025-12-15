@@ -29,6 +29,13 @@ import {
   UploadOutlined,
   ReadOutlined,
   EditOutlined,
+
+  // icons cho cẩm nang nghề nghiệp
+  ClockCircleOutlined,
+  BulbOutlined,
+  DollarOutlined,
+  CarryOutOutlined,
+  BarChartOutlined,
 } from "@ant-design/icons";
 
 import { Dropdown, Menu } from "antd";
@@ -48,6 +55,7 @@ function Header() {
   const [companies, setCompanies] = useState([]);
   const [isJobMenuOpen, setIsJobMenuOpen] = useState(false);
   const [isToolsMenuOpen, setIsToolsMenuOpen] = useState(false);
+  const [isCareerGuideMenuOpen, setIsCareerGuideMenuOpen] = useState(false);
 
   // ----- MENU DỮ LIỆU -----
   const jobShortcuts = [
@@ -61,7 +69,7 @@ function Header() {
     { key: "skill-assessment", icon: <RadarChartOutlined />, label: "Đánh giá năng lực", path: "/skill-assessment" },
     { key: "gross-net", icon: <WalletOutlined />, label: "Tính lương Gross - Net", path: "/gross-net" },
     { key: "tax", icon: <CalculatorOutlined />, label: "Tính thuế thu nhập cá nhân", path: "/personal-income-tax" },
-    { key: "compound", icon: <LineChartOutlined />, label: "Tính lãi suất kép" },
+    { key: "compound", icon: <LineChartOutlined />, label: "Tính lãi suất kép", path: "/compound-interest" },
     { key: "unemployment", icon: <SafetyCertificateOutlined />, label: "Tính bảo hiểm thất nghiệp", path: "/unemployment-insurance" },
     { key: "social", icon: <SolutionOutlined />, label: "Tính bảo hiểm xã hội một lần" },
     { key: "saving-plan", icon: <CalculatorOutlined />, label: "Lập kế hoạch tiết kiệm", path: "/savings-plan" },
@@ -72,6 +80,15 @@ function Header() {
   const companyShortcuts = [
     { key: "companies", icon: <UnorderedListOutlined />, label: "Danh sách công ty", path: "/companies" },
     { key: "top-companies", icon: <CrownOutlined />, label: "Top công ty", path: "/companies" },
+  ];
+
+  const careerGuideShortcuts = [
+    { key: "career-orientation", icon: <ClockCircleOutlined />, label: "Định hướng nghề nghiệp", path: "/career-guide/orientation" },
+    { key: "job-search-tips", icon: <BulbOutlined />, label: "Bí kíp tìm việc", path: "/career-guide/job-search-tips" },
+    { key: "salary-benefits", icon: <DollarOutlined />, label: "Chế độ lương thưởng", path: "/career-guide/salary-benefits" },
+    { key: "professional-knowledge", icon: <BookOutlined />, label: "Kiến thức chuyên ngành", path: "/career-guide/professional-knowledge" },
+    { key: "career-toolkit", icon: <CarryOutOutlined />, label: "Hành trang nghề nghiệp", path: "/career-guide/toolkit" },
+    { key: "market-trends", icon: <BarChartOutlined />, label: "Thị trường & xu hướng tuyển dụng", path: "/career-guide/market-trends" },
   ];
 
   const jobPositions = [
@@ -189,6 +206,7 @@ function Header() {
     if (path) navigate(path);
     setIsJobMenuOpen(false);
     setIsToolsMenuOpen(false);
+    setIsCareerGuideMenuOpen(false);
   };
 
   const handleGoCompany = async () => {
@@ -264,6 +282,7 @@ function Header() {
                 <NavLink to="/admin/jobs" className="header__top-link">Quản lý việc làm</NavLink>
                 <NavLink to="/admin/companies" className="header__top-link">Quản lý công ty</NavLink>
                 <NavLink to="/admin/users" className="header__top-link">Quản lý người dùng</NavLink>
+                <NavLink to="/admin/posts" className="header__top-link">Quản lý bài viết</NavLink>
               </>
             ) : (
               <>
@@ -359,6 +378,36 @@ function Header() {
                     <div className="header__tools-title">CÔNG CỤ</div>
                     <div className="header__tools-grid">
                       {toolShortcuts.map((item) => (
+                        <button key={item.key} className="header__tools-item"
+                          onClick={() => handleNavigateAndClose(item.path)}
+                        >
+                          <span className="header__tools-icon">{item.icon}</span>
+                          <span>{item.label}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {/* CAREER GUIDE MENU */}
+                <div
+                  className={`header__tools-menu ${isCareerGuideMenuOpen ? "header__tools-menu--open" : ""}`}
+                  onMouseEnter={() => setIsCareerGuideMenuOpen(true)}
+                  onMouseLeave={() => setIsCareerGuideMenuOpen(false)}
+                >
+                  <NavLink
+                    to="/career-guide"
+                    className={`header__top-link ${
+                      location.pathname.startsWith("/career-guide") ? "header__top-link--active" : ""
+                    }`}
+                  >
+                    Cẩm nang nghề nghiệp
+                  </NavLink>
+
+                  <div className="header__tools-dropdown">
+                    <div className="header__tools-title">CẨM NANG NGHỀ NGHIỆP</div>
+                    <div className="header__tools-grid">
+                      {careerGuideShortcuts.map((item) => (
                         <button key={item.key} className="header__tools-item"
                           onClick={() => handleNavigateAndClose(item.path)}
                         >
