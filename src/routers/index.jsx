@@ -22,10 +22,12 @@ import GrossNet from "../pages/GrossNet/index.jsx";
 import UnemploymentInsurance from "../pages/UnemploymentInsurance/index.jsx";
 import PersonalIncomeTax from "../pages/PersonalIncomeTax/index.jsx";
 import SavingsPlan from "../pages/SavingsPlan/index.jsx";
+import CompoundInterestPage from "../pages/CompoundInterest/index.jsx";
 import AdminLayout from "../Layout/AdminLayout/index.jsx";
 import JobsManagement from "../pages/Admin/JobsManagement/index.jsx";
 import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
 import CompaniesManagement from "../pages/Admin/CompaniesManagement/index.jsx";
+import PostsManagement from "../pages/Admin/PostsManagement/index.jsx";
 import CandidateProfile from "../pages/CandidateProfile/index.jsx";
 import AppliedJobs from "../pages/AppliedJobs/index.jsx";
 
@@ -40,6 +42,15 @@ import CompanyQuizManagement from "../pages/CompanyQuizManagement/index.jsx";
 import QuestionForm from "../pages/CompanyQuizManagement/QuestionForm.jsx";
 import QuestionSetForm from "../pages/CompanyQuizManagement/QuestionSetForm.jsx";
 import QuizForm from "../pages/CompanyQuizManagement/QuizForm.jsx";
+import CareerGuide from "../pages/CareerGuide/index.jsx";
+import CareerOrientation from "../pages/CareerGuide/CareerOrientation.jsx";
+import JobSearchTips from "../pages/CareerGuide/JobSearchTips.jsx";
+import SalaryBenefits from "../pages/CareerGuide/SalaryBenefits.jsx";
+import ProfessionalKnowledge from "../pages/CareerGuide/ProfessionalKnowledge.jsx";
+import CareerToolkit from "../pages/CareerGuide/CareerToolkit.jsx";
+import MarketTrends from "../pages/CareerGuide/MarketTrends.jsx";
+import PostsList from "../pages/Posts/index.jsx";
+import PostDetail from "../pages/Posts/PostDetail.jsx";
 
 export const routes = [
   {
@@ -61,6 +72,10 @@ export const routes = [
       {
         path: "gross-net",
         element: <GrossNet />,
+      },
+      {
+        path: "compound-interest",
+        element: <CompoundInterestPage />,
       },
       {
         path: "unemployment-insurance",
@@ -158,6 +173,42 @@ export const routes = [
         path: "company/quiz/quizzes/:id",
         element: <QuizForm />,
       },
+      {
+        path: "career-guide",
+        element: <CareerGuide />,
+      },
+      {
+        path: "career-guide/orientation",
+        element: <CareerOrientation />,
+      },
+      {
+        path: "career-guide/job-search-tips",
+        element: <JobSearchTips />,
+      },
+      {
+        path: "career-guide/salary-benefits",
+        element: <SalaryBenefits />,
+      },
+      {
+        path: "career-guide/professional-knowledge",
+        element: <ProfessionalKnowledge />,
+      },
+      {
+        path: "career-guide/toolkit",
+        element: <CareerToolkit />,
+      },
+      {
+        path: "career-guide/market-trends",
+        element: <MarketTrends />,
+      },
+      {
+        path: "posts",
+        element: <PostsList />,
+      },
+      {
+        path: "posts/:slug",
+        element: <PostDetail />,
+      },
     ],
   },
   {
@@ -203,6 +254,10 @@ export const routes = [
       {
         path: "companies",
         element: <CompaniesManagement />,
+      },
+      {
+        path: "posts",
+        element: <PostsManagement />,
       },
     ],
   },
