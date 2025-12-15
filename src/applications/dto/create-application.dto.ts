@@ -1,10 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsNumber, IsNotEmpty } from 'class-validator';
+import { IsNotEmpty, IsNumberString, IsOptional, IsString } from 'class-validator';
 
 export class CreateApplicationDto {
   @ApiProperty({ example: 1, description: 'ID của công việc' })
-  @IsNumber()
+  @IsNumberString()
   @IsNotEmpty()
-  jobId: number;
+  jobId: string;
+
+  @ApiProperty({
+    example: 'https://res.cloudinary.com/.../cv-preview.png',
+    description: 'URL ảnh preview CV (tùy chọn, để hiển thị trong modal)',
+    required: false,
+  })
+  @IsOptional()
+  @IsString()
+  cvPreviewImageUrl?: string;
 }
 

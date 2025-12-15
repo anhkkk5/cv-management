@@ -25,6 +25,13 @@ import { QuestionsModule } from './questions/questions.module';
 import { QuestionSetsModule } from './question-sets/question-sets.module';
 import { ApplicationsModule } from './applications/applications.module';
 import { CvsModule } from './cvs/cvs.module';
+import { CompanyReviewsModule } from './company-reviews/company-reviews.module';
+import { ActivitiesModule } from './activities/activities.module';
+import { AwardsModule } from './awards/awards.module';
+import { ReferencesModule } from './references/references.module';
+import { HobbiesModule } from './hobbies/hobbies.module';
+import { AdSlotsModule } from './ad-slots/ad-slots.module';
+import { AdBookingsModule } from './ad-bookings/ad-bookings.module';
 import { Role } from './common/enums/role.enum';
 
 const dbPortStr = process.env.DB_PORT;
@@ -65,9 +72,17 @@ if (Number.isNaN(dbPort)) {
     QuestionSetsModule,
     ApplicationsModule,
     CvsModule,
+    CompanyReviewsModule,
+    ActivitiesModule,
+    AwardsModule,
+    ReferencesModule,
+    HobbiesModule,
+    AdSlotsModule,
+    AdBookingsModule,
   ],
   controllers: [AppController],
-  providers: [AppService,
+  providers: [
+    AppService,
     {
       provide: APP_GUARD,
       useClass: JwtAuthGuard,

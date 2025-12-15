@@ -1,6 +1,8 @@
 import { User } from '../schemas/user.entity';
 import { Job } from '../schemas/job.entity';
 import { CompanyAddress } from '../schemas/company-address.entity';
+import { AdSlot } from './ad-slot.entity';
+
 import {
   Column,
   CreateDateColumn,
@@ -62,6 +64,9 @@ export class Company {
 
   @OneToMany(() => CompanyAddress, (address) => address.company)
   addresses: CompanyAddress[];
+
+  @OneToMany(() => AdSlot, (slot) => slot.company)
+  adSlots: AdSlot[];
 
   @Column({ nullable: true })
   status: string;

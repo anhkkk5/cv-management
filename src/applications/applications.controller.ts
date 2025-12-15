@@ -38,6 +38,10 @@ export class ApplicationsController {
         jobId: {
           type: 'number',
         },
+        cvPreviewImageUrl: {
+          type: 'string',
+          description: 'URL ảnh preview CV (tùy chọn)',
+        },
         cvPdf: {
           type: 'string',
           format: 'binary',
