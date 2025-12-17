@@ -60,3 +60,5 @@ export class HobbiesService {
     await this.hobbyRepository.remove(hobby);
   }
 }
+
+

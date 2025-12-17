@@ -40,6 +40,15 @@ export class User {
   @Column({ nullable: false })
   name: string;
 
+  @Column({ default: false })
+  isEmailVerified: boolean;
+
+  @Column({ type: 'varchar', length: 255, nullable: true })
+  emailOtpHash: string | null;
+
+  @Column({ type: 'datetime', nullable: true })
+  emailOtpExpiresAt: Date | null;
+
   @OneToMany(() => Experience, (experience) => experience.user)
   experiences: Experience[];
 
@@ -78,6 +87,9 @@ export class User {
 
   @BeforeInsert()
   async hashPassword() {
+    if (typeof this.password === 'string' && this.password.startsWith('$2')) {
+      return;
+    }
     this.password = await bcrypt.hash(this.password, 10);
   }
 }

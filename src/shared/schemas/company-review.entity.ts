@@ -12,6 +12,12 @@ import {
 } from 'typeorm';
 import { ReviewComment } from './review-comment.entity';
 
+export enum CompanyReviewStatus {
+  Pending = 'pending',
+  Approved = 'approved',
+  Rejected = 'rejected',
+}
+
 @Entity('company_reviews')
 export class CompanyReview {
   @PrimaryGeneratedColumn()
@@ -73,6 +79,9 @@ export class CompanyReview {
 
   @Column({ type: 'int', default: 0 })
   helpfulCount: number; // Số người đánh giá hữu ích
+
+  @Column({ type: 'varchar', length: 20, default: CompanyReviewStatus.Pending })
+  status: CompanyReviewStatus;
 
   @OneToMany(() => ReviewComment, (comment) => comment.review, { cascade: true })
   comments: ReviewComment[];

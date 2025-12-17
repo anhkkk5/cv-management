@@ -6,7 +6,10 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { CompanyReview } from '../shared/schemas/company-review.entity';
+import {
+  CompanyReview,
+  CompanyReviewStatus,
+} from '../shared/schemas/company-review.entity';
 import { ReviewComment } from '../shared/schemas/review-comment.entity';
 import { Company } from '../shared/schemas/company.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
@@ -50,6 +53,7 @@ export class CompanyReviewsService {
       ...createReviewDto,
       company,
       user: { id: userId },
+      status: CompanyReviewStatus.Pending,
     });
 
     return this.reviewRepository.save(review);
@@ -62,10 +66,11 @@ export class CompanyReviewsService {
       .leftJoinAndSelect('review.user', 'user')
       .leftJoinAndSelect('review.comments', 'comments')
       .leftJoinAndSelect('comments.user', 'commentUser')
+      .where('review.status = :status', { status: CompanyReviewStatus.Approved })
       .orderBy('review.created_at', 'DESC');
 
     if (companyId) {
-      query.where('review.company.id = :companyId', { companyId });
+      query.andWhere('review.company.id = :companyId', { companyId });
     }
 
     return query.getMany();
@@ -73,7 +78,7 @@ export class CompanyReviewsService {
 
   async findOne(id: number): Promise<CompanyReview> {
     const review = await this.reviewRepository.findOne({
-      where: { id },
+      where: { id, status: CompanyReviewStatus.Approved },
       relations: ['company', 'user', 'comments', 'comments.user'],
     });
 
@@ -86,10 +91,72 @@ export class CompanyReviewsService {
 
   async findByCompanyId(companyId: number): Promise<CompanyReview[]> {
     return this.reviewRepository.find({
-      where: { company: { id: companyId } },
+      where: { company: { id: companyId }, status: CompanyReviewStatus.Approved },
       relations: ['user', 'comments', 'comments.user'],
       order: { created_at: 'DESC' },
     });
+  }
+
+  async adminFindAll(params?: {
+    companyId?: number;
+    status?: CompanyReviewStatus;
+  }): Promise<CompanyReview[]> {
+    const query = this.reviewRepository
+      .createQueryBuilder('review')
+      .leftJoinAndSelect('review.company', 'company')
+      .leftJoinAndSelect('review.user', 'user')
+      .leftJoinAndSelect('review.comments', 'comments')
+      .leftJoinAndSelect('comments.user', 'commentUser')
+      .orderBy('review.created_at', 'DESC');
+
+    if (params?.companyId) {
+      query.where('review.company.id = :companyId', { companyId: params.companyId });
+    }
+
+    if (params?.status) {
+      if (params.companyId) {
+        query.andWhere('review.status = :status', { status: params.status });
+      } else {
+        query.where('review.status = :status', { status: params.status });
+      }
+    }
+
+    return query.getMany();
+  }
+
+  async adminGetOne(id: number): Promise<CompanyReview> {
+    const review = await this.reviewRepository.findOne({
+      where: { id },
+      relations: ['company', 'user', 'comments', 'comments.user'],
+    });
+    if (!review) throw new NotFoundException('Không tìm thấy review');
+    return review;
+  }
+
+  async adminApprove(reviewId: number): Promise<CompanyReview> {
+    const review = await this.adminGetOne(reviewId);
+    review.status = CompanyReviewStatus.Approved;
+    return this.reviewRepository.save(review);
+  }
+
+  async adminReject(reviewId: number): Promise<CompanyReview> {
+    const review = await this.adminGetOne(reviewId);
+    review.status = CompanyReviewStatus.Rejected;
+    return this.reviewRepository.save(review);
+  }
+
+  async adminDeleteReview(reviewId: number) {
+    const review = await this.reviewRepository.findOne({ where: { id: reviewId } });
+    if (!review) throw new NotFoundException('Không tìm thấy review');
+    await this.reviewRepository.delete(reviewId);
+    return { success: true };
+  }
+
+  async adminDeleteComment(commentId: number) {
+    const comment = await this.commentRepository.findOne({ where: { id: commentId } });
+    if (!comment) throw new NotFoundException('Không tìm thấy bình luận');
+    await this.commentRepository.delete(commentId);
+    return { success: true };
   }
 
   async addComment(
@@ -97,7 +164,11 @@ export class CompanyReviewsService {
     createCommentDto: CreateCommentDto,
     userId: number,
   ): Promise<ReviewComment> {
-    const review = await this.findOne(reviewId);
+    const review = await this.adminGetOne(reviewId);
+
+    if (review.status !== CompanyReviewStatus.Approved) {
+      throw new ForbiddenException('Review chưa được duyệt');
+    }
 
     const comment = this.commentRepository.create({
       ...createCommentDto,

@@ -28,3 +28,5 @@ export class Hobby {
   @UpdateDateColumn()
   updated_at: Date;
 }
+
+

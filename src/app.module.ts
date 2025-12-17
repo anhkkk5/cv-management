@@ -36,6 +36,10 @@ import { ReferencesModule } from './references/references.module';
 import { HobbiesModule } from './hobbies/hobbies.module';
 import { AdSlotsModule } from './ad-slots/ad-slots.module';
 import { AdBookingsModule } from './ad-bookings/ad-bookings.module';
+import { MailModule } from './mail/mail.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { InterviewSchedulesModule } from './interview-schedules/interview-schedules.module';
+import { InterviewScorecardsModule } from './interview-scorecards/interview-scorecards.module';
 
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { RolesGuard } from './auth/guards/roles.guard';
@@ -91,6 +95,10 @@ if (Number.isNaN(dbPort)) {
     HobbiesModule,
     AdSlotsModule,
     AdBookingsModule,
+    MailModule,
+    NotificationsModule,
+    InterviewSchedulesModule,
+    InterviewScorecardsModule,
   ],
   controllers: [AppController],
   providers: [
@@ -121,6 +129,7 @@ export class AppModule implements OnModuleInit {
           password,
           confirmPassword: password,
           role: Role.Admin,
+          isEmailVerified: true,
         } as any);
 
         // eslint-disable-next-line no-console

@@ -55,3 +55,5 @@ export class HobbiesController {
     return this.hobbiesService.remove(id, req.user.userId);
   }
 }
+
+
