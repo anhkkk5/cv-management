@@ -17,7 +17,7 @@ function AdminLayout() {
 
   // Check if user is admin
   if (userType !== "admin") {
-    navigate("/loginAdmin");
+    navigate("/login");
     return null;
   }
 
@@ -39,6 +39,11 @@ function AdminLayout() {
       return [
         { title: <Link to="/">Trang chủ</Link> },
         { title: "Quản lý công ty" },
+      ];
+    } else if (path.includes("/admin/company-reviews")) {
+      return [
+        { title: <Link to="/">Trang chủ</Link> },
+        { title: "Duyệt đánh giá công ty" },
       ];
     }
     return [{ title: "Trang chủ" }];

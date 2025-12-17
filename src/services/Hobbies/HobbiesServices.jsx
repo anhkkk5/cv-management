@@ -19,3 +19,5 @@ export const deleteHobby = async (id) => {
   const result = await del(`hobbies/${id}`);
   return result;
 };
+
+

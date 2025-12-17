@@ -80,3 +80,5 @@ Kiểm tra trong console:
 - Có field nào bị thiếu không?
 
 Sau đó so sánh với payload của `activities` hoặc `certificates` (đang hoạt động) để tìm sự khác biệt.
+
+

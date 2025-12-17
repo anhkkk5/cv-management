@@ -93,3 +93,5 @@ function Hobbies({ hobbiesList = [], onAdd, onDelete, readOnly = false }) {
 }
 
 export default Hobbies;
+
+

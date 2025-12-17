@@ -139,7 +139,9 @@ function GrossNetPage() {
     : [];
 
   return (
-    <div className="grossnet">
+    <div className="grossnet-page">
+      <div className="grossnet-page__container">
+        <div className="grossnet">
       <div className="grossnet__header">
         <Card className="grossnet__card">
           <Row gutter={[16, 16]}>
@@ -257,6 +259,8 @@ function GrossNetPage() {
           </Typography.Text>
         </Card>
       )}
+        </div>
+      </div>
     </div>
   );
 }

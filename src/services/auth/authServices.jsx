@@ -27,6 +27,14 @@ export const login = async ({ email, password }) => {
   return res;
 };
 
+export const verifyOtp = async ({ email, otp }) => {
+  return await post("auth/verify-otp", { email, otp });
+};
+
+export const resendOtp = async ({ email }) => {
+  return await post("auth/resend-otp", { email });
+};
+
 // Minimal JWT decode to read role without external deps
 export const decodeJwt = (token) => {
   try {

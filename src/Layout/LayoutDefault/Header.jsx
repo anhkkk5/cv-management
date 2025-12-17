@@ -71,10 +71,10 @@ function Header() {
     { key: "tax", icon: <CalculatorOutlined />, label: "Tính thuế thu nhập cá nhân", path: "/personal-income-tax" },
     { key: "compound", icon: <LineChartOutlined />, label: "Tính lãi suất kép", path: "/compound-interest" },
     { key: "unemployment", icon: <SafetyCertificateOutlined />, label: "Tính bảo hiểm thất nghiệp", path: "/unemployment-insurance" },
+    { key: "company-reviews", icon: <ShopOutlined />, label: "Review công ty", path: "/company-reviews" },
     { key: "social", icon: <SolutionOutlined />, label: "Tính bảo hiểm xã hội một lần" },
     { key: "saving-plan", icon: <CalculatorOutlined />, label: "Lập kế hoạch tiết kiệm", path: "/savings-plan" },
     { key: "ads-rent", icon: <MobileOutlined />, label: "Thuê quảng cáo", path: "/ads/rent" },
-    { key: "mobile", icon: <MobileOutlined />, label: "Mobile App TopCV" },
   ];
 
   const companyShortcuts = [
@@ -202,6 +202,17 @@ function Header() {
   // ----- HANDLERS -----
   const handleLogout = () => navigate("/logout");
 
+  // Tùy loại user mà ẩn/bớt một số công cụ
+  const visibleToolShortcuts =
+    userType === "company"
+      ? toolShortcuts.filter(
+          (item) =>
+            item.key !== "skill-assessment" &&
+            item.key !== "ads-rent" &&
+            item.key !== "company-reviews"
+        )
+      : toolShortcuts;
+
   const handleNavigateAndClose = (path) => {
     if (path) navigate(path);
     setIsJobMenuOpen(false);
@@ -236,6 +247,11 @@ function Header() {
             onClick: handleGoCompany,
           },
           {
+            key: "company-interviews",
+            label: "Lịch phỏng vấn",
+            onClick: () => navigate("/company/interviews"),
+          },
+          {
             key: "manage-quizzes",
             label: "Quản lý đánh giá năng lực",
             onClick: () => navigate("/company/quiz"),
@@ -248,6 +264,11 @@ function Header() {
             key: "my-applications",
             label: "Công việc đã ứng tuyển",
             onClick: () => navigate("/applications"),
+          },
+          {
+            key: "my-interviews",
+            label: "Lịch phỏng vấn",
+            onClick: () => navigate("/interviews"),
           },
           {
             key: "saved-jobs",
@@ -283,6 +304,7 @@ function Header() {
                 <NavLink to="/admin/companies" className="header__top-link">Quản lý công ty</NavLink>
                 <NavLink to="/admin/users" className="header__top-link">Quản lý người dùng</NavLink>
                 <NavLink to="/admin/posts" className="header__top-link">Quản lý bài viết</NavLink>
+                <NavLink to="/admin/company-reviews" className="header__top-link">Duyệt đánh giá</NavLink>
               </>
             ) : (
               <>
@@ -305,14 +327,16 @@ function Header() {
                     Việc làm
                   </NavLink>
 
-                  <NavLink
-                    to="/company-reviews"
-                    className={`header__top-link ${
-                      location.pathname.startsWith("/company-reviews") ? "header__top-link--active" : ""
-                    }`}
-                  >
-                    Review công ty
-                  </NavLink>
+                  {!isLoggedIn && (
+                    <NavLink
+                      to="/company-reviews"
+                      className={`header__top-link ${
+                        location.pathname.startsWith("/company-reviews") ? "header__top-link--active" : ""
+                      }`}
+                    >
+                      Review công ty
+                    </NavLink>
+                  )}
 
                   <div className="header__job-dropdown">
                     <div className="header__job-dropdown-left">
@@ -377,7 +401,7 @@ function Header() {
                   <div className="header__tools-dropdown">
                     <div className="header__tools-title">CÔNG CỤ</div>
                     <div className="header__tools-grid">
-                      {toolShortcuts.map((item) => (
+                      {visibleToolShortcuts.map((item) => (
                         <button key={item.key} className="header__tools-item"
                           onClick={() => handleNavigateAndClose(item.path)}
                         >
@@ -610,14 +634,19 @@ function Header() {
           </div>
 
           <div className="header__search">
-            <SearchListJob showButton={false} />
+            <div className="header__search-box">
+              <SearchListJob reverse={true} showButton={false} />
+            </div>
           </div>
 
           {/* ACTION BUTTONS */}
           <div className="header__actions">
             {isLoggedIn ? (
               <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-                <BellOutlined style={{ fontSize: "24px", color: "#c41e3a", cursor: "pointer" }} />
+                <BellOutlined
+                  style={{ fontSize: "24px", color: "#c41e3a", cursor: "pointer" }}
+                  onClick={() => navigate("/notifications")}
+                />
 
                 <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
                   <div style={{ display: "flex", alignItems: "center", gap: "10px", cursor: "pointer" }}>

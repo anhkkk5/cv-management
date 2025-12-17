@@ -105,22 +105,41 @@ function CompanyReviewDetail() {
                   </Text>
                 </div>
                 <div className="company-info-row">
-                  <Text style={{ color: "#666" }}>
+                  <Text
+                    className="company-info-item"
+                    style={{ color: "#666" }}
+                    ellipsis={{ tooltip: company.address || "N/A" }}
+                  >
                     <EnvironmentOutlined style={{ marginRight: 4 }} /> {company.address || "N/A"}
                   </Text>
                   <Text style={{ color: "#666" }}>
                     <UserOutlined style={{ marginRight: 4 }} /> 25 - 100 nhân viên
                   </Text>
-                  <Text style={{ color: "#666", marginLeft: 16 }}>
+                  <Text style={{ color: "#666" }}>
                     <FileTextOutlined style={{ marginRight: 4 }} /> {jobsCount} việc làm
                   </Text>
                   {company.website && (
-                    <Text style={{ color: "#1890ff", cursor: "pointer", marginLeft: 16 }}>
+                    <a
+                      className="company-info-item"
+                      href={company.website}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      style={{ color: "#1890ff" }}
+                      title={company.website}
+                    >
                       <GlobalOutlined style={{ marginRight: 4 }} /> Xem trang web
-                    </Text>
+                    </a>
                   )}
                 </div>
-                <Tag color="success" style={{ marginTop: 8 }}>{company.description || "Công ty"}</Tag>
+                <Tag
+                  color="success"
+                  className="company-desc-tag"
+                  style={{ marginTop: 8 }}
+                >
+                  <span className="company-desc-text" title={company.description || "Công ty"}>
+                    {company.description || "Công ty"}
+                  </span>
+                </Tag>
               </div>
             </div>
             <div className="company-header-actions">

@@ -19,3 +19,5 @@ export const deleteSkill = async (id) => {
   const result = await del(`skills/${id}`);
   return result;
 };
+
+

@@ -18,6 +18,7 @@ import SavedJobs from "../pages/SavedJobs/index.jsx";
 /* Auth */
 import Login from "../pages/login/index.jsx";
 import Register from "../pages/Register/index.jsx";
+import VerifyOtp from "../pages/VerifyOtp/index.jsx";
 import Logout from "../logout/index.jsx";
 import LoginCompany from "../pages/login/loginCompany.jsx";
 import RegisterCompany from "../pages/Register/registerCompany.jsx";
@@ -39,6 +40,11 @@ import ViewCVPage from "../pages/ViewCV/index.jsx";
 /* Candidate */
 import CandidateProfile from "../pages/CandidateProfile/index.jsx";
 import AppliedJobs from "../pages/AppliedJobs/index.jsx";
+
+/* Interview schedules */
+import CompanyInterviewSchedules from "../pages/CompanyInterviewSchedules/index.jsx";
+import MyInterviews from "../pages/MyInterviews/index.jsx";
+import NotificationsPage from "../pages/Notifications/index.jsx";
 
 /* Skill assessment */
 import SkillAssessment from "../pages/SkillAssessment/index.jsx";
@@ -77,6 +83,7 @@ import JobsManagement from "../pages/Admin/JobsManagement/index.jsx";
 import UsersManagement from "../pages/Admin/UsersManagement/index.jsx";
 import CompaniesManagement from "../pages/Admin/CompaniesManagement/index.jsx";
 import PostsManagement from "../pages/Admin/PostsManagement/index.jsx";
+import CompanyReviewsManagement from "../pages/Admin/CompanyReviewsManagement/index.jsx";
 
 export const routes = [
   {
@@ -95,6 +102,13 @@ export const routes = [
       { path: "company-reviews/:id", element: <CompanyReviewDetail /> },
       { path: "company-ads", element: <CompanyAdsManagement /> },
 
+      // Finance tools
+      { path: "gross-net", element: <GrossNet /> },
+      { path: "personal-income-tax", element: <PersonalIncomeTax /> },
+      { path: "unemployment-insurance", element: <UnemploymentInsurance /> },
+      { path: "savings-plan", element: <SavingsPlan /> },
+      { path: "compound-interest", element: <CompoundInterestPage /> },
+
       { path: "saved-jobs", element: <SavedJobs /> },
       { path: "search", element: <Search /> },
       { path: "create-job", element: <CreateJob /> },
@@ -108,6 +122,10 @@ export const routes = [
       { path: "profile", element: <CandidateProfile /> },
       { path: "applications", element: <AppliedJobs /> },
       { path: "candidates/:id", element: <CandidateDetail /> },
+
+      { path: "company/interviews", element: <CompanyInterviewSchedules /> },
+      { path: "interviews", element: <MyInterviews /> },
+      { path: "notifications", element: <NotificationsPage /> },
 
       { path: "skill-assessment", element: <SkillAssessment /> },
       { path: "skill-assessment/take/:id", element: <TakeQuiz /> },
@@ -135,6 +153,7 @@ export const routes = [
 
   { path: "/login", element: <Login /> },
   { path: "/register", element: <Register /> },
+  { path: "/verify-otp", element: <VerifyOtp /> },
   { path: "/logout", element: <Logout /> },
   { path: "/loginCompany", element: <LoginCompany /> },
   { path: "/registerCompany", element: <RegisterCompany /> },
@@ -149,6 +168,7 @@ export const routes = [
       { path: "users", element: <UsersManagement /> },
       { path: "companies", element: <CompaniesManagement /> },
       { path: "posts", element: <PostsManagement /> },
+      { path: "company-reviews", element: <CompanyReviewsManagement /> },
     ],
   },
 ];

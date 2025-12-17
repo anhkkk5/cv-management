@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { login, decodeJwt } from "../../services/auth/authServices";
+import { getMyCompany } from "../../services/getAllLocation/../getAllCompany/companyServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -14,6 +15,38 @@ function Login() {
   const [messageApi, contextHolder] = message.useMessage();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+
+  const redirectByRole = async (role) => {
+    if (role === "admin") {
+      navigate("/admin/jobs", { replace: true });
+      return;
+    }
+
+    if (role === "recruiter") {
+      try {
+        const company = await getMyCompany();
+        if (company?.id) {
+          navigate(`/companies/${company.id}`, { replace: true });
+          return;
+        }
+      } catch (_) {}
+      navigate("/", { replace: true });
+      return;
+    }
+
+    navigate("/", { replace: true });
+  };
+
+  useEffect(() => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      const payload = decodeJwt(token);
+      const role = payload?.role;
+      if (!role) return;
+      redirectByRole(role);
+    } catch (_) {}
+  }, []);
 
   // Define validation rules
   const rules = [
@@ -35,18 +68,29 @@ function Login() {
       const role = payload?.role;
       const userId = payload?.sub;
 
-      if (role !== 'candidate') {
-        messageApi.error("Bạn không có quyền đăng nhập trang người dùng.");
-        return;
-      }
-
       const time = 1; // 1 day
       setCookie("id", userId, time);
-      setCookie("userType", "candidate", time);
       setCookie("token", token, time);
+
+      // Map role -> userType for FE routing/guards
+      if (role === "admin") setCookie("userType", "admin", time);
+      else if (role === "recruiter") setCookie("userType", "company", time);
+      else setCookie("userType", "candidate", time);
+
       dispatch(checkLogin(true));
       messageApi.success("Đăng nhập thành công!");
-      setTimeout(() => navigate("/"), 800);
+
+      if (role === "recruiter") {
+        try {
+          const company = await getMyCompany();
+          if (company) {
+            setCookie("companyName", company.companyName || company.fullName || "", time);
+            setCookie("companyId", company.id, time);
+          }
+        } catch (_) {}
+      }
+
+      setTimeout(() => redirectByRole(role), 400);
     } catch (error) {
       const backendMsg = error?.response?.data?.message;
       if (backendMsg) messageApi.error(Array.isArray(backendMsg) ? backendMsg.join(", ") : backendMsg);
@@ -151,13 +195,7 @@ function Login() {
                     }}
                   >
                     <Text>Hoặc đăng nhập bằng:</Text>
-                    <Link to="/loginAdmin" style={{ color: "red" }}>
-                      Admin
-                    </Link>
-                    <span>|</span>
-                    <Link to="/loginCompany" style={{ color: "red" }}>
-                      Công ty
-                    </Link>
+                    <Text type="secondary">(tài khoản Admin/Công ty/Ứng viên đều dùng chung trang này)</Text>
                   </div>
                 </div>
               </Form>

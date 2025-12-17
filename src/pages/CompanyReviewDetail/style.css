@@ -46,6 +46,25 @@
   gap: 16px;
   margin-top: 8px;
   color: #666;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.company-info-item {
+  max-width: 260px;
+}
+
+.company-desc-tag {
+  max-width: 100%;
+}
+
+.company-desc-text {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: bottom;
 }
 
 .company-header-actions {
@@ -210,8 +229,18 @@
 .overview-item-value {
   font-size: 15px;
   color: #262626;
-  word-break: break-word;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   line-height: 1.5;
+}
+
+.overview-item-value a {
+  display: inline-block;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .overview-description {

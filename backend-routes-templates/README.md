@@ -52,3 +52,5 @@ Các file trong thư mục này là templates để tạo API routes cho backend
 1. Đảm bảo `database.json` đã có các collections: `awards`, `skills`, `references`, `hobbies`
 2. Kiểm tra cách backend hiện tại xử lý `activities` và `certificates` để đảm bảo nhất quán
 3. Test các endpoints sau khi tạo
+
+

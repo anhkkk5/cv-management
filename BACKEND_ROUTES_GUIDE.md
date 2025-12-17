@@ -222,3 +222,5 @@ export async function DELETE(
 1. Đảm bảo database.json đã có các collections: `awards`, `skills`, `references`, `hobbies`
 2. Kiểm tra cách bạn xử lý authentication trong routes hiện tại (activities, certificates) và áp dụng tương tự
 3. Đảm bảo path đến database.json đúng với cấu trúc dự án của bạn
+
+

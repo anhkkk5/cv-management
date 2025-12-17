@@ -1,10 +1,10 @@
 /* Wrapper and header */
 .fj-wrapper {
-  padding: 24px 0;
+  padding: 32px 0 8px;
   max-width: 1400px;
   margin: 0 auto;
-  padding-left: 20px;
-  padding-right: 20px;
+  padding-left: 24px;
+  padding-right: 24px;
 }
 
 .fj-header {
@@ -16,7 +16,8 @@
 
 .fj-title {
   margin: 0;
-  font-size: 28px;
+  font-size: 26px;
+  font-weight: 700;
 }
 
 .fj-view-more {
@@ -26,8 +27,15 @@
 
 /* Card */
 .fj-card {
-  border: 1px solid #eee;
-  border-radius: 12px;
+  border: 1px solid #f0f0f0;
+  border-radius: 16px;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.fj-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.1);
 }
 
 .fj-card-top {

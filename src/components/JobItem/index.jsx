@@ -121,8 +121,13 @@ function JobItem(props) {
         <Space align="center" style={{ marginBottom: "8px" }}>
           <Avatar
             size="small"
-            icon={<BankOutlined />} // Icon ngân hàng đại diện cho công ty
-            style={{ backgroundColor: "#52c41a" }} // Màu xanh lá
+            src={
+              companyInfo?.logo ||
+              item?.infoCompany?.logo ||
+              undefined
+            }
+            icon={<BankOutlined />}
+            style={{ backgroundColor: "#52c41a" }}
           />
           <Text strong style={{ color: "#262626" }}>
             {/* Hiển thị tên công ty, ưu tiên companyInfo.companyName, fallback về item.infoCompany.companyName */}

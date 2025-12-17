@@ -393,7 +393,11 @@ function CompanyDetail() {
                           </span>
                         </div>
                         <div className="job-company">
-                          <Avatar size={32} className="job-company-logo">
+                          <Avatar
+                            size={32}
+                            className="job-company-logo"
+                            src={company.logo || undefined}
+                          >
                             {company.name?.charAt(0)}
                           </Avatar>
                           <span className="job-company-name">

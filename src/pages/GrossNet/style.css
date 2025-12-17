@@ -1,5 +1,20 @@
+.grossnet-page {
+  min-height: 100vh;
+  background: #f0f2f5;
+  padding: 40px 20px;
+}
+
+.grossnet-page__container {
+  max-width: 1050px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  padding: 24px 24px 32px;
+}
+
 .grossnet {
-  padding: 24px;
+  padding: 0;
 }
 
 .grossnet__card {

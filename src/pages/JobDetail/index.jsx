@@ -31,14 +31,17 @@ import {
   FileTextOutlined,
   EyeOutlined,
 } from "@ant-design/icons";
+import { Document, Page, pdfjs } from "react-pdf";
 import dayjs from "dayjs";
 import { getDetaiJob, updateJob } from "../../services/jobServices/jobServices";
 import { getDetaiCompany } from "../../services/getAllCompany/companyServices";
 import { getLocationById } from "../../services/getAllLocation/locationServices";
 import { getCookie } from "../../helpers/cookie";
-import { get, post, edit, postForm } from "../../utils/axios/request";
+import { get, edit, postForm } from "../../utils/axios/request";
 
 import "./style.css";
+
+pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 const { Title, Paragraph, Text } = Typography;
 const { TextArea } = Input;
@@ -60,6 +63,13 @@ function JobDetail() {
   const [updating, setUpdating] = React.useState(false);
   const [loadingApplications, setLoadingApplications] = React.useState(false);
   const [hasApplied, setHasApplied] = React.useState(false);
+  const [pdfModal, setPdfModal] = React.useState({
+    open: false,
+    url: "",
+    name: "",
+  });
+  const [numPages, setNumPages] = React.useState(null);
+  const [pageNumber, setPageNumber] = React.useState(1);
 
   // Check if user is company
   React.useEffect(() => {
@@ -213,6 +223,33 @@ function JobDetail() {
     });
   };
 
+  const handleOpenPdfModal = (candidate) => {
+    if (!candidate.cvPdfUrl) {
+      message.error("Ứng viên chưa upload CV PDF");
+      return;
+    }
+    setPdfModal({
+      open: true,
+      url: candidate.cvPdfUrl,
+      name: candidate.name || "CV ứng viên",
+    });
+    setNumPages(null);
+    setPageNumber(1);
+  };
+
+  const handleClosePdfModal = () => {
+    setPdfModal({
+      open: false,
+      url: "",
+      name: "",
+    });
+  };
+
+  const handleDocumentLoadSuccess = ({ numPages: nextNumPages }) => {
+    setNumPages(nextNumPages || 1);
+    setPageNumber(1);
+  };
+
   const showUpdateModal = () => {
     setIsModalVisible(true);
   };
@@ -236,10 +273,12 @@ function JobDetail() {
     if (!job?.id) return;
 
     if (hasApplied) {
-      message.info("Bạn đã ứng tuyển công việc này. Hãy theo dõi cập nhật từ nhà tuyển dụng.");
+      message.info(
+        "Bạn đã ứng tuyển công việc này. Hãy theo dõi cập nhật từ nhà tuyển dụng."
+      );
       return;
     }
-    
+
     // Hiển thị modal để upload PDF CV
     Modal.confirm({
       title: "Ứng tuyển công việc",
@@ -261,7 +300,7 @@ function JobDetail() {
       onOk: async () => {
         const fileInput = document.getElementById("cv-pdf-input");
         const file = fileInput?.files?.[0];
-        
+
         if (!file) {
           message.error("Vui lòng chọn file PDF CV");
           return Promise.reject();
@@ -319,7 +358,12 @@ function JobDetail() {
             status: app.status || "pending",
           }));
           setAppliedCandidates(formatted);
-        } catch (_) {}
+        } catch (e) {
+          console.error(
+            "Failed to reload applications after status update:",
+            e
+          );
+        }
       }
     } catch (error) {
       const backendMsg = error?.response?.data?.message;
@@ -336,13 +380,13 @@ function JobDetail() {
   const handleUpdate = async (values) => {
     try {
       setUpdating(true);
-      
+
       // Giữ nguyên tất cả các trường hiện có và chỉ cập nhật những trường được chỉnh sửa
       // Chuyển đổi string thành array cho requirements, desirable, benefits
       const convertToArray = (value) => {
         if (!value) return [];
-        if (typeof value === 'string') {
-          return value.split('\n').filter(item => item.trim() !== '');
+        if (typeof value === "string") {
+          return value.split("\n").filter((item) => item.trim() !== "");
         }
         return value;
       };
@@ -371,7 +415,7 @@ function JobDetail() {
       await updateJob(id, updateData);
       message.success("Cập nhật thông tin công việc thành công!");
       setIsModalVisible(false);
-      
+
       // Reload job data
       const jobData = await getDetaiJob(id);
       setJob(jobData);
@@ -441,7 +485,11 @@ function JobDetail() {
             {/* Job Header */}
             <div className="job-header">
               <div className="job-header-left">
-                <Avatar size={60} className="company-logo">
+                <Avatar
+                  size={60}
+                  className="company-logo"
+                  src={company?.logo || null}
+                >
                   {(company?.companyName || company?.name)?.charAt(0) || "?"}
                 </Avatar>
                 <div className="job-title-section">
@@ -646,12 +694,24 @@ function JobDetail() {
                 { key: "approved", title: "CV đã duyệt", color: "green" },
                 { key: "rejected", title: "CV không duyệt", color: "red" },
               ].map((group) => {
-                const list = appliedCandidates.filter((c) => c.status === group.key);
+                const list = appliedCandidates.filter(
+                  (c) => c.status === group.key
+                );
                 return (
                   <Col xs={24} md={8} key={group.key}>
-                    <Card title={<span>{group.title} <Tag color={group.color}>{list.length}</Tag></span>}>
+                    <Card
+                      title={
+                        <span>
+                          {group.title}{" "}
+                          <Tag color={group.color}>{list.length}</Tag>
+                        </span>
+                      }
+                    >
                       {list.length === 0 ? (
-                        <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="Trống" />
+                        <Empty
+                          image={Empty.PRESENTED_IMAGE_SIMPLE}
+                          description="Trống"
+                        />
                       ) : (
                         <Space direction="vertical" style={{ width: "100%" }}>
                           {list.map((candidate) => (
@@ -687,18 +747,7 @@ function JobDetail() {
                                       icon={<FileTextOutlined />}
                                       onClick={(e) => {
                                         e.stopPropagation();
-                                        if (!candidate.cvPdfUrl) {
-                                          message.error("Ứng viên chưa upload CV PDF");
-                                          return;
-                                        }
-                                        // Tải file PDF về với tên dễ đọc
-                                        const link = document.createElement("a");
-                                        link.href = candidate.cvPdfUrl;
-                                        const safeName = (candidate.name || "ungvien").replace(/[^a-zA-Z0-9-_]/g, "_");
-                                        link.download = `CV_${safeName}.pdf`;
-                                        document.body.appendChild(link);
-                                        link.click();
-                                        document.body.removeChild(link);
+                                        handleOpenPdfModal(candidate);
                                       }}
                                       title="Xem CV ứng viên"
                                     >
@@ -712,7 +761,10 @@ function JobDetail() {
                                         type="primary"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleUpdateApplicationStatus(candidate.id, "approved");
+                                          handleUpdateApplicationStatus(
+                                            candidate.id,
+                                            "approved"
+                                          );
                                         }}
                                       >
                                         Duyệt
@@ -722,7 +774,10 @@ function JobDetail() {
                                         danger
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          handleUpdateApplicationStatus(candidate.id, "rejected");
+                                          handleUpdateApplicationStatus(
+                                            candidate.id,
+                                            "rejected"
+                                          );
                                         }}
                                       >
                                         Không duyệt
@@ -754,15 +809,13 @@ function JobDetail() {
         style={{ top: 20 }}
         bodyStyle={{ maxHeight: "calc(100vh - 200px)", overflowY: "auto" }}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleUpdate}
-        >
+        <Form form={form} layout="vertical" onFinish={handleUpdate}>
           <Form.Item
             label="Tên công việc"
             name="title"
-            rules={[{ required: true, message: "Vui lòng nhập tên công việc!" }]}
+            rules={[
+              { required: true, message: "Vui lòng nhập tên công việc!" },
+            ]}
           >
             <Input placeholder="Technical Support" />
           </Form.Item>
@@ -770,7 +823,9 @@ function JobDetail() {
           <Form.Item
             label="Thời gian làm việc"
             name="jobType"
-            rules={[{ required: true, message: "Vui lòng chọn thời gian làm việc!" }]}
+            rules={[
+              { required: true, message: "Vui lòng chọn thời gian làm việc!" },
+            ]}
           >
             <Select placeholder="Chọn thời gian">
               <Option value="FULL-TIME">Full-time</Option>
@@ -807,24 +862,18 @@ function JobDetail() {
             <TextArea rows={4} placeholder="Hint text" />
           </Form.Item>
 
-          <Form.Item
-            label="Yêu cầu của công việc"
-            name="requirements"
-          >
-            <TextArea rows={4} placeholder="Nhập yêu cầu công việc (mỗi yêu cầu 1 dòng)" />
+          <Form.Item label="Yêu cầu của công việc" name="requirements">
+            <TextArea
+              rows={4}
+              placeholder="Nhập yêu cầu công việc (mỗi yêu cầu 1 dòng)"
+            />
           </Form.Item>
 
-          <Form.Item
-            label="Kinh nghiệm yêu cầu"
-            name="experience"
-          >
+          <Form.Item label="Kinh nghiệm yêu cầu" name="experience">
             <Input placeholder="Ví dụ: 2-3 năm" />
           </Form.Item>
 
-          <Form.Item
-            label="Trình độ học vấn"
-            name="education"
-          >
+          <Form.Item label="Trình độ học vấn" name="education">
             <Select placeholder="Chọn trình độ">
               <Option value="Đại học">Đại học</Option>
               <Option value="Cao đẳng">Cao đẳng</Option>
@@ -833,31 +882,25 @@ function JobDetail() {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="Kỹ năng mong muốn (Desirable)"
-            name="desirable"
-          >
-            <TextArea rows={3} placeholder="Nhập các kỹ năng mong muốn (mỗi kỹ năng 1 dòng)" />
+          <Form.Item label="Kỹ năng mong muốn (Desirable)" name="desirable">
+            <TextArea
+              rows={3}
+              placeholder="Nhập các kỹ năng mong muốn (mỗi kỹ năng 1 dòng)"
+            />
           </Form.Item>
 
-          <Form.Item
-            label="Quyền lợi (Benefits)"
-            name="benefits"
-          >
-            <TextArea rows={4} placeholder="Nhập các quyền lợi (mỗi quyền lợi 1 dòng)" />
+          <Form.Item label="Quyền lợi (Benefits)" name="benefits">
+            <TextArea
+              rows={4}
+              placeholder="Nhập các quyền lợi (mỗi quyền lợi 1 dòng)"
+            />
           </Form.Item>
 
-          <Form.Item
-            label="Địa điểm làm việc"
-            name="location"
-          >
+          <Form.Item label="Địa điểm làm việc" name="location">
             <Input placeholder="Ví dụ: Hà Nội" />
           </Form.Item>
 
-          <Form.Item
-            label="Trạng thái"
-            name="status"
-          >
+          <Form.Item label="Trạng thái" name="status">
             <Select placeholder="Chọn trạng thái">
               <Option value="active">Đang tuyển</Option>
               <Option value="inactive">Ngừng tuyển</Option>
@@ -865,16 +908,10 @@ function JobDetail() {
             </Select>
           </Form.Item>
 
-          <Form.Item
-            label="Thời gian ứng tuyển"
-            style={{ marginBottom: 0 }}
-          >
+          <Form.Item label="Thời gian ứng tuyển" style={{ marginBottom: 0 }}>
             <Row gutter={16}>
               <Col span={12}>
-                <Form.Item
-                  name="startDate"
-                  label="Start Date"
-                >
+                <Form.Item name="startDate" label="Start Date">
                   <DatePicker
                     style={{ width: "100%" }}
                     format="MMM DD, YYYY"
@@ -886,12 +923,11 @@ function JobDetail() {
                 <Form.Item
                   name="endDate"
                   label="End Date"
-                  rules={[{ required: true, message: "Vui lòng chọn ngày kết thúc!" }]}
+                  rules={[
+                    { required: true, message: "Vui lòng chọn ngày kết thúc!" },
+                  ]}
                 >
-                  <DatePicker
-                    style={{ width: "100%" }}
-                    format="MMM DD, YYYY"
-                  />
+                  <DatePicker style={{ width: "100%" }} format="MMM DD, YYYY" />
                 </Form.Item>
               </Col>
             </Row>
@@ -900,10 +936,7 @@ function JobDetail() {
           <Form.Item style={{ marginBottom: 0, marginTop: 24 }}>
             <Row gutter={16}>
               <Col span={12}>
-                <Button
-                  block
-                  onClick={handleCancel}
-                >
+                <Button block onClick={handleCancel}>
                   Hủy Bỏ
                 </Button>
               </Col>
@@ -926,7 +959,107 @@ function JobDetail() {
         </Form>
       </Modal>
 
-      {/* Không dùng modal xem CV nữa; khi bấm Xem CV sẽ mở/tải PDF trong tab mới */}
+      <Modal
+        title={pdfModal.name || "CV ứng viên"}
+        open={pdfModal.open}
+        onCancel={handleClosePdfModal}
+        footer={null}
+        width={900}
+        style={{ top: 20 }}
+        bodyStyle={{ height: "80vh" }}
+      >
+        {!pdfModal.url ? (
+          <div style={{ textAlign: "center", padding: 24 }}>
+            Không có file CV để hiển thị.
+          </div>
+        ) : (
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              height: "100%",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+                marginBottom: 12,
+              }}
+            >
+              <span>
+                Trang {pageNumber}/{numPages || "?"}
+              </span>
+              <div style={{ display: "flex", gap: 8 }}>
+                <Button
+                  size="small"
+                  disabled={!numPages || pageNumber <= 1}
+                  onClick={() => setPageNumber((prev) => Math.max(prev - 1, 1))}
+                >
+                  Trang trước
+                </Button>
+                <Button
+                  size="small"
+                  disabled={!numPages || pageNumber >= numPages}
+                  onClick={() =>
+                    setPageNumber((prev) =>
+                      numPages ? Math.min(prev + 1, numPages) : prev
+                    )
+                  }
+                >
+                  Trang sau
+                </Button>
+                <Button
+                  size="small"
+                  type="primary"
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = pdfModal.url;
+                    const safeName = (pdfModal.name || "ungvien").replace(
+                      /[^a-zA-Z0-9-_]/g,
+                      "_"
+                    );
+                    link.download = `CV_${safeName}.pdf`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                >
+                  Tải về
+                </Button>
+              </div>
+            </div>
+            <div
+              style={{
+                flex: 1,
+                overflow: "auto",
+                border: "1px solid #f0f0f0",
+                borderRadius: 4,
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <Document
+                file={pdfModal.url}
+                onLoadSuccess={handleDocumentLoadSuccess}
+                loading={
+                  <div style={{ padding: 24, textAlign: "center" }}>
+                    <Spin />
+                  </div>
+                }
+                error={
+                  <div style={{ padding: 24, textAlign: "center" }}>
+                    Không thể hiển thị file PDF.
+                  </div>
+                }
+              >
+                <Page pageNumber={pageNumber} width={800} />
+              </Document>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

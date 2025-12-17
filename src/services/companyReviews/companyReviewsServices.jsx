@@ -1,4 +1,4 @@
-import { get, post } from "../../utils/axios/request";
+import { get, post, edit, del } from "../../utils/axios/request";
 
 // Lấy tất cả reviews
 export const getAllReviews = async (companyId) => {
@@ -37,6 +37,41 @@ export const markHelpful = async (reviewId) => {
 export const getReviewDetail = async (reviewId) => {
   const result = await get(`company-reviews/${reviewId}`);
   return result;
+};
+
+// Admin: danh sách reviews (lọc theo status/companyId)
+export const adminGetReviews = async ({ status, companyId } = {}) => {
+  const params = new URLSearchParams();
+  if (companyId) params.set("companyId", String(companyId));
+  if (status) params.set("status", String(status));
+  const qs = params.toString();
+  const url = qs ? `company-reviews/admin?${qs}` : "company-reviews/admin";
+  return await get(url);
+};
+
+// Admin: xem chi tiết review
+export const adminGetReviewDetail = async (reviewId) => {
+  return await get(`company-reviews/admin/${reviewId}`);
+};
+
+// Admin: duyệt review
+export const adminApproveReview = async (reviewId) => {
+  return await edit(`company-reviews/admin/${reviewId}/approve`, {});
+};
+
+// Admin: từ chối review
+export const adminRejectReview = async (reviewId) => {
+  return await edit(`company-reviews/admin/${reviewId}/reject`, {});
+};
+
+// Admin: xoá review
+export const adminDeleteReview = async (reviewId) => {
+  return await del(`company-reviews/admin/${reviewId}`);
+};
+
+// Admin: xoá comment
+export const adminDeleteComment = async (commentId) => {
+  return await del(`company-reviews/admin/comments/${commentId}`);
 };
 
 

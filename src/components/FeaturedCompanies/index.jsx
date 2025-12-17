@@ -52,7 +52,7 @@ function FeaturedCompanies() {
       ) : (
         <Row gutter={[24, 24]}>
           {companies.map((company) => (
-            <Col xs={24} sm={12} md={12} lg={8} key={company.id}>
+          <Col xs={24} sm={12} md={12} lg={6} key={company.id}>
               <Card
                 hoverable
                 className="fc-card"

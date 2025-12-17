@@ -38,14 +38,13 @@ function Register() {
       });
 
       if (result) {
-        messageApi.success(
-          "Đăng ký thành công! Chào mừng bạn đến với nền tảng của chúng tôi 🎉"
-        );
+        messageApi.success("Đăng ký thành công! Vui lòng nhập OTP để xác thực tài khoản.");
         form.resetFields();
-        // Wait a bit for user to see the success message before navigating
         setTimeout(() => {
-          navigate("/login");
-        }, 2000);
+          navigate(`/verify-otp?email=${encodeURIComponent(values.email)}`, {
+            state: { email: values.email, otpExpiresAt: result?.otpExpiresAt },
+          });
+        }, 800);
       } else {
         messageApi.error("Đăng ký thất bại. Vui lòng thử lại!");
       }

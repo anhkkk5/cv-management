@@ -98,3 +98,5 @@ function Skills({ skillsList = [], onAdd, onDelete, readOnly = false }) {
 }
 
 export default Skills;
+
+

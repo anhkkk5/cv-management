@@ -68,6 +68,9 @@ body {
     color: #666;
     font-size: 14px;
     transition: color 0.3s;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 
     &:hover {
       color: #333;

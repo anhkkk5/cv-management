@@ -2,8 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col, Form, Input, Button, message, Typography } from "antd";
 import { EyeInvisibleOutlined, EyeTwoTone } from "@ant-design/icons";
-import { registerRecruiter, login } from "../../services/auth/authServices";
-import { updateMyCompany, getMyCompany } from "../../services/getAllCompany/companyServices";
+import { registerRecruiter } from "../../services/auth/authServices";
 import "../../pages/login/style.css";
 
 const { Title, Text } = Typography;
@@ -39,29 +38,13 @@ function Register() {
       });
 
       if (result) {
-        // Auto login tạm thời để tạo company, sau đó quay lại màn đăng nhập công ty
-        try {
-          const auth = await login({ email: values.email, password: values.password });
-          const token = auth?.access_token;
-          if (token) localStorage.setItem("token", token);
-          // Create or update my company using form fields
-          const payload = {
-            fullName: values.companyName,
-            companyName: values.companyName,
-            email: values.companyEmail || values.email,
-            address: values.address,
-            status: "active",
-          };
-          await updateMyCompany(payload);
-          messageApi.success("Đăng ký và thiết lập doanh nghiệp thành công. Vui lòng đăng nhập để tiếp tục.");
-          form.resetFields();
-          setTimeout(() => {
-            navigate("/loginCompany");
-          }, 1200);
-        } catch (e) {
-          messageApi.success("Đăng ký thành công! Vui lòng đăng nhập trang công ty.");
-          setTimeout(() => navigate("/loginCompany"), 1200);
-        }
+        messageApi.success("Đăng ký thành công! Vui lòng nhập OTP để xác thực tài khoản.");
+        form.resetFields();
+        setTimeout(() => {
+          navigate(`/verify-otp?email=${encodeURIComponent(values.email)}`, {
+            state: { email: values.email, otpExpiresAt: result?.otpExpiresAt },
+          });
+        }, 800);
       } else {
         messageApi.error("Đăng ký thất bại. Vui lòng thử lại!");
       }
@@ -252,7 +235,7 @@ function Register() {
               <Text>
                 Đã có tài khoản?{" "}
                 <Text
-                  onClick={() => navigate("/loginCompany")}
+                  onClick={() => navigate("/login")}
                   style={{ 
                     color: '#c41e3a', 
                     cursor: 'pointer', 
