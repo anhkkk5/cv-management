@@ -15,6 +15,8 @@ import {
 import { getCookie } from "../../helpers/cookie";
 import { createJob } from "../../services/jobServices/jobServices";
 import { getLocation } from "../../services/getAllLocation/locationServices";
+import { getMyCompany } from "../../services/getAllCompany/companyServices";
+import { getMyStars } from "../../services/stars/starsServices";
 import dayjs from "dayjs";
 import "./style.css";
 
@@ -46,6 +48,7 @@ function CreateJob() {
   const companyId = getCookie("companyId") || getCookie("id");
   const companyName = getCookie("companyName") || "";
   const [locations, setLocations] = useState([]);
+  const [postCost, setPostCost] = useState(4);
 
   useEffect(() => {
     const fetchLocations = async () => {
@@ -57,6 +60,26 @@ function CreateJob() {
       }
     };
     fetchLocations();
+  }, []);
+
+  useEffect(() => {
+    const fetchCost = async () => {
+      try {
+        const company = await getMyCompany();
+        const isPremium = !!company?.isPremium;
+        setPostCost(isPremium ? 2 : 4);
+        return;
+      } catch (_e) {
+        try {
+          const starsInfo = await getMyStars();
+          const isPremium = !!starsInfo?.isPremium;
+          setPostCost(isPremium ? 2 : 4);
+        } catch (_e2) {
+          setPostCost(4);
+        }
+      }
+    };
+    fetchCost();
   }, []);
 
   const handleSubmit = async (values) => {
@@ -91,7 +114,18 @@ function CreateJob() {
       navigate(`/companies/${companyId}`);
     } catch (error) {
       console.error("Error creating job:", error);
-      message.error("Thêm việc làm thất bại. Vui lòng thử lại!");
+      const status = error?.response?.status;
+      const serverMsg = error?.response?.data?.message;
+      const msgText = Array.isArray(serverMsg) ? serverMsg.join(" ") : String(serverMsg || "");
+      const isInsufficientStars =
+        status === 403 &&
+        (msgText.toLowerCase().includes("không đủ sao") || msgText.toLowerCase().includes("cần"));
+
+      if (isInsufficientStars) {
+        message.error("Bạn chưa đủ sao cần nâng cấp thêm");
+      } else {
+        message.error(serverMsg || "Thêm việc làm thất bại. Vui lòng thử lại!");
+      }
     } finally {
       setLoading(false);
     }
@@ -170,6 +204,12 @@ function CreateJob() {
                     </Option>
                   ))}
                 </Select>
+              </Form.Item>
+            </Col>
+
+            <Col xs={24} md={8}>
+              <Form.Item label="Chi phí đăng tin">
+                <Input value={`${postCost} sao`} size="large" disabled />
               </Form.Item>
             </Col>
 

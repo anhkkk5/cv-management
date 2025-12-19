@@ -40,7 +40,7 @@ import {
 
 import { Dropdown, Menu } from "antd";
 
-import { getAllCompany, getMyCompany } from "../../services/getAllCompany/companyServices";
+import { getAllCompany, getMyCompany, updateMyCompany } from "../../services/getAllCompany/companyServices";
 import { getMyCandidateProfile } from "../../services/Candidates/candidatesServices";
 import { decodeJwt } from "../../services/auth/authServices";
 import logoImage from "../../assets/logologin.png";
@@ -234,7 +234,24 @@ function Header() {
       }
     } catch (e) {
       const status = e?.response?.status;
-      if (status === 404) navigate("/registerCompany");
+      if (status === 404) {
+        try {
+          const token = getCookie("token") || localStorage.getItem("token");
+          const email = token ? decodeJwt(token)?.email : "";
+          const raw = email ? localStorage.getItem(`companyDraft:${email}`) : null;
+          const draft = raw ? JSON.parse(raw) : null;
+          if (draft && (draft.fullName || draft.companyName || draft.email)) {
+            const created = await updateMyCompany(draft);
+            if (created?.id) {
+              setCookie("companyId", created.id, 1);
+              setCookie("companyName", created.companyName || created.fullName, 1);
+              navigate(`/companies/${created.id}`);
+              return;
+            }
+          }
+        } catch (_) {}
+        navigate("/registerCompany");
+      }
     }
   };
 
@@ -256,6 +273,11 @@ function Header() {
             label: "Quản lý đánh giá năng lực",
             onClick: () => navigate("/company/quiz"),
           },
+          {
+            key: "upgrade",
+            label: "Nâng cấp tài khoản",
+            onClick: () => navigate("/upgrade"),
+          },
         ]
       : []),
     ...(userType === "candidate"
@@ -274,6 +296,11 @@ function Header() {
             key: "saved-jobs",
             label: "Công việc đã lưu",
             onClick: () => navigate("/saved-jobs"),
+          },
+          {
+            key: "upgrade",
+            label: "Nâng cấp tài khoản",
+            onClick: () => navigate("/upgrade"),
           },
         ]
       : []),

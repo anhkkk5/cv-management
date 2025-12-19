@@ -82,3 +82,4 @@ Kiểm tra trong console:
 Sau đó so sánh với payload của `activities` hoặc `certificates` (đang hoạt động) để tìm sự khác biệt.
 
 
+

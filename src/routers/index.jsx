@@ -19,6 +19,9 @@ import SavedJobs from "../pages/SavedJobs/index.jsx";
 import Login from "../pages/login/index.jsx";
 import Register from "../pages/Register/index.jsx";
 import VerifyOtp from "../pages/VerifyOtp/index.jsx";
+import WalletTopup from "../pages/WalletTopup/index.jsx";
+import MomoReturn from "../pages/MomoReturn/index.jsx";
+import UpgradeAccount from "../pages/UpgradeAccount/index.jsx";
 import Logout from "../logout/index.jsx";
 import LoginCompany from "../pages/login/loginCompany.jsx";
 import RegisterCompany from "../pages/Register/registerCompany.jsx";
@@ -148,6 +151,10 @@ export const routes = [
 
       { path: "posts", element: <PostsList /> },
       { path: "posts/:slug", element: <PostDetail /> },
+
+      { path: "wallet/topup", element: <WalletTopup /> },
+      { path: "momo/return", element: <MomoReturn /> },
+      { path: "upgrade", element: <UpgradeAccount /> },
     ],
   },
 

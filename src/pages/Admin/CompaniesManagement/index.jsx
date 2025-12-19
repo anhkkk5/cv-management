@@ -3,6 +3,7 @@ import {
   Table,
   Button,
   Input,
+  InputNumber,
   Space,
   Tag,
   Switch,
@@ -21,6 +22,7 @@ import {
   editCompany,
   deleteCompany,
 } from "../../../services/getAllCompany/companyServices";
+import { adminAdjustCompanyStars } from "../../../services/stars/starsServices";
 import { useNavigate } from "react-router-dom";
 import "./style.css";
 
@@ -30,6 +32,10 @@ function CompaniesManagement() {
   const [searchText, setSearchText] = useState("");
   const [editingCompany, setEditingCompany] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [starsModalOpen, setStarsModalOpen] = useState(false);
+  const [starsTarget, setStarsTarget] = useState(null);
+  const [starsAmount, setStarsAmount] = useState(10);
+  const [starsSaving, setStarsSaving] = useState(false);
   const [form] = Form.useForm();
   const navigate = useNavigate();
 
@@ -47,6 +53,28 @@ function CompaniesManagement() {
       console.error(error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const openStarsModal = (record) => {
+    setStarsTarget(record);
+    setStarsAmount(10);
+    setStarsModalOpen(true);
+  };
+
+  const submitAdjustStars = async () => {
+    if (!starsTarget?.id) return;
+    try {
+      setStarsSaving(true);
+      await adminAdjustCompanyStars(starsTarget.id, Number(starsAmount || 0));
+      message.success("Cập nhật sao thành công!");
+      setStarsModalOpen(false);
+      setStarsTarget(null);
+      fetchCompanies();
+    } catch (e) {
+      message.error(e?.response?.data?.message || e?.message || "Cập nhật sao thất bại!");
+    } finally {
+      setStarsSaving(false);
     }
   };
 
@@ -86,6 +114,7 @@ function CompaniesManagement() {
     form.setFieldsValue({
       ...record,
       status: record.status === "active",
+      isPremium: !!record.isPremium,
     });
     setIsModalVisible(true);
   };
@@ -169,6 +198,22 @@ function CompaniesManagement() {
       ),
     },
     {
+      title: "Sao",
+      dataIndex: "stars",
+      key: "stars",
+      width: 100,
+      render: (v) => <Tag color="gold">{v ?? 0}</Tag>,
+    },
+    {
+      title: "Premium",
+      dataIndex: "isPremium",
+      key: "isPremium",
+      width: 110,
+      render: (v) => (
+        <Tag color={v ? "green" : "default"}>{v ? "Đã" : "Chưa"}</Tag>
+      ),
+    },
+    {
       title: "Chi tiết thông tin",
       key: "actions",
       width: 150,
@@ -187,6 +232,9 @@ function CompaniesManagement() {
             onClick={() => handleEdit(record)}
           >
             Sửa
+          </Button>
+          <Button type="link" onClick={() => openStarsModal(record)}>
+            +/- Sao
           </Button>
           <Button
             type="link"
@@ -260,6 +308,14 @@ function CompaniesManagement() {
             <Input />
           </Form.Item>
 
+          <Form.Item label="Sao" name="stars">
+            <InputNumber min={0} style={{ width: "100%" }} />
+          </Form.Item>
+
+          <Form.Item label="Premium" name="isPremium" valuePropName="checked">
+            <Switch />
+          </Form.Item>
+
           <Form.Item label="Website" name="website">
             <Input />
           </Form.Item>
@@ -272,6 +328,26 @@ function CompaniesManagement() {
             <Switch checkedChildren="Hoạt động" unCheckedChildren="Tạm dừng" />
           </Form.Item>
         </Form>
+      </Modal>
+
+      <Modal
+        title={`Cộng/Trừ sao - ${starsTarget?.fullName || starsTarget?.companyName || ""}`}
+        open={starsModalOpen}
+        onCancel={() => {
+          setStarsModalOpen(false);
+          setStarsTarget(null);
+        }}
+        onOk={submitAdjustStars}
+        okText="Cập nhật"
+        cancelText="Hủy"
+        confirmLoading={starsSaving}
+      >
+        <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+          <div>
+            Nhập số sao muốn cộng/trừ (âm để trừ):
+          </div>
+          <InputNumber value={starsAmount} onChange={(v) => setStarsAmount(v)} style={{ width: "100%" }} />
+        </div>
       </Modal>
     </div>
   );

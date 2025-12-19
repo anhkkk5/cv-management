@@ -62,6 +62,12 @@ function CandidateProfile() {
               </div>
               <Title level={4} style={{ marginBottom: 4 }}>{data?.fullName || "Chưa cập nhật"}</Title>
               <Text type="secondary">{data?.title || "Ứng viên"}</Text>
+              <div style={{ marginTop: 12, display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap" }}>
+                <Tag color="gold">Sao: {data?.stars ?? 0}</Tag>
+                <Tag color={data?.isPremium ? "green" : "default"}>
+                  Premium: {data?.isPremium ? "Đã nâng cấp" : "Chưa"}
+                </Tag>
+              </div>
             </div>
             <Divider style={{ margin: "12px 0" }}>Liên hệ</Divider>
             <div style={{ display: "flex", alignItems: "center", marginBottom: 8 }}>

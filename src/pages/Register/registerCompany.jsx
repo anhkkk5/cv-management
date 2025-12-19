@@ -24,6 +24,16 @@ function Register() {
     try {
       console.log("Registration attempt:", values);
 
+      try {
+        const draft = {
+          fullName: values.fullName,
+          companyName: values.companyName,
+          email: values.companyEmail,
+          address: values.address,
+        };
+        localStorage.setItem(`companyDraft:${values.email}`, JSON.stringify(draft));
+      } catch (_) {}
+
       // Validate password confirmation
       if (values.password !== values.confirmPassword) {
         messageApi.error("Mật khẩu xác nhận không khớp!");

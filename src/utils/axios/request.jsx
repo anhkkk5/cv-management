@@ -2,7 +2,7 @@ import axios from "axios";
 import { getCookie } from "../../helpers/cookie.jsx";
 
 const API_BASE_URL =
-  (import.meta.env?.VITE_API_BASE_URL || "").trim() || "http://localhost:3000/";
+  (import.meta.env?.VITE_API_BASE_URL || "").trim() || "https://be-dw0z.onrender.com/";
 const NORMALIZED_BASE_URL = API_BASE_URL.endsWith("/")
   ? API_BASE_URL
   : `${API_BASE_URL}/`;

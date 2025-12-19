@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import { Card, Col, Row, Form, Input, Button, message, Typography } from "antd";
 import { useNavigate } from "react-router-dom";
 import { login, decodeJwt } from "../../services/auth/authServices";
-import { getMyCompany } from "../../services/getAllLocation/../getAllCompany/companyServices";
+import { getMyCompany, updateMyCompany } from "../../services/getAllLocation/../getAllCompany/companyServices";
 import { setCookie } from "../../helpers/cookie.jsx";
 import { useDispatch } from "react-redux";
 import { checkLogin } from "../../actions/login";
@@ -87,7 +87,22 @@ function Login() {
             setCookie("companyName", company.companyName || company.fullName || "", time);
             setCookie("companyId", company.id, time);
           }
-        } catch (_) {}
+        } catch (e) {
+          const status = e?.response?.status;
+          if (status === 404) {
+            try {
+              const raw = localStorage.getItem(`companyDraft:${values.email}`);
+              const draft = raw ? JSON.parse(raw) : null;
+              if (draft && (draft.fullName || draft.companyName || draft.email)) {
+                const created = await updateMyCompany(draft);
+                if (created?.id) {
+                  setCookie("companyName", created.companyName || created.fullName || "", time);
+                  setCookie("companyId", created.id, time);
+                }
+              }
+            } catch (_) {}
+          }
+        }
       }
 
       setTimeout(() => redirectByRole(role), 400);
